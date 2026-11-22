@@ -3,7 +3,7 @@
 //! it). A module is parsed the first time a text uses it, then kept. A module the stdlib does not
 //! have is not found: its calls are not followed.
 
-use crate::ast::File;
+use base_node::ast::File;
 use std::sync::OnceLock;
 
 /// (name, text) of each module of `stdlib/`, by name: build.rs lists the `.bn` files there, so
@@ -17,7 +17,7 @@ static PARSED: [OnceLock<Option<File>>; MODULES.len()] = [const { OnceLock::new(
 pub fn module(name: &str) -> Option<File> {
     let i = MODULES.iter().position(|(n, _)| *n == name)?;
     PARSED[i]
-        .get_or_init(|| crate::parse(MODULES[i].1, &format!("{name}.bn")).ok())
+        .get_or_init(|| base_node::parse(MODULES[i].1, &format!("{name}.bn")).ok())
         .clone()
 }
 

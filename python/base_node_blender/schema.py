@@ -3,11 +3,13 @@
 host/schema.py answers from Blender itself; tests answer with a small fake.
 """
 
-import functools
 import re
 import unicodedata
 from dataclasses import dataclass, field
 from typing import Protocol
+
+# The reserved words and the key of a name are the language's: a socket is named in text by `snake`
+from ._core import RESERVED, key, snake  # noqa: F401
 
 # Text type name -> interface socket type, for graph parameters and outputs
 TYPES = {
@@ -27,6 +29,11 @@ TYPES = {
     "Material": "NodeSocketMaterial",
     "Image": "NodeSocketImage",
     "Texture": "NodeSocketTexture",
+    "Font": "NodeSocketFont",
+    "Sound": "NodeSocketSound",
+    "Scene": "NodeSocketScene",
+    "Mask": "NodeSocketMask",
+    "Text": "NodeSocketText",
     "Bundle": "NodeSocketBundle",
     "Closure": "NodeSocketClosure",
 }
@@ -34,10 +41,10 @@ TYPES = {
 # These only link to their own type. Between the others (numbers, vectors,
 # colors, rotations) Blender converts, and has the last word on the details.
 STRICT = {"Geometry", "Shader", "String", "Menu", "Matrix", "Object", "Collection",
-          "Material", "Image", "Texture", "Bundle", "Closure"}
+          "Material", "Image", "Texture", "Font", "Sound", "Scene", "Mask", "Text", "Bundle", "Closure"}
 
 # Written in text as the datablock's name: material: "Rust"
-DATABLOCKS = {"Object", "Collection", "Material", "Image", "Texture"}
+DATABLOCKS = {"Object", "Collection", "Material", "Image", "Texture", "Font", "Sound", "Scene", "Mask", "Text"}
 
 TREE_KINDS = ("geometry", "shader", "compositor")
 
@@ -45,6 +52,10 @@ TREE_KINDS = ("geometry", "shader", "compositor")
 # group. It takes no input; its outputs are the Material Output's, by key, with their types
 MATERIAL = "material"
 MATERIAL_OUTPUTS = {"surface": "Shader", "volume": "Shader", "displacement": "Vector", "thickness": "Float"}
+
+# `geometry(deprecated: "use curl2") graph curl(…)`: a graph on its way out. No setting of a tree:
+# the checker warns whoever calls the graph (typecheck.deprecated_calls)
+DEPRECATED = "deprecated"
 
 
 # A ramp and curves are written as the value of their property, in calls of their own:
@@ -186,8 +197,6 @@ def option_key(attr, name):
     """The key of an item's options in ir.Node.item_options: its name, ("out", name) for an output item."""
     return name if attr == "items" else ("out", name)
 
-RESERVED = {"graph", "return", "true", "false", "and", "or", "xor", "not", "dot", "cross", "repeat"}
-
 
 # Links Blender converts although one side is strict
 CONVERSIONS = {("Rotation", "Matrix"), ("Matrix", "Rotation")}
@@ -195,24 +204,6 @@ CONVERSIONS = {("Rotation", "Matrix"), ("Matrix", "Rotation")}
 
 def can_link(src, dst):
     return src == dst or (src not in STRICT and dst not in STRICT) or (src, dst) in CONVERSIONS
-
-
-@functools.lru_cache(maxsize=4096)  # asked for every socket key, on each check while typing
-def snake(name):
-    """Socket name as written in text: `Base Color` -> `base_color`."""
-    s = re.sub(r"\W+", "_", name.lower()).strip("_")
-    if not s or s[0].isdigit():
-        s = "_" + s
-    return s + "_" if s in RESERVED else s
-
-
-def key(name):
-    """How a parameter or graph is named in code: itself when it can be, else snake_case.
-
-    A name that is not its own key is written quoted where it is declared:
-    `"Fur Density": Float`, then used as `fur_density`.
-    """
-    return name if name.isidentifier() and name not in RESERVED else snake(name)
 
 
 def interface_keys(sockets, given=()):

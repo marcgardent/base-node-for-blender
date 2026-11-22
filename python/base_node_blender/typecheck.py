@@ -9,10 +9,9 @@ import difflib
 import itertools
 from dataclasses import dataclass, field
 
-from . import ast, colors, ir, sugar
-from .errors import BnError, Diagnostic
-from .parser import parse
-from .schema import (CLOSURE_INPUT, CLOSURE_OUTPUT, CLOSURE_TO_LIST, COMBINE_BUNDLE, DATABLOCKS, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT,
+from . import ir, sugar, zones
+from ._core import BnError, Diagnostic, ast, colors, parse
+from .schema import (CLOSURE_INPUT, CLOSURE_OUTPUT, CLOSURE_TO_LIST, COMBINE_BUNDLE, DATABLOCKS, DEPRECATED, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT,
                      ITEM_NODES, ITEM_TYPES, NO_DEFAULT, NO_VALUE, RANGED, SEPARATE_BUNDLE, SIGNATURE_NODES, STRICT,
                      TREE_KINDS, TYPES, CURVE, CURVES, HANDLES, MAPPING_OPTIONS, MATERIAL, MATERIAL_OUTPUTS, RAMP,
                      RAMP_OPTIONS, Socket, can_link, is_material, key, loose, snake)
@@ -96,13 +95,110 @@ class Sym:
     name: str
 
 
-def check(file, schema, filename="<text>", load=None):
+def check(file, schema, filename="<text>", load=None, warnings=None):
     """Checked graphs, callees before callers, those of the modules first. Raises BnError.
 
     `load(name, source)` gives a module's (text, filename) for a `use`, or raises
-    LookupError with the reason; without it, a `use` is an error.
+    LookupError with the reason; without it, a `use` is an error. `warnings` is a list the
+    warnings of a valid text are added to (see `deprecated_calls`): they stop nothing.
     """
-    return Modules(schema, load).check(file, filename).order
+    modules = Modules(schema, load)
+    order = modules.check(file, filename).order
+    if warnings is not None:
+        warnings.extend(modules.warnings)
+    return order
+
+
+def deprecation(g):
+    """What an ast.Graph says of its leaving, `kind(deprecated: "use curl2") graph curl(…)`: None when
+    it stays, else what its author wrote of it, "" for `deprecated: true`."""
+    for a in g.settings:
+        if a.name == DEPRECATED:
+            if isinstance(a.value, ast.String):
+                return a.value.value
+            return "" if isinstance(a.value, ast.Bool) and a.value.value else None
+    return None
+
+
+def _calls(node):
+    """Every ast.Call under an AST node."""
+    if isinstance(node, (list, tuple)):
+        for item in node:
+            yield from _calls(item)
+    elif dataclasses.is_dataclass(node):
+        if isinstance(node, ast.Call):
+            yield node
+        for f in dataclasses.fields(node):
+            value = getattr(node, f.name)
+            if isinstance(value, (list, tuple)) or dataclasses.is_dataclass(value):
+                yield from _calls(value)
+
+
+def deprecated_calls(graphs, callable_, filename="<text>"):
+    """A warning at each call, in `graphs`, of a graph marked deprecated, with what its author says.
+
+    `callable_` is {the name a call writes: ast.Graph}, the graphs of the text and those its uses
+    bring. A graph that is deprecated itself calls the others without a word: it leaves with them.
+    """
+    marked = {k: deprecation(g) for k, g in callable_.items()}
+    marked = {k: m for k, m in marked.items() if m is not None}
+    if not marked:
+        return []
+    out = []
+    for g in graphs:
+        if deprecation(g) is not None:
+            continue
+        for c in _calls(g.body):
+            if c.name in marked:
+                said = f": {marked[c.name]}" if marked[c.name] else ""
+                out.append(Diagnostic(filename, c.line, c.col, f"'{c.name}' is deprecated{said}", "warning"))
+    return sorted(out, key=lambda d: (d.line, d.col))
+
+
+def deprecations(file, filename="<text>", find=None):
+    """The warnings of a parsed text, for a reader with no schema to check it with: `deprecated_calls`
+    of its graphs. `find(name)` gives the parsed module of a `use`, or None: by default the standard
+    library's, as a check against a target finds it."""
+    if find is None:
+        from .targets import _module as find
+    callable_ = {}
+    for u in file.uses:
+        module = find(u.name)
+        if module is None:
+            continue
+        for g in module.graphs:
+            k = key(g.name)
+            if u.names is None or k in u.names:
+                callable_[k] = g
+            for prefix in {u.alias or u.name, u.name}:
+                callable_[f"{prefix}::{k}"] = g
+    callable_.update((key(g.name), g) for g in file.graphs)
+    return deprecated_calls(file.graphs, callable_, filename)
+
+
+def old_spellings(file, filename="<text>", find=None):
+    """An error at each call, in a parsed text, of a zone's name with no body, as zones were written
+    before (`repeat(…) {`, `closure(…) -> … {`), for a reader with no schema to check it with.
+
+    The name is the zone when nothing else in the text has it: no graph of the text, none a `use`
+    brings, no name the graph binds, and no `use` of a module `find` does not find (its graphs are unknown: the call may be
+    one of them). `find` is the one of `deprecations`. The checker says the same of a text it checks."""
+    from .targets import _assigns, _module
+
+    find = find or _module
+    taken = {key(g.name) for g in file.graphs} | {g.name for g in file.graphs}
+    for u in file.uses:
+        module = find(u.name)
+        if module is None:
+            return []
+        taken.update(u.names if u.names is not None else (key(g.name) for g in module.graphs))
+    out = []
+    for g in file.graphs:
+        # A call on a name the graph binds evaluates the closure it holds
+        mine = taken | {a.name for a in _assigns(g.body)}
+        out += [Diagnostic(filename, c.line, c.col, zones.old_spelling(c.name))
+                for c in _calls(g.body) if c.name not in mine and zones.old_spelling(c.name)]
+    return sorted(out, key=lambda d: (d.line, d.col))
 
 
 @dataclass
@@ -135,7 +231,8 @@ TYPE_SETTINGS = {"Float": ("FLOAT",), "Int": ("INT", "INT32"), "Bool": ("BOOLEAN
                  "Rotation": ("ROTATION", "QUATERNION"), "Matrix": ("MATRIX", "FLOAT4X4"),
                  "String": ("STRING",), "Menu": ("MENU",), "Geometry": ("GEOMETRY",), "Shader": ("SHADER",),
                  "Object": ("OBJECT",), "Collection": ("COLLECTION",), "Material": ("MATERIAL",),
-                 "Image": ("IMAGE",), "Texture": ("TEXTURE",), "Bundle": ("BUNDLE",), "Closure": ("CLOSURE",)}
+                 "Image": ("IMAGE",), "Texture": ("TEXTURE",), "Font": ("FONT",), "Sound": ("SOUND",),
+                 "Scene": ("SCENE",), "Mask": ("MASK",), "Text": ("TEXT",), "Bundle": ("BUNDLE",), "Closure": ("CLOSURE",)}
 
 
 def infer_type(found):
@@ -223,6 +320,7 @@ class Modules:
         self.variants = {}  # (module ident, graph key, kind) -> (ir.Graph or None, diagnostics)
         self.variant_graphs = {}  # name of a variant's group -> its ir.Graph
         self.collecting = []  # for each file being checked, the variants its graphs call
+        self.warnings = []  # of the text checked, not of its modules: what a valid text should change
 
     def check(self, file, filename, ident=None, stack=()):
         diags = []
@@ -260,6 +358,8 @@ class Modules:
                 self.check_template(g, callable_, filename, diags, unsure)
         if diags:
             raise BnError(diags)
+        if ident is None:
+            self.warnings += deprecated_calls(file.graphs, callable_, filename)
         for g in own:
             g.module = ident
         seen = set()
@@ -573,6 +673,14 @@ class GraphChecker:
         graph.output_keys = [o.key for o in g.outputs]
         graph.panels, graph.panel_of = self.panels()
         graph.settings = self.literal_options(g.settings, "setting")
+        if DEPRECATED in graph.settings:
+            # Not the tree's: said to whoever calls the graph (deprecated_calls)
+            del graph.settings[DEPRECATED]
+            written = next(a for a in g.settings if a.name == DEPRECATED)
+            if isinstance(written.value, (ast.String, ast.Bool)):
+                graph.deprecated = deprecation(g)
+            else:
+                self.error(written, f"setting '{DEPRECATED}': true, or what to use instead, in quotes")
         if MATERIAL in graph.settings:
             self.material(graph)
         return graph
@@ -859,14 +967,18 @@ class GraphChecker:
             self.error(stmt, f"'{stmt.name}' is already defined")
             return
         created = len(self.nodes)
-        if isinstance(stmt.value, ast.Repeat):
-            value = self.state_zone(stmt.value, stmt.name, "repeat")
-        elif isinstance(stmt.value, ast.Simulate):
-            value = self.state_zone(stmt.value, stmt.name, "simulate")
-        elif isinstance(stmt.value, ast.Foreach):
-            value = self.foreach(stmt.value, stmt.name)
-        elif isinstance(stmt.value, ast.Closure):
-            value = self.closure(stmt.value, stmt.name)
+        if isinstance(stmt.value, ast.BODIES):
+            # A call with a body is a zone, a graph with no name a Closure zone
+            zone, refused = zones.read(stmt.value)
+            if refused is not None:
+                self.error(*refused)
+                value = None
+            elif isinstance(zone, zones.Foreach):
+                value = self.foreach(zone, stmt.name)
+            elif isinstance(zone, zones.Closure):
+                value = self.closure(zone, stmt.name)
+            else:
+                value = self.state_zone(zone, stmt.name, zones.WORDS[type(zone)])
         else:
             value = self.eval(stmt.value)
             if isinstance(value, Lit):
@@ -1734,6 +1846,11 @@ class GraphChecker:
             evaluate = self.schema.node(self.g.kind, "EvaluateClosure")
             if evaluate is not None:
                 return self.signature_call(c, evaluate, piped, target=self.env[c.name])
+        if spec is None and c.name not in self.graphs and not self.is_function(c.name) \
+                and self.existing_group(c) is None and not self.unsure and zones.old_spelling(c.name):
+            # A zone's name called with no body, when nothing else has that name: `repeat(…) {` as it was written
+            self.error(c, zones.old_spelling(c.name))
+            return None
         if c.outputs is not None:
             self.error(c, f"'->' declares items of SeparateBundle or EvaluateClosure, not {c.name}")
             return None

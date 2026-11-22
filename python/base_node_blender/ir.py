@@ -110,6 +110,9 @@ class Graph:
     panels: list = field(default_factory=list)  # parents before their children, siblings in order
     panel_of: dict = field(default_factory=dict)  # ("INPUT" or "OUTPUT", socket key) -> panel id
     settings: dict = field(default_factory=dict)  # the tree's own: {Blender property: value}
+    # `geometry(deprecated: "use curl2") graph curl(…)`: on its way out, with what its author says of it
+    # ("" for nothing); None for a graph that stays
+    deprecated: str | None = None
     # A module's graph built for another kind of tree: the name its calls give (`bias`), its own
     # being that of its group (`bias (Compositor)`)
     called_as: str | None = None

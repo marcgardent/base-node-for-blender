@@ -9,16 +9,16 @@ its operands. The checker uses it to build, the reader to check that a
 node reads back as the same formula.
 """
 
+from ._core import WORDS  # noqa: F401
+
 SCALAR = {"Float", "Int", "Bool"}
 # Blender converts a color, and an integer vector (Image Info's Dimensions), to a vector for Vector Math
 VECTOR = {"Vector", "Color", "Int_Vector"}
 
 BINOPS = {"+": "ADD", "-": "SUBTRACT", "*": "MULTIPLY", "/": "DIVIDE"}
 
-# Products of two vectors. AZERTY has neither sign: `dot` and `cross` are
-# written in their place (the editor swaps them as you type), `·` too
+# Products of two vectors; WORDS, the grammar's, are the words written in place of their signs
 PRODUCTS = {"⋅": "DOT_PRODUCT", "×": "CROSS_PRODUCT"}
-WORDS = {"dot": "⋅", "cross": "×", "·": "⋅"}
 
 COMPARE = {"<": "LESS_THAN", "<=": "LESS_EQUAL", ">": "GREATER_THAN", ">=": "GREATER_EQUAL",
            "==": "EQUAL", "!=": "NOT_EQUAL"}

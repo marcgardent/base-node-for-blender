@@ -3,24 +3,25 @@
     base-node docs [--root .] [--out site/reference]
 
 Everything is read from the repository: `spec/*.md` for the language and the idioms, `targets/*.json`
-for the targets, `targets/backends/blender-<x.y>.json` for the nodes of each kind of tree and
+for the targets (and `targets/blender/` for the versions and the variants of `blender`), `targets/backends/blender-<x.y>.json` for the nodes of each kind of tree and
 `targets/backends/blender-<x.y>/<module>.json` where each stdlib graph builds (written in Blender by
 `base-node-for-blender/tests/export_backend.py`), and `stdlib/*.bn` with their heads for the modules. No dependency, no Blender: the Pages workflow runs it.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import html
 import json
 import re
 from pathlib import Path
 
-from .ast import flatten
-from .lexer import tokenize, width
-from .manifest import manifest as stdlib_manifest
-from .parser import parse
-from .schema import key
-from .targets import catalog
+from base_node.ast import flatten
+from base_node.lexer import tokenize, width
+from base_node.manifest import manifest as stdlib_manifest
+from base_node.names import key
+from base_node.parser import parse
+from base_node_blender.targets import ALIASES, BLENDER, NOT_JSON, Blender, Target, catalog
 
 REPO = "https://github.com/marcgardent/base-node-language"
 KINDS = ("geometry", "shader", "compositor")
@@ -373,7 +374,27 @@ def spec_page(root, name):
 # ---- Targets ----
 
 def read_targets(root):
-    return {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in sorted((root / "targets").glob("*.json"))}
+    """{name: Target} of the targets of the repository at `root`, in the order of the page: `blender`
+    as every version promised, each of its versions, each variant of both, then the others."""
+    folder = root / "targets"
+    out = {}
+    b = Blender(folder) if (folder / f"{BLENDER}.json").is_file() else None
+    if b is not None:
+        for variant in [None] + b.variants:
+            for version in [None] + b.versions:
+                t = b.target(version, variant)
+                out[t.name] = t
+    for p in sorted(folder.glob("*.json")):
+        if p.stem != BLENDER:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            out[p.stem] = Target(**{f.name: data[f.name] for f in dataclasses.fields(Target)
+                                    if f.name in data and f.name not in NOT_JSON}, path=p)
+    return out, b
+
+
+def anchor_of(name):
+    """The id of a target on the page: `blender@5.3 gltf` is `blender-5.3-gltf`."""
+    return re.sub(r"[^a-z0-9.]+", "-", name)
 
 
 def node_link(name, backend):
@@ -383,42 +404,61 @@ def node_link(name, backend):
     return f"<code>{esc(name)}</code>"
 
 
-def every_node_of(data, backend):
-    """The kind of tree whose every node the target lists, or None."""
-    for kind in KINDS:
-        if set(data.get("nodes", [])) == {n["name"] for n in backend["kinds"][kind]}:
-            return kind
-    return None
-
-
 def targets_page(root, targets, backend):
+    targets, b = targets
     title, spec = spec_page(root, "targets.md")
     body = [spec, '<h2 id="every-target">Every target<a class="anchor" href="#every-target">#</a></h2>']
-    for name, data in targets.items():
-        codes = lambda xs: ", ".join(f"<code>{esc(x)}</code>" for x in xs) or "—"
-        kind = every_node_of(data, backend)
-        nodes = f'every node of a <a href="nodes-{kind}.html">{kind} tree</a> ({len(data["nodes"])})' if kind else \
-            ", ".join(node_link(n, backend) for n in data.get("nodes", [])) or "—"
-        rows = [("Kinds of graph", codes(data.get("kinds", []))), ("Types", codes(data.get("types", []))),
-                ("Zones", codes(data.get("zones", []))), ("Implicit inputs", codes(data.get("implicit", []))),
-                ("Nodes", nodes)]
-        for source, tr in data.get("translators", {}).items():
+    codes = lambda xs: ", ".join(f"<code>{esc(x)}</code>" for x in xs) or "—"
+    link = lambda name: f'<a href="#{anchor_of(name)}">{esc(name)}</a>'
+    for name, t in targets.items():
+        rows = [("Kinds of graph", codes(t.kinds))]
+        if t.members:
+            rows.append(("Versions", ", ".join(link(m.name) for m in t.members)
+                         + ": a text fits when it fits each of them"))
+            if name == BLENDER:
+                aliases = [f"<code>{BLENDER}@{word}</code> ({'no catalog of it here' if b.alias(word) not in b.versions else link(b.name(b.alias(word)))})"
+                           for word in ALIASES]
+                rows.append(("Aliases, on a command line", ", ".join(aliases)))
+                rows.append(("Variants", ", ".join(link(f"{BLENDER} {v}") for v in b.variants)))
+        elif t.trees:
+            for kind, tree in t.trees.items():
+                left = [n for n in t.without if n not in tree["nodes"]]
+                nodes = f'every node of a <a href="nodes-{kind}.html">{kind} tree</a> ({len(tree["nodes"])})'
+                if left:
+                    nodes = (f'every node of a <a href="nodes-{kind}.html">{kind} tree</a> but {len(left)} '
+                             f'({len(tree["nodes"])}):<ul>'
+                             + "".join(f"<li>{node_link(n, backend)}: {esc(t.without[n])}</li>" for n in left) + "</ul>")
+                rows.append((f"<code>{kind} graph</code>",
+                             f'types {codes(tree["types"])}<br>zones {codes(tree["zones"])}<br>'
+                             f'implicit inputs {codes(tree["implicit"])}<br>{nodes}'))
+        else:
+            rows += [("Types", codes(t.types)), ("Zones", codes(t.zones)), ("Implicit inputs", codes(t.implicit)),
+                     ("Nodes", ", ".join(node_link(n, backend) for n in t.nodes) or "—")]
+        for source, tr in t.translators.items():
             pairs = []
             for src, dst in tr.get("nodes", {}).items():
                 dst = dst if isinstance(dst, str) else dst["node"]
                 pairs.append(node_link(src, backend) + ("" if dst == src else f" → <code>{esc(dst)}</code>"))
             kinds = ", ".join(f"<code>{esc(k)}</code> → <code>{esc(v)}</code>" for k, v in tr.get("kinds", {}).items())
-            rows.append((f'From <a href="#{source}">{source}</a>', (kinds + "<br>" if kinds else "") + ", ".join(pairs)))
-        if data.get("bridges"):
-            rows.append(("Bridges", codes(data["bridges"])))
-        body.append(f'<h3 id="{name}">{name}<a class="anchor" href="#{name}">#</a></h3>'
-                    f'<p>{esc(data.get("description", ""))}</p><table><tbody>'
+            rows.append((f"From {link(source)}", (kinds + "<br>" if kinds else "") + ", ".join(pairs)))
+        if t.bridges:
+            rows.append(("Bridges", codes(t.bridges)))
+        note = ' <span class="tag">experimental</span>' if t.experimental else ""
+        body.append(f'<h3 id="{anchor_of(name)}">{esc(name)}{note}<a class="anchor" href="#{anchor_of(name)}">#</a></h3>'
+                    f'<p>{esc(t.description)}</p><table><tbody>'
                     + "".join(f"<tr><th>{k}</th><td>{v}</td></tr>" for k, v in rows) + "</tbody></table>")
     return title, "\n".join(body)
 
 
+def nodes_taken(t, kind):
+    """The nodes a target takes in a graph of that kind: of several versions, those each takes."""
+    if t.members:
+        return set.intersection(*(nodes_taken(m, kind) for m in t.members))
+    return set(t.trees.get(kind, {}).get("nodes", [])) if t.trees else set(t.nodes)
+
+
 def target_links(names):
-    return ", ".join(f'<a href="targets.html#{t}">{t}</a>' for t in names) or "—"
+    return ", ".join(f'<a href="targets.html#{anchor_of(t)}">{esc(t)}</a>' for t in names) or "—"
 
 
 def value_text(v):
@@ -444,11 +484,15 @@ def node_signature(node):
 
 def nodes_page(kind, backend, targets):
     nodes = backend["kinds"][kind]
+    # The targets a graph of this kind may promise that take the node: of `blender`, every version
+    # promised, whole and by variant
     allowed = {}
-    for name, data in targets.items():
-        listed = set(data.get("nodes", []))
+    for name, t in targets[0].items():
+        if "@" in name or kind not in t.kinds:
+            continue
+        listed = nodes_taken(t, kind)
         for n in nodes:
-            if n["name"] in listed and kind in data.get("kinds", []):
+            if n["name"] in listed:
                 allowed.setdefault(n["name"], []).append(name)
     body = [f"<h1>Nodes of a {kind} tree</h1>",
             f'<p class="lead">The {len(nodes)} nodes a <code>{kind} graph</code> can write in Blender {esc(backend["blender"])}, '
@@ -476,7 +520,7 @@ def nodes_page(kind, backend, targets):
                         + "".join(rows) + "</tbody></table>")
         if n.get("data"):
             part.append("<p>Data: " + ", ".join(f"<code>{esc(d['name'])}</code> ({esc(d['kind'].lower())})" for d in n["data"]) + "</p>")
-        part.append('<div class="tags">' + "".join(f'<a class="tag" href="targets.html#{t}">{t}</a>'
+        part.append('<div class="tags">' + "".join(f'<a class="tag" href="targets.html#{anchor_of(t)}">{esc(t)}</a>'
                                                    for t in allowed.get(n["name"], [])) + "</div>")
         body.append("\n".join(part) + "</details>")
     body.append(NODES_SCRIPT)
@@ -677,7 +721,7 @@ def index_page(manifest, backend, targets):
     boxes = [
         ("language.html", "Language", "The <code>.bn</code> grammar and semantics: graphs, types, statements, expressions, zones, limits. "
          '<a href="versioning.html">Versioning</a>: editions, stdlib and lifecycle.'),
-        ("targets.html", "Targets", f"{len(targets)} targets, what each destination accepts, and the nodes of each kind of tree in "
+        ("targets.html", "Targets", f"{len([t for t in targets[0] if '@' not in t and ' ' not in t])} targets, what each destination accepts, and the nodes of each kind of tree in "
          f"Blender {esc(backend['blender'])}: "
          + ", ".join(f'<a href="nodes-{k}.html">{k}</a>' for k in KINDS) + "."),
         ("stdlib.html", "Standard library", f"{len(manifest['modules'])} modules, each graph with its signature, inputs and the kinds of tree it builds in."),

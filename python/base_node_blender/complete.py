@@ -7,9 +7,8 @@ the parse tree: what comes just before the cursor says what may follow.
 import re
 from dataclasses import dataclass
 
-from .colors import CSS
-from .lexer import tokenize
-from .targets import load_target, target_names
+from ._core import colors, tokenize
+from .targets import load_target, promise_names
 from .schema import TREE_KINDS, TYPES, key, snake
 from .sugar import COMPONENTS, FUNCS, VECTOR, WORDS
 
@@ -71,13 +70,14 @@ def complete(source, line, col, schema, load=None, asked=False):
     if tokens and tokens[-1].kind in ("COMMENT", "OPEN_STRING"):
         return start, []
     if tokens and tokens[-1].kind == "COLOR":
-        return start, matching([Item(name, name, "#" + code, "color") for name, code in CSS.items()], prefix)
+        return start, matching([Item(name, name, "#" + code, "color") for name, code in colors.CSS.items()], prefix)
     items = context(source, line, tokens, schema, load).items(asked)
     return start, matching(items, prefix)
 
 
 # A comment line so far: `//`, `// @tar`, `// @target gl`
-TARGET_LINE = re.compile(r'\s*//(\s*(?:@\w*(?:\s+"?[\w-]*)?)?)')
+# The name being typed may have a version and a variant: `blender@5.3 gltf`
+TARGET_LINE = re.compile(r'\s*//(\s*(?:@\w*(?:\s+"?[\w@.-]*(?: [\w-]*)?)?)?)')
 
 
 def targets_line(typed, col):
@@ -87,7 +87,7 @@ def targets_line(typed, col):
         return None
     rest = m.group(1).strip().replace('"', "")
     items = [Item(f"@target {name}", f" @target {name}", load_target(name).description, "keyword")
-             for name in target_names()]
+             for name in promise_names()]
     return col - len(m.group(1)), [i for i in items if i.label.startswith(rest)]
 
 

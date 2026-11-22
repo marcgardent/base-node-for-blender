@@ -3,16 +3,21 @@
 A target is one JSON file: the kinds of tree, types, zones and nodes a text may use there, and the
 translators that carry a text of another target to it. No target is defined from another.
 
-    check_target(file, "gltf")   -> the Issues of the text outside gltf, [] when it fits
-    infer(file)                  -> which targets accept it, natively or through a translator
-    translate(file, "blender-compositor", "blade") -> the text renamed for blade
+    check_target(file, "blender gltf")   -> the Issues of the text outside it, [] when it fits
+    infer(file)                          -> which targets accept it, natively or through a translator
+    translate(file, "blender", "blade")  -> the text renamed for blade
+
+`blender` is Blender's own, and has a catalog per version of Blender (targets/blender/<x.y>.json,
+what that Blender reports): `blender@5.3` is one version, `blender` every version targets/blender.json
+promises, `blender@lts` and `blender@latest` aliases for a command line. A word after it is a
+variant, the shader nodes one consumer accepts: `blender@5.3 gltf`, `blender eevee`.
 
 A graph a text calls brings its issues: those of the text, of the stdlib modules it `use`s, and
 of the bridges of the target (modules shipped with it). A name that is not a target's raises
 ValueError.
 
-`python -m base_node.targets` rewrites the node lists of the blender-* targets from the nodes
-Blender reports (targets/backends/blender-<x.y>.json). The `_targets` next to this module is a link
+`python -m base_node_blender.targets` rewrites the catalogs of `blender` from the nodes Blender
+reports (targets/backends/blender-<x.y>.json). The `_targets` next to this module is a link
 to targets/ in git, and a folder of files in the wheel and the Blender extension.
 """
 
@@ -25,27 +30,32 @@ import sys
 from dataclasses import dataclass, field, fields, is_dataclass
 from pathlib import Path
 
-from . import ast
+from ._core import ast
 from .schema import IMPLICIT as SCHEMA_IMPLICIT
 from .schema import CURVE, CURVES, RAMP, is_material, key
 from .sugar import BINOPS, BOOL_FUNCS, EPSILON, MATH_COMPARE, MATH_FUNCS, VECTOR_FUNCS
+from .zones import word as zone_word
 
 HERE = Path(__file__).resolve().parent
 # The targets shipped with this package, then the repository's when run from a checkout
 DIRS = (HERE / "_targets", HERE.parents[1] / "targets")
 
-ZONE_WORDS = {ast.Repeat: "repeat", ast.Simulate: "simulate", ast.Foreach: "foreach", ast.Closure: "closure"}
 ARITHMETIC = {"+", "-", "*", "/"}
 PRODUCTS = {"⋅", "×", "dot", "cross", "·"}
 COMPARISONS = {"<", "<=", ">", ">=", "==", "!="}
 LOGIC = {"and", "or", "xor"}
-# Blender targets built from the nodes Blender reports: name -> kind of tree. A graph of any kind
-# builds in any tree whose nodes it uses (a compositor graph of math in a geometry tree). blender-gp
-# is Geometry Nodes on a Grease Pencil object: Blender accepts every geometry node there
-BLENDER = {"blender-geometry": "geometry", "blender-gp": "geometry", "blender-shader": "shader",
-           "blender-compositor": "compositor"}
-DESCRIPTIONS = {"blender-gp": "Every Geometry Nodes node of Blender {blender}, on a Grease Pencil object"}
+# The target of Blender, and the kinds of tree it has. A graph called from a graph of another kind
+# is built in the caller's tree (a compositor graph of math in a geometry tree)
+BLENDER = "blender"
 BLENDER_KINDS = ["geometry", "shader", "compositor"]
+# The names a command line gives a version it does not write: refused in the `@target` of a text
+ALIASES = ("latest", "lts")
+# The targets of before the one `blender`, and what to write now
+RENAMED = {"blender-geometry": "blender", "blender-gp": "blender", "blender-shader": "blender",
+           "blender-compositor": "blender", "gltf": "blender gltf"}
+# A target as it is written: a name, a version after `@`, words after a space. What they mean is
+# the target's to say
+SPELLING = re.compile(r"(?P<name>[a-z0-9][a-z0-9_-]*)(?:@(?P<version>[A-Za-z0-9.-]+))?(?P<words>(?: [a-z0-9_-]+)*)")
 # Blender's zones by kind of tree: repeat and closure are shader and geometry nodes, the others geometry's
 ZONES = {"geometry": ["repeat", "foreach", "simulate", "closure"], "shader": ["repeat", "closure"],
          "compositor": ["repeat"]}
@@ -98,8 +108,22 @@ class Target:
     groups: dict = field(default_factory=dict)
     # The nodes the destination reads one of: the first that reaches the material
     once: list = field(default_factory=list)
+    # Of a target that has several kinds of tree, what each accepts: kind -> its types, zones,
+    # implicit inputs and nodes. A graph is checked against the tree of its kind, and the graphs it
+    # calls with it: they are built in that tree
+    trees: dict = field(default_factory=dict)
+    # Of a variant of `blender`: the nodes of its kinds it does not accept, each with where that is said
+    without: dict = field(default_factory=dict)
+    # A variant whose list is not settled yet
+    experimental: bool = False
+    # Of a name that stands for several versions (`blender`): the target of each. A text fits when
+    # it fits each of them
+    members: list = field(default_factory=list, repr=False)
     # The file it was read from: its bridges are paths relative to it. Not a field of the JSON
     path: Path | None = field(default=None, repr=False, compare=False)
+
+
+NOT_JSON = ("path", "members")
 
 
 def _bare(name):
@@ -107,14 +131,208 @@ def _bare(name):
     return isinstance(name, str) and re.fullmatch(r"[a-z0-9][a-z0-9_-]*", name) is not None
 
 
-def target_names():
-    """Every target found, sorted."""
+def _dir():
+    """The folder of the targets: the one shipped with this package, else the repository's."""
     for d in DIRS:
-        if d.is_dir():
-            names = sorted(p.stem for p in d.glob("*.json"))
-            if names:
-                return names
-    return []
+        if d.is_dir() and any(d.glob("*.json")):
+            return d
+    return None
+
+
+def _json(path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _version(version):
+    return tuple(int(x) for x in version.split("."))
+
+
+class Blender:
+    """The `blender` target as targets/ holds it: targets/blender.json, which says the versions
+    promised, the LTS and the variants, a catalog per version (blender/<x.y>.json) and a file per
+    variant (blender/<variant>.json)."""
+
+    def __init__(self, root):
+        self.root = root
+        data = _json(root / f"{BLENDER}.json")
+        self.description = data.get("description", "")
+        self.lts = sorted(data.get("lts", []), key=_version)
+        self.promised = sorted(data.get("promised", []), key=_version)
+        self.variants = sorted(data.get("variants", []))
+        found = [p.stem for p in (root / BLENDER).glob("*.json") if re.fullmatch(r"\d+\.\d+", p.stem)]
+        self.versions = sorted(found, key=_version)
+        self._catalogs, self._variants, self._targets = {}, {}, {}
+
+    def catalog(self, version):
+        if version not in self._catalogs:
+            self._catalogs[version] = _json(self.root / BLENDER / f"{version}.json")
+        return self._catalogs[version]
+
+    def variant(self, name):
+        if name not in self._variants:
+            self._variants[name] = _json(self.root / BLENDER / f"{name}.json")
+        return self._variants[name]
+
+    def name(self, version):
+        """A version as a text names it: an LTS says so."""
+        return f"{BLENDER}@{version}-lts" if version in self.lts else f"{BLENDER}@{version}"
+
+    def names(self):
+        """`blender` and each version there is a catalog of."""
+        return [BLENDER] + [self.name(v) for v in self.versions]
+
+    def alias(self, word):
+        """The version `lts` or `latest` stands for today: the newest LTS, the newest catalog."""
+        if word == "lts":
+            return self.lts[-1] if self.lts else None
+        return self.versions[-1] if self.versions else None
+
+    def refusal(self, version, words):
+        """Why `blender@version words` names no target: ("unknown", what to write) or
+        ("catalog", why), None when it names one."""
+        if len(words) > 1:
+            return "unknown", f"one variant after the target, as '{BLENDER} {words[0]}'"
+        if words and words[0] not in self.variants:
+            return "unknown", None
+        if version is None:
+            return None
+        if version in ALIASES:
+            number = self.alias(version)
+            if number is None:
+                return "catalog", f"no LTS of Blender in this version of Base Node ({self._known()})"
+        else:
+            m = re.fullmatch(r"(\d+\.\d+)(-lts)?", version)
+            if m is None:
+                return "unknown", None
+            number = m.group(1)
+        if number not in self.versions:
+            return "catalog", f"no catalog for Blender {number} in this version of Base Node ({self._known()})"
+        if version not in ALIASES and f"{BLENDER}@{version}" != self.name(number):
+            lts = "an LTS" if number in self.lts else "not an LTS"
+            return "unknown", f"Blender {number} is {lts}: write '{self.name(number)}'"
+        return None
+
+    def _known(self):
+        return "catalogs: " + (", ".join(self.versions) or "none")
+
+    def target(self, version, variant):
+        """The Target of one version, or of every promised one (`version` None), whole or of a variant."""
+        k = (version, variant)
+        if k not in self._targets:
+            self._targets[k] = self._group(variant) if version is None else self._one(version, variant)
+        return self._targets[k]
+
+    def _group(self, variant):
+        members = [self.target(v, variant) for v in self.promised]
+        first = members[0]
+        said = self.variant(variant)["description"] if variant else "Every node of Blender, by kind of tree"
+        return Target(name=BLENDER + (f" {variant}" if variant else ""),
+                      description=f"{said}, in every version of Blender this version of Base Node promises: "
+                                  + ", ".join(self.promised),
+                      kinds=list(first.kinds), experimental=first.experimental, members=members)
+
+    def _one(self, version, variant):
+        catalog = self.catalog(version)
+        trees = catalog["trees"]
+        if variant is None:
+            return Target(name=self.name(version),
+                          description=f"Every node of Blender {catalog['blender']}, by kind of tree",
+                          kinds=list(trees), trees=trees)
+        data = dict(self.variant(variant))
+        data["name"] = f"{self.name(version)} {variant}"
+        data["description"] = f"{data.get('description', '')}, in Blender {catalog['blender']}"
+        t = Target(**{f.name: data[f.name] for f in fields(Target) if f.name in data and f.name not in NOT_JSON},
+                   path=self.root / BLENDER / f"{variant}.json")
+        if t.nodes:
+            # A list of its own: the nodes of it this version has
+            has = {n for k in t.kinds for n in trees.get(k, {}).get("nodes", [])}
+            t.nodes = [n for n in t.nodes if n in has]
+        else:
+            t.trees = {k: {**trees[k], "nodes": [n for n in trees[k]["nodes"] if n not in t.without]}
+                       for k in t.kinds if k in trees}
+        return t
+
+
+_blender = {}
+
+
+def blender():
+    """The `blender` target of the targets found, None when there is none."""
+    root = _dir()
+    if root is None or not (root / f"{BLENDER}.json").is_file():
+        return None
+    if root not in _blender:
+        _blender[root] = Blender(root)
+    return _blender[root]
+
+
+def _others():
+    """The targets that are a file of their own, sorted: every one but `blender`."""
+    root = _dir()
+    return sorted(p.stem for p in root.glob("*.json") if p.stem != BLENDER) if root else []
+
+
+def target_names():
+    """Every target found, sorted: `blender` and each of its versions among them, without their variants."""
+    b = blender()
+    return sorted(_others() + (b.names() if b else []))
+
+
+def variant_names():
+    """The variants of `blender`, sorted: a word after the target, as `blender gltf`."""
+    b = blender()
+    return list(b.variants) if b else []
+
+
+def promise_names():
+    """Every name a text may promise, sorted: the targets, and `blender` with each variant."""
+    b = blender()
+    return sorted(_others() + [f"{n}{w}" for n in (b.names() if b else [])
+                               for w in [""] + [f" {v}" for v in b.variants]])
+
+
+def inferred_names():
+    """The targets an inference tries, sorted: `blender` as the versions promised, whole and by
+    variant, and the others."""
+    b = blender()
+    return sorted(_others() + ([BLENDER] + [f"{BLENDER} {v}" for v in b.variants] if b else []))
+
+
+def refusal(name):
+    """Why `name` names no target: ("unknown", the names there are) or ("catalog", why there is no
+    such version), None when it names one."""
+    m = SPELLING.fullmatch(name) if isinstance(name, str) else None
+    b = blender()
+    hint = None
+    if m is not None and m.group("name") == BLENDER and b is not None:
+        found = b.refusal(m.group("version"), m.group("words").split())
+        if found is None or found[0] == "catalog":
+            return found
+        hint = found[1]
+    elif _bare(name) and name in _others():
+        return None
+    elif name in RENAMED:
+        hint = f"'{name}' is now '{RENAMED[name]}'"
+    said = ", ".join(target_names())
+    if b is not None and b.variants:
+        said += f"; variants of {BLENDER}, written after it: {', '.join(b.variants)}"
+    return "unknown", said + (f"; {hint}" if hint else "")
+
+
+def promise_refusal(name):
+    """Why a text may not promise `name` in its `@target`, None when it may: what follows
+    `@target '<name>': ` in the message. An alias is the command line's."""
+    m = SPELLING.fullmatch(name)
+    b = blender()
+    if m is not None and m.group("name") == BLENDER and m.group("version") in ALIASES and b is not None:
+        number = b.alias(m.group("version"))
+        write = f": write the version, '{b.name(number)}{m.group('words')}'" if number in b.versions else ""
+        return ("an alias, for a command line: the version it names changes with each release of "
+                f"Blender, and the promise of the text would change with it{write}")
+    found = refusal(name)
+    if found is None:
+        return None
+    return f"one of {found[1]}" if found[0] == "unknown" else found[1]
 
 
 def load_target(name):
@@ -122,14 +340,29 @@ def load_target(name):
     if isinstance(name, Target):
         return name
     path = None
-    if _bare(name):
-        path = next((d / f"{name}.json" for d in DIRS if (d / f"{name}.json").is_file()), None)
+    m = SPELLING.fullmatch(name) if isinstance(name, str) else None
+    b = blender()
+    if m is not None and m.group("name") == BLENDER and b is not None:
+        found = b.refusal(m.group("version"), m.group("words").split())
+        if found is None:
+            version = m.group("version")
+            if version in ALIASES:
+                version = b.alias(version)
+            elif version is not None:
+                version = version.removesuffix("-lts")
+            return b.target(version, m.group("words").strip() or None)
+    elif _bare(name):
+        root = _dir()
+        if root is not None and (root / f"{name}.json").is_file():
+            path = root / f"{name}.json"
     elif Path(name).is_file():
         path = Path(name)
     if path is None:
-        raise ValueError(f"unknown target '{name}'; targets: {', '.join(target_names())}")
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return Target(**{f.name: data[f.name] for f in fields(Target) if f.name in data and f.name != "path"},
+        kind, why = refusal(name)
+        raise ValueError(f"unknown target '{name}'; targets: {why}" if kind == "unknown"
+                         else f"target '{name}': {why}")
+    data = _json(path)
+    return Target(**{f.name: data[f.name] for f in fields(Target) if f.name in data and f.name not in NOT_JSON},
                   path=path)
 
 
@@ -165,8 +398,9 @@ def _walk(o, out):
         out.append(("op", "not", line, col))
     elif isinstance(o, ast.Cond):
         out.append(("op", "?", line, col))
-    elif type(o) in ZONE_WORDS:
-        out.append(("zone", ZONE_WORDS[type(o)], line, col))
+    elif isinstance(o, ast.BODIES):
+        # A call with a body that is no zone's is a call no target knows
+        out.append(("zone", zone_word(o), line, col) if zone_word(o) else ("call", o.name, line, col))
     for f in fields(o):
         _walk(getattr(o, f.name), out)
 
@@ -204,8 +438,9 @@ def _local_names(file, find=None):
     return names, modules, every
 
 
-def uses(graph, local=frozenset(), modules=frozenset(), every=False):
-    """What `graph` needs of a target: its kind, types, zones and nodes, as Uses."""
+def uses(graph, local=frozenset(), modules=frozenset(), every=False, tree=None):
+    """What `graph` needs of a target: its kind, types, zones and nodes, as Uses. `tree` is the kind
+    of the tree it is built in, its own by default: a ternary is the node of that tree."""
     out = [Use("kind", (graph.kind,), graph.line, graph.col)]
     for p in list(ast.flatten(graph.params)) + list(ast.flatten(graph.outputs)):
         out.append(Use("type", (p.type,), p.line, p.col))
@@ -232,7 +467,8 @@ def uses(graph, local=frozenset(), modules=frozenset(), every=False):
                 out.append(Use("node", ("BooleanMath",), line, col))
             elif name == "?":
                 # A Switch where it chooses for each element, else a Mix by the condition (typecheck.ternary)
-                out.append(Use("node", ("Switch",) if graph.kind == "geometry" else ("Mix", "MixShader"), line, col))
+                out.append(Use("node", ("Switch",) if (tree or graph.kind) == "geometry" else ("Mix", "MixShader"),
+                               line, col))
         elif "::" in name:
             if name.split("::", 1)[0] not in modules:
                 out.append(Use("node", (name,), line, col))
@@ -257,9 +493,31 @@ def _graphs(file):
     return ast.File(graphs=graphs), graphs
 
 
-def _allowed(target, what):
+def _allowed(target, what, tree=None):
+    """What `target` accepts of a kind of thing. Of a target with a tree per kind: the kinds a text's
+    graph may be, those a called graph may be (it is built in the caller's tree), and for the rest
+    what the tree of kind `tree` has, or any tree for a kind the target has no tree of."""
+    if target.trees and what == "kind":
+        return target.kinds if tree is None else BLENDER_KINDS
+    if target.trees and what != "kind":
+        field_ = {"type": "types", "zone": "zones", "implicit": "implicit", "node": "nodes"}[what]
+        if tree in target.trees:
+            return target.trees[tree][field_]
+        return [x for t in target.trees.values() for x in t[field_]]
     return {"kind": target.kinds, "type": target.types, "zone": target.zones, "implicit": target.implicit,
             "node": target.nodes}[what]
+
+
+def accepted(target, what):
+    """Everything `target` accepts of a kind of thing ("node", "type", "zone", "implicit"), in any of
+    its trees: for an editor that colors a text without reading its graphs. Of several versions,
+    what each of them accepts."""
+    target = load_target(target)
+    if target.members:
+        return set.intersection(*(accepted(m, what) for m in target.members))
+    if target.trees:
+        return {x for tree in target.trees for x in _allowed(target, what, tree)}
+    return set(_allowed(target, what))
 
 
 # Where a `use` without a source finds its module: the stdlib of the checkout, then the add-on's
@@ -270,7 +528,7 @@ _modules = {}
 def _module(name):
     """The parsed stdlib module `name`, or None when it is not found."""
     if name not in _modules:
-        from .parser import parse
+        from ._core import parse
 
         path = next((d / f"{name}.bn" for d in STDLIB_DIRS if (d / f"{name}.bn").is_file()), None)
         _modules[name] = parse(path.read_text(encoding="utf-8"), str(path)) if path else None
@@ -289,7 +547,7 @@ def _bridges(target):
     for rel in target.bridges:
         path = (target.path.parent / rel).resolve()
         if path not in _bridge_files:
-            from .parser import parse
+            from ._core import parse
 
             _bridge_files[path] = parse(path.read_text(encoding="utf-8"), str(path)) if path.is_file() else None
         if _bridge_files[path] is not None:
@@ -322,17 +580,24 @@ def _callees(graph, file, find=_module):
                 yield g, m
 
 
-def graph_issues(graph, target, file=None, _seen=None):
+def graph_issues(graph, target, file=None, _seen=None, tree=None):
     """The Issues of one graph outside `target`, with those of the graphs it calls.
 
     The graphs it calls are those of the text, and of the modules it uses: the bridges of `target`
-    and the stdlib."""
+    and the stdlib. Against a target with a tree per kind, the graph is checked against the tree of
+    its kind, and the graphs it calls against that tree too: `tree` is the kind of the tree a
+    graph is built in when a graph of that kind calls it. Against several versions, an issue
+    every version has is the target's, another the version's."""
     target = load_target(target)
+    if target.members:
+        return _every(target, [graph_issues(graph, m, file, _seen, tree) for m in target.members])
     find = _finder(target)
     local, modules, every = _local_names(file, find) if file is not None else (set(), set(), False)
-    allowed = {w: set(_allowed(target, w)) for w in ("kind", "type", "zone", "implicit", "node")}
+    called, tree = tree, tree or graph.kind
+    allowed = {w: set(_allowed(target, w, tree if w != "kind" else called))
+               for w in ("kind", "type", "zone", "implicit", "node")}
     out = []
-    for u in uses(graph, local, modules, every):
+    for u in uses(graph, local, modules, every, tree):
         if not any(n in allowed[u.what] for n in u.names):
             out.append(Issue(graph.name, u.what, u.name, u.line, u.col, target.name))
     out += link_issues(graph, target, local, file)
@@ -342,11 +607,28 @@ def graph_issues(graph, target, file=None, _seen=None):
             if id(g) in seen:
                 continue
             # Its links are read where it is called, through the values the call gives
-            inner = [i for i in graph_issues(g, target, f, seen) if i.what != "link"]
+            inner = [i for i in graph_issues(g, target, f, seen, tree) if i.what != "link"]
             if inner:
                 first = inner[0]
                 out.append(Issue(graph.name, "graph", f"{key(g.name)} ({first.what} {first.name})",
                                  first.line, first.col, target.name))
+    return out
+
+
+def _every(target, per):
+    """The issues of the versions of `target`, each once: one that every version has is the
+    target's, one that some have is each of theirs."""
+    def same(i):
+        return (i.graph, i.what, i.name, i.line, i.col)
+
+    shared = set.intersection(*({same(i) for i in issues} for issues in per)) if per else set()
+    out = []
+    for n, issues in enumerate(per):
+        for i in issues:
+            if same(i) not in shared:
+                out.append(i)
+            elif n == 0:
+                out.append(Issue(i.graph, i.what, i.name, i.line, i.col, target.name))
     return out
 
 
@@ -361,6 +643,15 @@ def check_target(file, target):
     file, graphs = _graphs(file)
     target = load_target(target)
     return [i for g in graphs for i in graph_issues(g, target, file)]
+
+
+def tree_kinds(file, target=BLENDER):
+    """The kinds of tree of `target` every graph of the text builds in, as a graph of that kind
+    calls it: a text of math builds in a geometry tree and in the compositor, whatever its graphs
+    are declared as; one that scatters points, in a geometry tree only."""
+    file, graphs = _graphs(file)
+    target = load_target(target)
+    return [k for k in target.kinds if not any(graph_issues(g, target, file, tree=k) for g in graphs)]
 
 
 def check_targets(file, targets):
@@ -403,7 +694,7 @@ _written = {}
 def _expression(text):
     """The expression a pattern of a target writes, parsed."""
     if text not in _written:
-        from .parser import parse
+        from ._core import parse
 
         f = parse(f"shader graph pattern() -> Float {{\n  return {text}\n}}\n", "<pattern>")
         _written[text] = f.graphs[0].body[-1].value
@@ -1125,6 +1416,8 @@ def link_issues(graph, target, local=frozenset(), file=None):
     as Blender's exporter reads through a group, and a material's return feeds its Material Output.
     A target without rules refuses none."""
     target = load_target(target)
+    if target.members:
+        return _every(target, [link_issues(graph, m, local, file) for m in target.members])
     if not target.rules:
         return []
     if file is not None:
@@ -1336,10 +1629,18 @@ class Inference:
         return out
 
 
+def _tried(graphs):
+    """The targets an inference tries for these graphs: a variant of `blender` narrows the trees of
+    some kinds (shaders, for each of today's), so it is tried only for a text that holds a graph of
+    one of them. For another text it would only say that the kind is not its own."""
+    kinds = {g.kind for g in graphs}
+    return [t for t in inferred_names() if " " not in t or kinds & set(load_target(t).kinds)]
+
+
 def infer(file, targets=None):
     """Which targets accept the text: as it is, or through one of their translators."""
     file, graphs = _graphs(file)
-    names = sorted(targets) if targets is not None else target_names()
+    names = sorted(targets) if targets is not None else _tried(graphs)
     fits, outside = {}, {}
     for t in names:
         issues = check_target(file, t)
@@ -1357,35 +1658,39 @@ def infer(file, targets=None):
     return Inference(dict(sorted(fits.items())), outside, per_graph)
 
 
-# ---- The blender-* targets, from what Blender reports ----
+# ---- The catalogs of `blender`, from what Blender reports ----
 
-def catalog(root):
-    """The newest targets/backends/blender-<x.y>.json under `root`, its `stdlib` read from the file
-    of each module next to it (blender-<x.y>/<module>.json)."""
-    files = sorted((root / "targets" / "backends").glob("blender-*.json"),
-                   key=lambda p: tuple(int(x) for x in re.findall(r"\d+", p.stem)))
+def _backends(root):
+    """targets/backends/blender-<x.y>.json under `root`, the oldest Blender first."""
+    return sorted((root / "targets" / "backends").glob("blender-*.json"),
+                  key=lambda p: tuple(int(x) for x in re.findall(r"\d+", p.stem)))
+
+
+def catalog(root, version=None):
+    """What Blender `version` reports, targets/backends/blender-<x.y>.json under `root` (the newest
+    without a version), its `stdlib` read from the file of each module next to it (blender-<x.y>/<module>.json)."""
+    files = [p for p in _backends(root) if version is None or p.stem == f"blender-{version}"]
     if not files:
-        raise FileNotFoundError(f"no {root}/targets/backends/blender-*.json")
+        raise FileNotFoundError(f"no {root}/targets/backends/blender-{version or '*'}.json")
     backend = json.loads(files[-1].read_text(encoding="utf-8"))
     backend["stdlib"] = {p.stem: json.loads(p.read_text(encoding="utf-8"))
                          for p in sorted(files[-1].with_suffix("").glob("*.json"))}
     return backend
 
 
-def blender_target(name, backend):
-    kind, kinds = BLENDER[name], BLENDER_KINDS
-    nodes = backend["kinds"][kind]
-    types = sorted({s["type"] for n in nodes for s in n["inputs"] + n["outputs"]})
-    return {
-        "name": name,
-        "description": DESCRIPTIONS.get(name, f"Every {kind} node of Blender {{blender}}").format(
-            blender=backend["blender"]),
-        "kinds": kinds,
-        "types": types,
-        "zones": ZONES[kind],
-        "implicit": IMPLICIT,
-        "nodes": sorted(n["name"] for n in nodes),
-    }
+def blender_catalog(backend):
+    """The catalog of one version of Blender, targets/blender/<x.y>.json: for each kind of tree
+    its types, zones, implicit inputs and nodes."""
+    trees = {}
+    for kind in BLENDER_KINDS:
+        nodes = backend["kinds"][kind]
+        trees[kind] = {
+            "types": sorted({s["type"] for n in nodes for s in n["inputs"] + n["outputs"]}),
+            "zones": ZONES[kind],
+            "implicit": IMPLICIT,
+            "nodes": sorted(n["name"] for n in nodes),
+        }
+    return {"blender": backend["blender"], "trees": trees}
 
 
 def dump(data):
@@ -1393,16 +1698,17 @@ def dump(data):
 
 
 def sync(root):
-    """Rewrite the blender-* targets of `root`/targets from its backend. Returns the paths written."""
+    """Rewrite the catalogs of `blender` in `root`/targets/blender from its backends, one per
+    version of Blender. Returns the paths written."""
     written = []
-    backend = catalog(root)
-    for name in BLENDER:
-        p = root / "targets" / f"{name}.json"
-        old = json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {}
-        new = {**blender_target(name, backend), **{k: v for k, v in old.items()
-                                                   if k in ("translators", "bridges")}}
-        if old != new:
-            p.write_text(dump(new), encoding="utf-8")
+    for path in _backends(root):
+        backend = json.loads(path.read_text(encoding="utf-8"))
+        version = ".".join(backend["blender"].split(".")[:2])
+        p = root / "targets" / BLENDER / f"{version}.json"
+        new = dump(blender_catalog(backend))
+        if not p.is_file() or p.read_text(encoding="utf-8") != new:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(new, encoding="utf-8")
             written.append(p)
     return written
 

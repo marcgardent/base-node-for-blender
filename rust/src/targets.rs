@@ -2,13 +2,18 @@
 //!
 //! A target is one JSON file of `targets/`: the kinds of tree, types, zones and nodes a text may
 //! use there, and the translators that carry a text of another target to it. No target is defined
-//! from another. The Python package's `base_node/targets.py`, rule for rule.
+//! from another. The Python package's `python/base_node_blender/targets.py`, rule for rule.
 //!
 //! ```text
-//! check_target(&file, "gltf")                        -> the Issues outside gltf, [] when it fits
-//! infer(&file)                                       -> which targets accept it
-//! translate(&file, "blender-compositor", "blade")    -> the text renamed for blade
+//! check_target(&file, "blender gltf")       -> the Issues outside it, [] when it fits
+//! infer(&file)                              -> which targets accept it
+//! translate(&file, "blender", "blade")      -> the text renamed for blade
 //! ```
+//!
+//! `blender` is Blender's own, and has a catalog per version of Blender (`targets/blender/<x.y>.json`):
+//! `blender@5.3` is one version, `blender` every version `targets/blender.json` promises,
+//! `blender@lts` and `blender@latest` aliases for a command line. A word after it is a variant,
+//! the shader nodes one consumer accepts: `blender@5.3 gltf`, `blender eevee`.
 //!
 //! A graph a text calls brings its issues: those of the text, and of the modules it `use`s: the
 //! bridges of the target (modules shipped with it), the stdlib (built in, `crate::stdlib`), and
@@ -25,28 +30,36 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::ast::{
+use crate::stdlib;
+use base_node::ast::{
     key, Arg, AssignValue, Call, Expr, File, Graph, Param, ReturnValue, Stmt, Use as UseLine,
 };
-use crate::stdlib;
 
-/// Every target, as `targets/<name>.json`, sorted by name.
+/// The targets that are a file of their own, `targets/<name>.json`, sorted by name: every one but
+/// `blender`.
 const FILES: &[(&str, &str)] = &[
+    // One line per target
     ("blade", include_str!("../../targets/blade.json")),
-    (
-        "blender-compositor",
-        include_str!("../../targets/blender-compositor.json"),
-    ),
-    (
-        "blender-geometry",
-        include_str!("../../targets/blender-geometry.json"),
-    ),
-    ("blender-gp", include_str!("../../targets/blender-gp.json")),
-    (
-        "blender-shader",
-        include_str!("../../targets/blender-shader.json"),
-    ),
-    ("gltf", include_str!("../../targets/gltf.json")),
+];
+
+/// The target of Blender, `targets/blender.json`: the versions it promises, the LTS, the variants.
+const BLENDER: &str = "blender";
+const DECLARATION: &str = include_str!("../../targets/blender.json");
+/// The files of `targets/blender/` by name, listed by build.rs: the catalog of each version
+/// (`5.3`) and the variants (`gltf`).
+const BLENDER_FILES: &[(&str, &str)] = &include!(concat!(env!("OUT_DIR"), "/blender_files.rs"));
+/// The kinds of tree Blender has. A graph called from a graph of another kind is built in the
+/// caller's tree.
+const BLENDER_KINDS: [&str; 3] = ["geometry", "shader", "compositor"];
+/// The names a command line gives a version it does not write: refused in the `@target` of a text.
+const ALIASES: [&str; 2] = ["latest", "lts"];
+/// The targets of before the one `blender`, and what to write now.
+const RENAMED: [(&str, &str); 5] = [
+    ("blender-geometry", "blender"),
+    ("blender-gp", "blender"),
+    ("blender-shader", "blender"),
+    ("blender-compositor", "blender"),
+    ("gltf", "blender gltf"),
 ];
 
 /// The bridges of the targets, by their path in `targets/` (that of the target's `bridges`, which
@@ -72,7 +85,7 @@ const ARITHMETIC: [&str; 4] = ["+", "-", "*", "/"];
 const PRODUCTS: [&str; 5] = ["⋅", "×", "dot", "cross", "·"];
 const COMPARISONS: [&str; 6] = ["<", "<=", ">", ">=", "==", "!="];
 const LOGIC: [&str; 4] = ["and", "or", "xor", "not"];
-// The formulas written as functions (python/base_node/sugar.py)
+// The formulas written as functions (python/base_node_blender/sugar.py)
 const MATH_FUNCS: [&str; 28] = [
     "sin",
     "cos",
@@ -169,6 +182,19 @@ pub struct Translator {
     pub nodes: BTreeMap<String, NodeRename>,
 }
 
+/// What one kind of tree accepts, in a target that has several.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Tree {
+    #[serde(default)]
+    pub types: Vec<String>,
+    #[serde(default)]
+    pub zones: Vec<String>,
+    #[serde(default)]
+    pub implicit: Vec<String>,
+    #[serde(default)]
+    pub nodes: Vec<String>,
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Target {
     pub name: String,
@@ -219,6 +245,21 @@ pub struct Target {
     /// The nodes the destination reads one of: the last the material reaches.
     #[serde(default)]
     pub once: Vec<String>,
+    /// Of a target that has several kinds of tree, what each accepts. A graph is checked against
+    /// the tree of its kind, and the graphs it calls with it: they are built in that tree.
+    #[serde(default)]
+    pub trees: BTreeMap<String, Tree>,
+    /// Of a variant of `blender`: the nodes of its kinds it does not accept, each with where that
+    /// is said.
+    #[serde(default)]
+    pub without: BTreeMap<String, String>,
+    /// A variant whose list is not settled yet.
+    #[serde(default)]
+    pub experimental: bool,
+    /// Of a name that stands for several versions (`blender`): the target of each. A text fits
+    /// when it fits each of them. Not a field of the JSON.
+    #[serde(skip)]
+    pub members: Vec<Target>,
 }
 
 impl Target {
@@ -227,18 +268,300 @@ impl Target {
         serde_json::from_str(json).map_err(|e| e.to_string())
     }
 
-    fn allowed(&self, what: &str) -> &[String] {
+    /// Whether it accepts one of `names`, of a kind of thing. Of a target with a tree per kind:
+    /// the kinds a text's graph may be, those a called graph may be (it is built in the caller's
+    /// tree), and for the rest what the tree of kind `tree` has, or any tree for a kind the target
+    /// has no tree of.
+    fn accepts(&self, what: &str, tree: &str, called: bool, names: &[String]) -> bool {
+        let any = |list: &[String]| names.iter().any(|n| list.contains(n));
+        if !self.trees.is_empty() {
+            if what == "kind" {
+                return if called {
+                    names.iter().any(|n| BLENDER_KINDS.contains(&n.as_str()))
+                } else {
+                    any(&self.kinds)
+                };
+            }
+            let of = |t: &Tree| match what {
+                "type" => any(&t.types),
+                "zone" => any(&t.zones),
+                "implicit" => any(&t.implicit),
+                _ => any(&t.nodes),
+            };
+            return match self.trees.get(tree) {
+                Some(t) => of(t),
+                None => self.trees.values().any(of),
+            };
+        }
         match what {
-            "kind" => &self.kinds,
-            "type" => &self.types,
-            "zone" => &self.zones,
-            "implicit" => &self.implicit,
-            _ => &self.nodes,
+            "kind" => any(&self.kinds),
+            "type" => any(&self.types),
+            "zone" => any(&self.zones),
+            "implicit" => any(&self.implicit),
+            _ => any(&self.nodes),
         }
     }
 }
 
-fn targets() -> &'static [Target] {
+/// `targets/blender.json`.
+#[derive(Default, Deserialize)]
+struct Declaration {
+    #[serde(default)]
+    lts: Vec<String>,
+    #[serde(default)]
+    promised: Vec<String>,
+    #[serde(default)]
+    variants: Vec<String>,
+}
+
+/// `targets/blender/<x.y>.json`: what one version of Blender reports, by kind of tree.
+#[derive(Deserialize)]
+struct Catalog {
+    blender: String,
+    trees: BTreeMap<String, Tree>,
+}
+
+/// The `blender` target: the versions there is a catalog of (the oldest first), those promised,
+/// the LTS, the variants, and the target of each name a text may write.
+struct Blender {
+    versions: Vec<String>,
+    promised: Vec<String>,
+    lts: Vec<String>,
+    variants: Vec<String>,
+    names: Vec<String>,
+    targets: Vec<Target>,
+}
+
+fn version_number(version: &str) -> Vec<u32> {
+    version.split('.').filter_map(|x| x.parse().ok()).collect()
+}
+
+/// Whether `text` is a version of Blender as a catalog is named: `5.3`.
+fn is_version(text: &str) -> bool {
+    let digits = |x: &str| !x.is_empty() && x.chars().all(|c| c.is_ascii_digit());
+    text.split_once('.')
+        .is_some_and(|(a, b)| digits(a) && digits(b))
+}
+
+fn blender_file(name: &str) -> &'static str {
+    BLENDER_FILES
+        .iter()
+        .find(|(n, _)| *n == name)
+        .map(|(_, json)| *json)
+        .unwrap_or_else(|| panic!("no targets/blender/{name}.json"))
+}
+
+impl Blender {
+    fn read() -> Blender {
+        let d: Declaration = serde_json::from_str(DECLARATION)
+            .unwrap_or_else(|e| panic!("targets/blender.json is not the blender target: {e}"));
+        let by_number = |mut list: Vec<String>| {
+            list.sort_by_key(|v| version_number(v));
+            list
+        };
+        let versions = by_number(
+            BLENDER_FILES
+                .iter()
+                .filter(|(n, _)| is_version(n))
+                .map(|(n, _)| (*n).to_owned())
+                .collect(),
+        );
+        let mut variants = d.variants;
+        variants.sort();
+        let mut b = Blender {
+            versions,
+            promised: by_number(d.promised),
+            lts: by_number(d.lts),
+            variants,
+            names: Vec::new(),
+            targets: Vec::new(),
+        };
+        b.names = std::iter::once(BLENDER.to_owned())
+            .chain(b.versions.iter().map(|v| b.name(v)))
+            .collect();
+        let variants: Vec<Option<String>> = std::iter::once(None)
+            .chain(b.variants.iter().cloned().map(Some))
+            .collect();
+        for variant in &variants {
+            let variant = variant.as_deref();
+            let one: Vec<(String, Target)> = b
+                .versions
+                .iter()
+                .map(|v| (v.clone(), b.one(v, variant)))
+                .collect();
+            let members: Vec<Target> = one
+                .iter()
+                .filter(|(v, _)| b.promised.contains(v))
+                .map(|(_, t)| t.clone())
+                .collect();
+            b.targets.push(b.group(variant, members));
+            b.targets.extend(one.into_iter().map(|(_, t)| t));
+        }
+        b
+    }
+
+    /// A version as a text names it: an LTS says so.
+    fn name(&self, version: &str) -> String {
+        if self.lts.iter().any(|v| v == version) {
+            format!("{BLENDER}@{version}-lts")
+        } else {
+            format!("{BLENDER}@{version}")
+        }
+    }
+
+    /// The version `lts` or `latest` stands for today: the newest LTS, the newest catalog.
+    fn alias(&self, word: &str) -> Option<&str> {
+        let list = if word == "lts" {
+            &self.lts
+        } else {
+            &self.versions
+        };
+        list.last().map(String::as_str)
+    }
+
+    fn variant(name: &str) -> Target {
+        Target::from_json(blender_file(name))
+            .unwrap_or_else(|e| panic!("targets/blender/{name}.json is not a variant: {e}"))
+    }
+
+    /// The target of one version, whole or of a variant.
+    fn one(&self, version: &str, variant: Option<&str>) -> Target {
+        let catalog: Catalog = serde_json::from_str(blender_file(version))
+            .unwrap_or_else(|e| panic!("targets/blender/{version}.json is not a catalog: {e}"));
+        let Some(variant) = variant else {
+            return Target {
+                name: self.name(version),
+                description: format!("Every node of Blender {}, by kind of tree", catalog.blender),
+                kinds: BLENDER_KINDS
+                    .iter()
+                    .filter(|k| catalog.trees.contains_key(**k))
+                    .map(|k| (*k).to_owned())
+                    .collect(),
+                trees: catalog.trees,
+                ..Target::default()
+            };
+        };
+        let mut t = Blender::variant(variant);
+        t.name = format!("{} {variant}", self.name(version));
+        t.description = format!("{}, in Blender {}", t.description, catalog.blender);
+        if !t.nodes.is_empty() {
+            // A list of its own: the nodes of it this version has
+            let kinds = t.kinds.clone();
+            t.nodes.retain(|n| {
+                kinds
+                    .iter()
+                    .filter_map(|k| catalog.trees.get(k))
+                    .any(|tree| tree.nodes.contains(n))
+            });
+        } else {
+            for k in &t.kinds {
+                if let Some(tree) = catalog.trees.get(k) {
+                    let mut tree = tree.clone();
+                    tree.nodes.retain(|n| !t.without.contains_key(n));
+                    t.trees.insert(k.clone(), tree);
+                }
+            }
+        }
+        t
+    }
+
+    /// The target of every promised version, whole or of a variant.
+    fn group(&self, variant: Option<&str>, members: Vec<Target>) -> Target {
+        let said = match variant {
+            Some(v) => Blender::variant(v).description,
+            None => "Every node of Blender, by kind of tree".to_owned(),
+        };
+        Target {
+            name: match variant {
+                Some(v) => format!("{BLENDER} {v}"),
+                None => BLENDER.to_owned(),
+            },
+            description: format!(
+                "{said}, in every version of Blender this version of Base Node promises: {}",
+                self.promised.join(", ")
+            ),
+            kinds: members.first().map(|m| m.kinds.clone()).unwrap_or_default(),
+            experimental: members.first().is_some_and(|m| m.experimental),
+            members,
+            ..Target::default()
+        }
+    }
+
+    fn known(&self) -> String {
+        if self.versions.is_empty() {
+            "catalogs: none".to_owned()
+        } else {
+            format!("catalogs: {}", self.versions.join(", "))
+        }
+    }
+
+    /// Why `blender@version words` names no target, none when it names one.
+    fn refusal(&self, version: Option<&str>, words: &[&str]) -> Option<Refusal> {
+        if words.len() > 1 {
+            return Some(Refusal::Unknown(Some(format!(
+                "one variant after the target, as '{BLENDER} {}'",
+                words[0]
+            ))));
+        }
+        if words
+            .first()
+            .is_some_and(|w| !self.variants.iter().any(|v| v == w))
+        {
+            return Some(Refusal::Unknown(None));
+        }
+        let version = version?;
+        let number = if ALIASES.contains(&version) {
+            match self.alias(version) {
+                Some(n) => n,
+                None => {
+                    return Some(Refusal::Catalog(format!(
+                        "no LTS of Blender in this version of Base Node ({})",
+                        self.known()
+                    )))
+                }
+            }
+        } else {
+            let number = version.strip_suffix("-lts").unwrap_or(version);
+            if !is_version(number) {
+                return Some(Refusal::Unknown(None));
+            }
+            number
+        };
+        if !self.versions.iter().any(|v| v == number) {
+            return Some(Refusal::Catalog(format!(
+                "no catalog for Blender {number} in this version of Base Node ({})",
+                self.known()
+            )));
+        }
+        if !ALIASES.contains(&version) && format!("{BLENDER}@{version}") != self.name(number) {
+            let lts = if self.lts.iter().any(|v| v == number) {
+                "an LTS"
+            } else {
+                "not an LTS"
+            };
+            return Some(Refusal::Unknown(Some(format!(
+                "Blender {number} is {lts}: write '{}'",
+                self.name(number)
+            ))));
+        }
+        None
+    }
+}
+
+/// Why a name names no target: it is unknown (with what to write, when that is known), or the
+/// version it names has no catalog.
+enum Refusal {
+    Unknown(Option<String>),
+    Catalog(String),
+}
+
+fn blender() -> &'static Blender {
+    static ALL: OnceLock<Blender> = OnceLock::new();
+    ALL.get_or_init(Blender::read)
+}
+
+/// The targets that are a file of their own: every one but `blender`.
+fn others() -> &'static [Target] {
     static ALL: OnceLock<Vec<Target>> = OnceLock::new();
     ALL.get_or_init(|| {
         FILES
@@ -251,9 +574,134 @@ fn targets() -> &'static [Target] {
     })
 }
 
-/// Every target, sorted.
+/// Every target a name may stand for.
+fn targets() -> impl Iterator<Item = &'static Target> {
+    others().iter().chain(blender().targets.iter())
+}
+
+fn sorted(mut names: Vec<&'static str>) -> Vec<&'static str> {
+    names.sort();
+    names
+}
+
+/// Every target, sorted: `blender` and each of its versions among them, without their variants.
 pub fn target_names() -> Vec<&'static str> {
-    targets().iter().map(|t| t.name.as_str()).collect()
+    sorted(
+        others()
+            .iter()
+            .map(|t| t.name.as_str())
+            .chain(blender().names.iter().map(String::as_str))
+            .collect(),
+    )
+}
+
+/// The variants of `blender`, sorted: a word after the target, as `blender gltf`.
+pub fn variant_names() -> Vec<&'static str> {
+    blender().variants.iter().map(String::as_str).collect()
+}
+
+/// Every name a text may promise, sorted: the targets, and `blender` with each variant.
+pub fn promise_names() -> Vec<&'static str> {
+    sorted(targets().map(|t| t.name.as_str()).collect())
+}
+
+/// The targets an inference tries, sorted: `blender` as the versions promised, whole and by
+/// variant, and the others.
+pub fn inferred_names() -> Vec<&'static str> {
+    sorted(
+        targets()
+            .map(|t| t.name.as_str())
+            .filter(|n| !n.contains('@'))
+            .collect(),
+    )
+}
+
+/// A target as it is written: a name, a version after `@`, words after a space. What they mean
+/// is the target's to say.
+fn spelling(name: &str) -> Option<(&str, Option<&str>, Vec<&str>)> {
+    let word = |w: &str, more: &str| {
+        !w.is_empty()
+            && w.chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || more.contains(c))
+    };
+    let mut parts = name.split(' ');
+    let head = parts.next()?;
+    let words: Vec<&str> = parts.collect();
+    if !words.iter().all(|w| word(w, "_-")) {
+        return None;
+    }
+    let (name, version) = match head.split_once('@') {
+        Some((n, v)) => (n, Some(v)),
+        None => (head, None),
+    };
+    let bare = word(name, "_-") && !name.starts_with(['_', '-']);
+    let versioned = version.is_none_or(|v| {
+        !v.is_empty()
+            && v.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+    });
+    (bare && versioned).then_some((name, version, words))
+}
+
+fn refusal(name: &str) -> Option<Refusal> {
+    let mut hint = None;
+    match spelling(name) {
+        Some((BLENDER, version, words)) => match blender().refusal(version, &words) {
+            Some(Refusal::Unknown(h)) => hint = h,
+            other => return other,
+        },
+        Some((n, None, words)) if words.is_empty() && others().iter().any(|t| t.name == n) => {
+            return None
+        }
+        _ => {}
+    }
+    if let Some((_, now)) = RENAMED.iter().find(|(old, _)| *old == name) {
+        hint = Some(format!("'{name}' is now '{now}'"));
+    }
+    Some(Refusal::Unknown(hint))
+}
+
+/// The targets there are, as a message lists them, with what to write for `hint`.
+fn listed(hint: Option<String>) -> String {
+    let mut said = target_names().join(", ");
+    if !blender().variants.is_empty() {
+        said += &format!(
+            "; variants of {BLENDER}, written after it: {}",
+            blender().variants.join(", ")
+        );
+    }
+    if let Some(hint) = hint {
+        said += &format!("; {hint}");
+    }
+    said
+}
+
+/// Why a text may not promise `name` in its `@target`, none when it may: what follows
+/// `@target '<name>': ` in the message. An alias is the command line's.
+pub fn promise_refusal(name: &str) -> Option<String> {
+    if let Some((BLENDER, Some(version), words)) = spelling(name) {
+        if ALIASES.contains(&version) {
+            let b = blender();
+            let write = match b
+                .alias(version)
+                .filter(|n| b.versions.iter().any(|v| v == n))
+            {
+                Some(number) => {
+                    let words: String = words.iter().map(|w| format!(" {w}")).collect();
+                    format!(": write the version, '{}{words}'", b.name(number))
+                }
+                None => String::new(),
+            };
+            return Some(format!(
+                "an alias, for a command line: the version it names changes with each release \
+                 of Blender, and the promise of the text would change with it{write}"
+            ));
+        }
+    }
+    match refusal(name)? {
+        Refusal::Unknown(hint) => Some(format!("one of {}", listed(hint))),
+        Refusal::Catalog(why) => Some(why),
+    }
 }
 
 /// A name that is not a target's.
@@ -262,22 +710,33 @@ pub struct UnknownTarget(pub String);
 
 impl fmt::Display for UnknownTarget {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "unknown target '{}'; targets: {}",
-            self.0,
-            target_names().join(", ")
-        )
+        match refusal(&self.0) {
+            Some(Refusal::Catalog(why)) => write!(f, "target '{}': {why}", self.0),
+            Some(Refusal::Unknown(hint)) => {
+                write!(f, "unknown target '{}'; targets: {}", self.0, listed(hint))
+            }
+            None => write!(f, "unknown target '{}'; targets: {}", self.0, listed(None)),
+        }
     }
 }
 
 impl std::error::Error for UnknownTarget {}
 
-/// The target `name`.
+/// The target `name`: of `blender`, one version, every promised one, or the one an alias names.
 pub fn load_target(name: &str) -> Result<&'static Target, UnknownTarget> {
+    let mut wanted = name.to_owned();
+    if let Some((BLENDER, Some(version), words)) = spelling(name) {
+        if let Some(number) = ALIASES
+            .contains(&version)
+            .then(|| blender().alias(version))
+            .flatten()
+        {
+            let words: String = words.iter().map(|w| format!(" {w}")).collect();
+            wanted = format!("{}{words}", blender().name(number));
+        }
+    }
     targets()
-        .iter()
-        .find(|t| t.name == name)
+        .find(|t| t.name == wanted)
         .ok_or_else(|| UnknownTarget(name.to_owned()))
 }
 
@@ -345,6 +804,15 @@ enum Found {
     Zone,
 }
 
+/// A call with a body is a zone when its name is one's; else a call no target knows.
+fn zone_or_call(name: &str) -> Found {
+    if crate::zones::call_word(name).is_some() {
+        Found::Zone
+    } else {
+        Found::Call
+    }
+}
+
 struct Walk(Vec<(Found, String, usize, usize)>);
 
 impl Walk {
@@ -362,27 +830,15 @@ impl Walk {
         match s {
             Stmt::Assign(a) => match &a.value {
                 AssignValue::Expr(e) => self.expr(e),
-                AssignValue::Repeat(z) => {
-                    self.push(Found::Zone, "repeat", z.line, z.col);
-                    self.expr(&z.count);
-                    self.args(&z.states);
+                AssignValue::BodyCall(z) => {
+                    self.push(zone_or_call(&z.name), &z.name, z.line, z.col);
+                    self.args(&z.args);
                     self.stmts(&z.body);
                 }
-                AssignValue::Closure(z) => {
+                AssignValue::NamelessGraph(z) => {
                     self.push(Found::Zone, "closure", z.line, z.col);
                     self.params(&z.params);
                     self.params(&z.outputs);
-                    self.stmts(&z.body);
-                }
-                AssignValue::Simulate(z) => {
-                    self.push(Found::Zone, "simulate", z.line, z.col);
-                    self.args(&z.states);
-                    self.stmts(&z.body);
-                }
-                AssignValue::Foreach(z) => {
-                    self.push(Found::Zone, "foreach", z.line, z.col);
-                    self.expr(&z.geometry);
-                    self.args(&z.args);
                     self.stmts(&z.body);
                 }
             },
@@ -512,7 +968,7 @@ fn local_names(file: &File, find: &dyn Fn(&str) -> Option<Rc<File>>) -> Local {
 pub fn uses(graph: &Graph, file: &File) -> Vec<Use> {
     let modules = Modules::new(None);
     let local = local_names(file, &|n| modules.get(n));
-    uses_of(graph, &local)
+    uses_of(graph, &local, &graph.kind)
 }
 
 /// The names the statements bind, in frames and zones too.
@@ -523,10 +979,8 @@ fn assigned(body: &[Stmt], out: &mut HashSet<String>) {
                 out.insert(a.name.clone());
                 match &a.value {
                     AssignValue::Expr(_) => {}
-                    AssignValue::Repeat(z) => assigned(&z.body, out),
-                    AssignValue::Closure(z) => assigned(&z.body, out),
-                    AssignValue::Simulate(z) => assigned(&z.body, out),
-                    AssignValue::Foreach(z) => assigned(&z.body, out),
+                    AssignValue::BodyCall(z) => assigned(&z.body, out),
+                    AssignValue::NamelessGraph(z) => assigned(&z.body, out),
                 }
             }
             Stmt::Frame(f) => assigned(&f.body, out),
@@ -535,7 +989,9 @@ fn assigned(body: &[Stmt], out: &mut HashSet<String>) {
     }
 }
 
-fn uses_of(graph: &Graph, local: &Local) -> Vec<Use> {
+/// What `graph` needs of a target. `tree` is the kind of the tree it is built in: a ternary is the
+/// node of that tree.
+fn uses_of(graph: &Graph, local: &Local, tree: &str) -> Vec<Use> {
     let mut out = vec![Use::new("kind", &[&graph.kind], graph.line, graph.col)];
     // The parser opens the panels: these are every input and output
     let params = &graph.params;
@@ -568,7 +1024,7 @@ fn uses_of(graph: &Graph, local: &Local) -> Vec<Use> {
                     &["BooleanMath"]
                 } else if n == "?" {
                     // A Switch where it chooses for each element, else a Mix by the condition
-                    if graph.kind == "geometry" {
+                    if tree == "geometry" {
                         &["Switch"]
                     } else {
                         &["Mix", "MixShader"]
@@ -646,7 +1102,7 @@ impl<'a> Modules<'a> {
             .entry(path.clone())
             .or_insert_with(|| {
                 let (_, text) = BRIDGES.iter().find(|(p, _)| p == path)?;
-                crate::parse(text, path).ok().map(Rc::new)
+                base_node::parse(text, path).ok().map(Rc::new)
             })
             .clone()
     }
@@ -698,13 +1154,24 @@ fn graph_issues_in(
     target: &Target,
     modules: &Modules,
     seen: &HashSet<(usize, usize)>,
+    tree: Option<&str>,
 ) -> Vec<Issue> {
+    if !target.members.is_empty() {
+        let per = target
+            .members
+            .iter()
+            .map(|m| graph_issues_in(file, at, m, modules, seen, tree))
+            .collect();
+        return every(target, per);
+    }
     let graph = &file.graphs[at];
     let local = local_names(file, &|n| modules.find(target, n));
+    // The tree it is built in: its own, or its caller's
+    let called = tree.is_some();
+    let tree = tree.unwrap_or(&graph.kind);
     let mut out = Vec::new();
-    for u in uses_of(graph, &local) {
-        let allowed = target.allowed(u.what);
-        if !u.names.iter().any(|n| allowed.contains(n)) {
+    for u in uses_of(graph, &local, tree) {
+        if !target.accepts(u.what, tree, called, &u.names) {
             out.push(Issue {
                 graph: graph.name.clone(),
                 what: u.what.to_owned(),
@@ -724,7 +1191,7 @@ fn graph_issues_in(
             continue;
         }
         // Its links are read where it is called, through the values the call gives
-        let inner: Vec<Issue> = graph_issues_in(&f, i, target, modules, &seen)
+        let inner: Vec<Issue> = graph_issues_in(&f, i, target, modules, &seen, Some(tree))
             .into_iter()
             .filter(|i| i.what != "link")
             .collect();
@@ -742,9 +1209,32 @@ fn graph_issues_in(
     out
 }
 
+/// The issues of the versions of `target`, each once: one that every version has is the
+/// target's, one that some have is each of theirs.
+fn every(target: &Target, per: Vec<Vec<Issue>>) -> Vec<Issue> {
+    let same = |a: &Issue, b: &Issue| {
+        (&a.graph, &a.what, &a.name, a.line, a.col) == (&b.graph, &b.what, &b.name, b.line, b.col)
+    };
+    let shared = |i: &Issue| per.iter().all(|issues| issues.iter().any(|j| same(i, j)));
+    let mut out = Vec::new();
+    for (n, issues) in per.iter().enumerate() {
+        for i in issues {
+            if !shared(i) {
+                out.push(i.clone());
+            } else if n == 0 {
+                out.push(Issue {
+                    target: target.name.clone(),
+                    ..i.clone()
+                });
+            }
+        }
+    }
+    out
+}
+
 fn issues_of(file: &Rc<File>, target: &Target, modules: &Modules) -> Vec<Issue> {
     (0..file.graphs.len())
-        .flat_map(|i| graph_issues_in(file, i, target, modules, &HashSet::new()))
+        .flat_map(|i| graph_issues_in(file, i, target, modules, &HashSet::new(), None))
         .collect()
 }
 
@@ -761,6 +1251,7 @@ pub fn graph_issues(
         target,
         &Modules::new(resolve),
         &HashSet::new(),
+        None,
     )
 }
 
@@ -781,6 +1272,21 @@ pub fn check_target_with(
 /// The Issues of the text outside a target of its own (`Target::from_json`).
 pub fn check_against(file: &File, target: &Target, resolve: Option<Resolver>) -> Vec<Issue> {
     issues_of(&Rc::new(file.clone()), target, &Modules::new(resolve))
+}
+
+/// The kinds of tree of `target` every graph of the text builds in, as a graph of that kind calls
+/// it: a text of math builds in a geometry tree and in the compositor, whatever its graphs are
+/// declared as; one that scatters points, in a geometry tree only.
+pub fn tree_kinds(file: &File, target: &str) -> Result<Vec<String>, UnknownTarget> {
+    let target = load_target(target)?;
+    let file = Rc::new(file.clone());
+    let modules = Modules::new(None);
+    let builds = |kind: &str| {
+        (0..file.graphs.len()).all(|i| {
+            graph_issues_in(&file, i, target, &modules, &HashSet::new(), Some(kind)).is_empty()
+        })
+    };
+    Ok(target.kinds.iter().filter(|k| builds(k)).cloned().collect())
 }
 
 /// The Issues of the graphs that fit none of `targets` (a text may promise several, one per graph).
@@ -812,7 +1318,7 @@ fn check_targets_in(
     for i in 0..file.graphs.len() {
         let per: Vec<Vec<Issue>> = targets
             .iter()
-            .map(|t| graph_issues_in(&file, i, t, &modules, &HashSet::new()))
+            .map(|t| graph_issues_in(&file, i, t, &modules, &HashSet::new(), None))
             .collect();
         if !per.is_empty() && per.iter().all(|p| !p.is_empty()) {
             // The first of the shortest, as Python's min
@@ -833,8 +1339,8 @@ fn check_targets_in(
 const TIMES: &str = "×";
 /// The inputs of a Material Output, which a material's return feeds.
 const MATERIAL_SOCKETS: [&str; 4] = ["surface", "volume", "displacement", "thickness"];
-/// The inputs text names by a key of their own (python/base_node/schema.py, INPUT_KEYS): Blender's
-/// identifier, which a call may still write, is read as that key.
+/// The inputs text names by a key of their own (python/base_node_blender/schema.py, INPUT_KEYS):
+/// Blender's identifier, which a call may still write, is read as that key.
 fn identifier_key<'a>(node: &str, name: &'a str) -> &'a str {
     match (node, name) {
         ("MixShader" | "AddShader", "Shader") => "a",
@@ -843,7 +1349,7 @@ fn identifier_key<'a>(node: &str, name: &'a str) -> &'a str {
     }
 }
 
-/// The operation a formula writes (python/base_node/sugar.py).
+/// The operation a formula writes (python/base_node_blender/sugar.py).
 const BINOPS: [(&str, &str); 4] = [
     ("+", "ADD"),
     ("-", "SUBTRACT"),
@@ -914,7 +1420,7 @@ fn pattern(text: &str) -> (&str, Vec<&str>) {
 /// The expression a pattern of a target writes, parsed.
 fn expression(text: &str) -> Option<Expr> {
     let src = format!("shader graph pattern() -> Float {{\n  return {text}\n}}\n");
-    let file = crate::parse(&src, "<pattern>").ok()?;
+    let file = base_node::parse(&src, "<pattern>").ok()?;
     match file.graphs.first()?.body.last()? {
         Stmt::Return(r) => match &r.value {
             ReturnValue::Expr(e) => Some(e.clone()),
@@ -992,23 +1498,13 @@ impl<'a> Calls<'a> {
             match s {
                 Stmt::Assign(a) => match &a.value {
                     AssignValue::Expr(e) => self.expr(e),
-                    AssignValue::Repeat(z) => {
-                        self.expr(&z.count);
-                        self.args(&z.states);
+                    AssignValue::BodyCall(z) => {
+                        self.args(&z.args);
                         self.stmts(&z.body);
                     }
-                    AssignValue::Closure(z) => {
+                    AssignValue::NamelessGraph(z) => {
                         self.params(&z.params);
                         self.params(&z.outputs);
-                        self.stmts(&z.body);
-                    }
-                    AssignValue::Simulate(z) => {
-                        self.args(&z.states);
-                        self.stmts(&z.body);
-                    }
-                    AssignValue::Foreach(z) => {
-                        self.expr(&z.geometry);
-                        self.args(&z.args);
                         self.stmts(&z.body);
                     }
                 },
@@ -1156,19 +1652,11 @@ fn bound<'a>(body: &'a [Stmt], out: &mut HashMap<&'a str, Option<&'a Expr>>) {
                 AssignValue::Expr(e) => {
                     out.insert(&a.name, Some(e));
                 }
-                AssignValue::Repeat(z) => {
+                AssignValue::BodyCall(z) => {
                     out.insert(&a.name, None);
                     bound(&z.body, out);
                 }
-                AssignValue::Closure(z) => {
-                    out.insert(&a.name, None);
-                    bound(&z.body, out);
-                }
-                AssignValue::Simulate(z) => {
-                    out.insert(&a.name, None);
-                    bound(&z.body, out);
-                }
-                AssignValue::Foreach(z) => {
+                AssignValue::NamelessGraph(z) => {
                     out.insert(&a.name, None);
                     bound(&z.body, out);
                 }
@@ -2013,21 +2501,11 @@ impl Inline<'_, '_> {
             match s {
                 Stmt::Assign(a) => match &mut a.value {
                     AssignValue::Expr(e) => self.expr(e, f, depth),
-                    AssignValue::Repeat(z) => {
-                        self.expr(&mut z.count, f, depth);
-                        self.args(&mut z.states, f, depth);
-                        self.stmts(&mut z.body, f, depth);
-                    }
-                    AssignValue::Closure(z) => self.stmts(&mut z.body, f, depth),
-                    AssignValue::Simulate(z) => {
-                        self.args(&mut z.states, f, depth);
-                        self.stmts(&mut z.body, f, depth);
-                    }
-                    AssignValue::Foreach(z) => {
-                        self.expr(&mut z.geometry, f, depth);
+                    AssignValue::BodyCall(z) => {
                         self.args(&mut z.args, f, depth);
                         self.stmts(&mut z.body, f, depth);
                     }
+                    AssignValue::NamelessGraph(z) => self.stmts(&mut z.body, f, depth),
                 },
                 Stmt::Return(r) => match &mut r.value {
                     ReturnValue::Expr(e) => self.expr(e, f, depth),
@@ -2049,7 +2527,7 @@ impl Inline<'_, '_> {
         matches!(e, Expr::Call(c) if self.finder(f).contains_key(&c.name))
     }
 
-    fn pipe_call(&mut self, p: &crate::ast::Pipe, f: &Rc<File>) -> bool {
+    fn pipe_call(&mut self, p: &base_node::ast::Pipe, f: &Rc<File>) -> bool {
         match &*p.call {
             Expr::Member(m) => self.graph_call(&m.target, f),
             other => self.graph_call(other, f),
@@ -2172,7 +2650,7 @@ impl Inline<'_, '_> {
                 .or_else(|| positional.get(i).cloned());
             if node.is_some() {
                 let v = given.or_else(|| p.default.clone()).unwrap_or(Expr::Number(
-                    crate::ast::Number {
+                    base_node::ast::Number {
                         value: 0.0,
                         is_int: false,
                         line: call.line,
@@ -2196,7 +2674,7 @@ impl Inline<'_, '_> {
                 continue;
             }
             let v = given.or_else(|| p.default.clone()).unwrap_or_else(|| {
-                Expr::Ref(crate::ast::Ref {
+                Expr::Ref(base_node::ast::Ref {
                     name: format!("{k}@{n}"),
                     line: call.line,
                     col: call.col,
@@ -2306,10 +2784,8 @@ fn rename_assigns(body: &mut [Stmt], names: &HashMap<String, String>) {
                 }
                 match &mut a.value {
                     AssignValue::Expr(_) => {}
-                    AssignValue::Repeat(z) => rename_assigns(&mut z.body, names),
-                    AssignValue::Closure(z) => rename_assigns(&mut z.body, names),
-                    AssignValue::Simulate(z) => rename_assigns(&mut z.body, names),
-                    AssignValue::Foreach(z) => rename_assigns(&mut z.body, names),
+                    AssignValue::BodyCall(z) => rename_assigns(&mut z.body, names),
+                    AssignValue::NamelessGraph(z) => rename_assigns(&mut z.body, names),
                 }
             }
             Stmt::Frame(f) => rename_assigns(&mut f.body, names),
@@ -2369,21 +2845,11 @@ fn for_exprs(body: &mut [Stmt], each: &mut dyn FnMut(&mut Expr)) {
         match s {
             Stmt::Assign(a) => match &mut a.value {
                 AssignValue::Expr(e) => each(e),
-                AssignValue::Repeat(z) => {
-                    each(&mut z.count);
-                    args(&mut z.states, each);
-                    for_exprs(&mut z.body, each);
-                }
-                AssignValue::Closure(z) => for_exprs(&mut z.body, each),
-                AssignValue::Simulate(z) => {
-                    args(&mut z.states, each);
-                    for_exprs(&mut z.body, each);
-                }
-                AssignValue::Foreach(z) => {
-                    each(&mut z.geometry);
+                AssignValue::BodyCall(z) => {
                     args(&mut z.args, each);
                     for_exprs(&mut z.body, each);
                 }
+                AssignValue::NamelessGraph(z) => for_exprs(&mut z.body, each),
             },
             Stmt::Return(r) => match &mut r.value {
                 ReturnValue::Expr(e) => each(e),
@@ -2416,6 +2882,14 @@ fn inlined(file: &Rc<File>, at: usize, target: &Target, modules: &Modules) -> Gr
 /// reads through a group, and a material's return feeds its Material Output. A target without
 /// rules refuses none.
 pub fn link_issues(file: &File, at: usize, target: &Target) -> Vec<Issue> {
+    if !target.members.is_empty() {
+        let per = target
+            .members
+            .iter()
+            .map(|m| link_issues(file, at, m))
+            .collect();
+        return every(target, per);
+    }
     let modules = Modules::new(None);
     let local = local_names(file, &|n| modules.find(target, n));
     let file = Rc::new(file.clone());
@@ -2508,7 +2982,7 @@ fn math_comparisons(e: &mut Expr) {
     };
     let (line, col) = (b.line, b.col);
     let number = |value: f64| {
-        Expr::Number(crate::ast::Number {
+        Expr::Number(base_node::ast::Number {
             value,
             is_int: false,
             line,
@@ -2528,7 +3002,7 @@ fn math_comparisons(e: &mut Expr) {
     if operation == "COMPARE" {
         args.push(arg(None, number(EPSILON)));
     }
-    let setting = Expr::Ref(crate::ast::Ref {
+    let setting = Expr::Ref(base_node::ast::Ref {
         name: operation.to_owned(),
         line,
         col,
@@ -2544,7 +3018,7 @@ fn math_comparisons(e: &mut Expr) {
         type_args: None,
     });
     *e = if negated {
-        Expr::BinOp(crate::ast::BinOp {
+        Expr::BinOp(base_node::ast::BinOp {
             op: "-".to_owned(),
             left: Box::new(number(1.0)),
             right: Box::new(call),
@@ -2846,7 +3320,7 @@ fn translation_issues_in(
     };
     let mut out = Vec::new();
     for g in &file.graphs {
-        for u in uses_of(g, &local) {
+        for u in uses_of(g, &local, &g.kind) {
             let ok = match u.what {
                 "kind" => tr.kinds.contains_key(&g.kind) || t.kinds.contains(&g.kind),
                 "node" => match u.names.iter().find_map(|n| tr.nodes.get(n)) {
@@ -2866,7 +3340,7 @@ fn translation_issues_in(
                     }
                     Some(_) => true,
                 },
-                what => u.names.iter().any(|n| t.allowed(what).contains(n)),
+                what => t.accepts(what, &g.kind, false, &u.names),
             };
             if !ok {
                 out.push(issue(g, u.what, u.name(), &u));
@@ -2882,7 +3356,14 @@ fn bridge_issues(name: &str, target: &Target, modules: &Modules) -> Option<Vec<I
     let (module, k) = name.split_once("::")?;
     let m = modules.bridge(target, module)?;
     let at = m.graphs.iter().position(|g| key(&g.name) == k)?;
-    Some(graph_issues_in(&m, at, target, modules, &HashSet::new()))
+    Some(graph_issues_in(
+        &m,
+        at,
+        target,
+        modules,
+        &HashSet::new(),
+        None,
+    ))
 }
 
 /// Whether a check against `target` follows the module `name` of a `use`: a bridge of the target
@@ -2948,21 +3429,11 @@ fn rename_stmts(body: &mut [Stmt], tr: &Translator, bridged: &mut Bridged) {
         match s {
             Stmt::Assign(a) => match &mut a.value {
                 AssignValue::Expr(e) => rename_expr(e, tr, bridged),
-                AssignValue::Repeat(z) => {
-                    rename_expr(&mut z.count, tr, bridged);
-                    rename_args(&mut z.states, tr, bridged);
-                    rename_stmts(&mut z.body, tr, bridged);
-                }
-                AssignValue::Closure(z) => rename_stmts(&mut z.body, tr, bridged),
-                AssignValue::Simulate(z) => {
-                    rename_args(&mut z.states, tr, bridged);
-                    rename_stmts(&mut z.body, tr, bridged);
-                }
-                AssignValue::Foreach(z) => {
-                    rename_expr(&mut z.geometry, tr, bridged);
+                AssignValue::BodyCall(z) => {
                     rename_args(&mut z.args, tr, bridged);
                     rename_stmts(&mut z.body, tr, bridged);
                 }
+                AssignValue::NamelessGraph(z) => rename_stmts(&mut z.body, tr, bridged),
             },
             Stmt::Return(r) => match &mut r.value {
                 ReturnValue::Expr(e) => rename_expr(e, tr, bridged),
@@ -3083,7 +3554,15 @@ fn infer_in(file: &File, resolve: Option<Resolver>) -> Inference {
     let file = Rc::new(file.clone());
     let modules = Modules::new(resolve);
     let mut inf = Inference::default();
-    for t in targets() {
+    // A variant of `blender` narrows the trees of some kinds (shaders, for each of today's): it is
+    // tried only for a text that holds a graph of one of them. For another text it would only say
+    // that the kind is not its own.
+    let tried: Vec<&Target> = inferred_names()
+        .into_iter()
+        .filter_map(|n| load_target(n).ok())
+        .filter(|t| !t.name.contains(' ') || file.graphs.iter().any(|g| t.kinds.contains(&g.kind)))
+        .collect();
+    for t in &tried {
         let issues = issues_of(&file, t, &modules);
         if issues.is_empty() {
             inf.fits.insert(t.name.clone(), None);
@@ -3114,9 +3593,11 @@ fn infer_in(file: &File, resolve: Option<Resolver>) -> Inference {
         .iter()
         .enumerate()
         .map(|(i, g)| {
-            let fit = targets()
+            let fit = tried
                 .iter()
-                .filter(|t| graph_issues_in(&file, i, t, &modules, &HashSet::new()).is_empty())
+                .filter(|t| {
+                    graph_issues_in(&file, i, t, &modules, &HashSet::new(), None).is_empty()
+                })
                 .map(|t| t.name.clone())
                 .collect();
             (g.name.clone(), fit)
@@ -3130,9 +3611,74 @@ mod tests {
     use super::*;
 
     #[test]
+    fn an_issue_every_version_has_is_the_target_s_another_the_version_s() {
+        // Two versions, as `blender` will hold with the catalog of Blender 5.2: the older has no Kuwahara
+        let newer = load_target("blender@5.3").unwrap().clone();
+        let mut older = newer.clone();
+        older.name = "blender@5.2-lts".to_owned();
+        let compositor = older.trees.get_mut("compositor").unwrap();
+        compositor.nodes.retain(|n| n != "Kuwahara");
+        let both = Target {
+            name: "blender".to_owned(),
+            kinds: newer.kinds.clone(),
+            members: vec![older, newer],
+            ..Target::default()
+        };
+        let f = base_node::parse(
+            "compositor graph g(image: Color) -> Color {\n  return Kuwahara(Cube(image))\n}\n",
+            "t.bn",
+        )
+        .unwrap();
+        let said: Vec<(String, String)> = check_against(&f, &both, None)
+            .into_iter()
+            .map(|i| (i.name, i.target))
+            .collect();
+        assert_eq!(
+            said,
+            [
+                ("Kuwahara".to_owned(), "blender@5.2-lts".to_owned()),
+                ("Cube".to_owned(), "blender".to_owned())
+            ]
+        );
+    }
+
+    #[test]
+    fn a_version_as_a_text_names_it() {
+        let b = Blender {
+            versions: vec!["5.2".to_owned(), "5.3".to_owned()],
+            promised: vec!["5.2".to_owned(), "5.3".to_owned()],
+            lts: vec!["5.2".to_owned()],
+            variants: vec!["gltf".to_owned()],
+            names: Vec::new(),
+            targets: Vec::new(),
+        };
+        assert_eq!(b.name("5.2"), "blender@5.2-lts");
+        assert_eq!(b.name("5.3"), "blender@5.3");
+        assert_eq!(
+            (b.alias("lts"), b.alias("latest")),
+            (Some("5.2"), Some("5.3"))
+        );
+        assert!(
+            b.refusal(Some("5.2-lts"), &[]).is_none()
+                && b.refusal(Some("lts"), &["gltf"]).is_none()
+        );
+        let hint = |version: &str| match b.refusal(Some(version), &[]) {
+            Some(Refusal::Unknown(hint)) => hint,
+            _ => None,
+        };
+        assert_eq!(
+            hint("5.2").as_deref(),
+            Some("Blender 5.2 is an LTS: write 'blender@5.2-lts'")
+        );
+        assert_eq!(
+            hint("5.3-lts").as_deref(),
+            Some("Blender 5.3 is not an LTS: write 'blender@5.3'")
+        );
+    }
+
+    #[test]
     fn the_bridges_of_every_target_are_built_in_and_parse() {
         let mut paths: Vec<&str> = targets()
-            .iter()
             .flat_map(|t| t.bridges.iter().map(String::as_str))
             .collect();
         paths.sort();
@@ -3141,7 +3687,7 @@ mod tests {
         for (path, text) in BRIDGES {
             let on_disk = format!("{}/../targets/{path}", env!("CARGO_MANIFEST_DIR"));
             assert!(std::path::Path::new(&on_disk).is_file(), "{path}");
-            assert!(crate::parse(text, path).is_ok(), "{path}");
+            assert!(base_node::parse(text, path).is_ok(), "{path}");
         }
     }
 }
