@@ -10,6 +10,8 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ## [Unreleased]
 
+## [1.0.0-rc.9] - 2026-11-23
+
 ### Blender add-on
 
 - Changed, a text needs an edit: a setting by position goes to the one enum setting of the node
