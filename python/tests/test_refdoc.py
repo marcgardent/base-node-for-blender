@@ -5,7 +5,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 from base_node_blender.cli import main
-from base_node.manifest import manifest
+from base_node_blender.manifest import manifest
 from base_node_blender.refdoc import cells, highlight, markdown, slug
 
 ROOT = Path(__file__).resolve().parents[2]

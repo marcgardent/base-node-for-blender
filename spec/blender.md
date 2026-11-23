@@ -1,6 +1,6 @@
 # Base Node for Blender
 
-The language as Blender reads it: what the [reference](../../../spec/reference.md) leaves to the
+The language as Blender reads it: what the [reference](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md) leaves to the
 host, for Blender's node trees. Each numbered section completes the section of the reference of the
 same number. The library (`base_node_blender`: the nodes, the checker, `base-node check`) and the
 add-on hold a text to these rules; what each destination accepts is in [targets](targets.md), ways of
@@ -10,7 +10,7 @@ writing a graph in [idioms](idioms.md).
 
 ## 1. File Structure
 
-A `use` finds its module ([reference, 1](../../../spec/reference.md#1-file-structure)):
+A `use` finds its module ([reference, 1](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#1-file-structure)):
 
 - Without `from`, Blender looks for the text `math.bn` of the .blend, then `math.bn` next to the imported file, then in the *Module Folder* of the add-on preferences, then in the standard library bundled with the add-on.
 - With `from`, a path relative to the .blend starts with `//`, as elsewhere in Blender (`use math from "//lib/math.bn"`), and `{project_root}` is the root of the Blender project of the .blend (the nearest parent holding `.blender_project`). A module stays inside its root: `..` may not escape it, an absolute path is refused but for a module found next to a file imported in this session, and so is a URL (`a module is a file, not a URL: download it and use math from "//path/math.bn"`). `./lib/math.bn` is refused with the path to write, `//lib/math.bn`.
@@ -19,7 +19,7 @@ Tree → Text writes a `use` and a call for a group a module built while the gro
 
 ### 1.1 File Head
 
-The add-on reads the head of a `.bn` file dropped on it ([reference, 1.1](../../../spec/reference.md#11-file-head)), with four directives of its own:
+The add-on reads the head of a `.bn` file dropped on it ([reference, 1.1](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#11-file-head)), with four directives of its own:
 
 ```bn
 // @module waves
@@ -47,7 +47,7 @@ Without `@offer`, a file offers `library` when it has a `@module`, `groups` alwa
 
 ## 2. Identifiers and Keywords
 
-- A socket's key is its UI name's key ([reference, 2](../../../spec/reference.md#2-identifiers-and-keywords)): `Base Color` is `base_color`, a socket named like a reserved word `not_`, `inf_`.
+- A socket's key is its UI name's key ([reference, 2](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#2-identifiers-and-keywords)): `Base Color` is `base_color`, a socket named like a reserved word `not_`, `inf_`.
 - The names the zones give their body, `iteration`, `delta_time`, `index` and `element` ([6.1](#61-blenders-zones)), are the same whatever the version of Blender and the zone's settings.
 - A menu's item and a material named like a reserved word are written as strings (`"inf"`).
 
@@ -136,7 +136,7 @@ crates have no checker: they build no template.*
 
 A Blender node group has one type per socket: a graph that reads an attribute with a fallback is
 written once for a `Float`, again for a `Vector`, again for a `Color`. A template
-([reference, 3.4](../../../spec/reference.md#34-templates)) is built into a node group of its own for
+([reference, 3.4](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#34-templates)) is built into a node group of its own for
 each type it is called with, as a module's graph is built again for each kind of tree that calls it
 ([3.0](#30-shader-and-compositor-graphs)).
 
@@ -263,7 +263,7 @@ to the menu it feeds.
 - **Vector swizzle**: `v.x`, `v.y`, `v.z`, of a vector, a color or an integer vector (one Separate XYZ, which leaves the alpha out)
 - **Pipe**: into a node, the value passed on is the input that goes first unnamed (the geometry it works on, see Inputs), into a graph or a function its first input, in every kind of tree; a tree reads back to the pipe
 - **Comparisons**: `<`, `<=`, `>`, `>=`, `==`, `!=` are a Compare node where the tree has one (a geometry tree, and a compositor tree of Blender 5.3), which gives a `Bool` and compares numbers, vectors, colors and strings. A shader tree has no Compare node, nor has the compositor of Blender 5.2 LTS ([targets](targets.md#what-blender-53-has-that-blender-52-lts-has-not)): there they compare numbers only, with Math nodes that give a `Float`, 0.0 or 1.0, so `height > 0.5` is written the same in every tree and a module's graph that compares builds in a shader tree too. `a > b` and `a < b` are Math's Greater Than and Less Than; `a >= b` is `1.0 - (a < b)` and `a <= b` is `1.0 - (a > b)`, two nodes; `a == b` is Math's Compare, its Epsilon 0.001 as that of a new Compare node (Math's own default, 0.5, is not written by `==`), and `a != b` is `1.0 - (a == b)`. Such a tree reads these nodes back as the operator, those written by hand too: `Math[GREATER_THAN](Value: a, Value_001: b)` reads `a > b` and `1.0 - (a < b)` reads `a >= b`; a Math Compare of another Epsilon stays a call. In a tree that has Compare, Math's comparisons stay calls (`Math[GREATER_THAN](Value: a, Value_001: b)`). Example, in a shader graph: `mask = (height > 0.5) * (slope <= 0.2)` is three Math nodes for the comparisons and one for the product
-- **Ternary**: `cond ? a : b` ([reference, 5](../../../spec/reference.md#5-expressions)) writes a node that depends on the kind of tree:
+- **Ternary**: `cond ? a : b` ([reference, 5](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#5-expressions)) writes a node that depends on the kind of tree:
   - in a **geometry** tree, a Switch (`Switch(switch: cond, false_: b, true_: a)`) of the type of its branches, every type Switch takes: `shape = dense ? SubdivideMesh(mesh) : mesh` is a Geometry switch, `radius = index > 4 ? 0.1 : 0.2` a Float one, chosen for each element when the condition is a field;
   - in a **shader** tree, where a Switch takes one value for the whole surface, a Mix by the condition (`Mix(factor: cond, a: b, b: a)`, the value when false being its A) for `Float`, `Vector`, `Color` and `Rotation` branches, and a Mix Shader for `Shader` branches: `color = height > 0.5 ? snow : rock`, `surface = facing > 0.5 ? DiffuseBSDF() : GlossyBSDF()`;
   - in a **compositor** tree, where a Switch takes one value for the whole image too (given an image as condition it gives its False input everywhere), the same Mix: `image = mask > 0.8 ? glow : image`.
@@ -295,7 +295,7 @@ An unknown name is compared with the node names case, spaces and underscores asi
 
 ## 6. Calls with a Body, and Nameless Graphs
 
-In Blender, the calls that take a body ([reference, 6](../../../spec/reference.md#6-calls-with-a-body-and-nameless-graphs)) are its zones, and a nameless graph is a Closure zone, a value of type `Closure`.
+In Blender, the calls that take a body ([reference, 6](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#6-calls-with-a-body-and-nameless-graphs)) are its zones, and a nameless graph is a Closure zone, a value of type `Closure`.
 
 ### 6.1 Blender's Zones
 
@@ -363,7 +363,7 @@ an error. A destination other than Blender has its targets in its own library, w
 
 The promise is that Tree → Text → Tree is exact within one version of Blender: a tree read as text and built back from that text, in the Blender that read it, holds every node, link, setting and value it held, bit for bit, but what this section lists. It holds across versions only as far as Blender does: a value the text leaves out because it is a new node's or a new socket's is the default of the Blender that builds the text, so a default that differs between two versions of Blender is out of the promise. The add-on's tests compare each tree of the third-party libraries with the tree built back, on Blender's data, and fail on any difference but these, by decision:
 
-- **How the editor draws the tree**: the names of the nodes, their locations, sizes and colours (a colour a node holds without showing it too), their colour tags; the frames, their places and which nodes they hold, but for the blocks the text writes ([reference, 4](../../../spec/reference.md#4-statements)); reroutes, a link through them being one link; what is selected or active (the active item of a list, an interface item selected), a node's panels open or closed, its options or its texture shown, a String node's text box, the view's centre, the default width of a group's node; the label, colour and collapsed state of the nodes the text has no statement for, the Group Input nodes and the input nodes of zones. Of the other nodes, the label, colour, collapsed and muted state are written ([reference, 4.1](../../../spec/reference.md#41-node-presentation-)).
+- **How the editor draws the tree**: the names of the nodes, their locations, sizes and colours (a colour a node holds without showing it too), their colour tags; the frames, their places and which nodes they hold, but for the blocks the text writes ([reference, 4](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#4-statements)); reroutes, a link through them being one link; what is selected or active (the active item of a list, an interface item selected), a node's panels open or closed, its options or its texture shown, a String node's text box, the view's centre, the default width of a group's node; the label, colour and collapsed state of the nodes the text has no statement for, the Group Input nodes and the input nodes of zones. Of the other nodes, the label, colour, collapsed and muted state are written ([reference, 4.1](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md#41-node-presentation-)).
 - **A muted link**: it carries nothing, so it is dropped.
 - **Several Group Input nodes**: they are read as one, which gives the interface. Geometry Nodes and shader trees evaluate them alike; the compositor may evaluate a tree of several otherwise, as the `[blender_quirks]` table of a library's manifest records (Compositing Essentials' Film Grain).
 - **What a node does not show**: the value of an input its node does not show in its present mode (the third value of a Math that adds), a link into or out of such a socket, which Blender does not follow, and the value of an input that an implicit field feeds (`Normal: Vector = Normal()`).
@@ -376,8 +376,10 @@ The promise is that Tree → Text → Tree is exact within one version of Blende
 
 ## Versions
 
-Base Node for Blender takes the version of the core ([versioning](../../../spec/versioning.md)), and
-adds three tiers of its own:
+Base Node for Blender has a version of its own, and needs one version of the core, the language
+([versioning](https://github.com/marcgardent/base-node-language/blob/main/spec/versioning.md)): the Python package depends on
+`base-node` of that version, the crates on `base-node` of that version, and the git submodule `core/`
+is that version. Over the core, it has three tiers of its own:
 
 ```
 ┌────────────────────────────────────────────────────────┐
@@ -446,7 +448,7 @@ The standard library modules provide reusable computational geometry, math, and 
 ```
 
 Each module says the rest in the head of its `.bn` (below), so that adding a module adds its file
-and edits no shared list. `base_node.manifest.manifest("stdlib")` reads them into one manifest, the
+and edits no shared list. `base_node_blender.manifest.manifest("stdlib")` reads them into one manifest, the
 modules by name:
 
 ```json
@@ -503,7 +505,7 @@ enforced strictly.
 - **`MINOR`**: new graphs, new inputs with defaults, a new version of Blender, a version of Blender that Blender no longer maintains taken out.
 - **How long.** The 1.x line is maintained as long as Blender maintains 5.2 LTS.
 - **Deprecation**: a graph is marked with the option `deprecated`, with what to use instead: `geometry(deprecated: "use curl2") graph curl(…)`. It works as before, and every call of it is a warning, in `base-node check` and in the add-on's editor ([3](#3-graph-declaration)).
-- A text of an edition the reader does not know is refused by `base-node check` and by the add-on when it is imported, pasted, checked or applied ([versioning, 2](../../../spec/versioning.md#2-tier-1-language-edition-edition)).
+- A text of an edition the reader does not know is refused by `base-node check` and by the add-on when it is imported, pasted, checked or applied ([versioning, 2](https://github.com/marcgardent/base-node-language/blob/main/spec/versioning.md#2-tier-1-language-edition-edition)).
 
 #### The versions of Blender
 
@@ -518,7 +520,7 @@ nodes it adds and removes are the changelog, and `blender@latest` moves with a m
 
 ### Before 1.0.0
 
-- [x] What is Blender's apart from the core, in this folder: the core names no destination.
+- [x] What is Blender's apart from the core, in this repository: the core names no destination.
 - [x] One `blender` target by version, its variants `eevee`, `cycles`, `gltf`, its aliases.
 - [x] A graph marked `deprecated` warns whoever calls it.
 - [ ] Blender 5.2 LTS: its catalog, its baselines, the CI. The catalog and the baselines are in,
@@ -534,7 +536,9 @@ nodes it adds and removes are the changelog, and `blender@latest` moves with a m
 
 ### Where the version is written
 
-The packages of Base Node for Blender take the version of the core:
+The packages of Base Node for Blender take its version; the version of the core it needs is written
+in their dependencies, `base-node==…` of [`python/pyproject.toml`](../python/pyproject.toml) and
+`base-node = { …, version = "=…" }` of [`Cargo.toml`](../Cargo.toml):
 
 | Component | Path | Version Scheme |
 |---|---|---|

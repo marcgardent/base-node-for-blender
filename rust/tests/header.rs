@@ -60,7 +60,10 @@ fn the_stdlib_head_is_read() {
     let src = fs::read_to_string("../stdlib/curves2d.bn").unwrap();
     let h = header(&src, "curves2d.bn").unwrap();
     assert_eq!(h.module.as_deref(), Some("curves2d"));
-    assert_eq!(h.version.as_deref(), Some(base_node::STDLIB_VERSION));
+    assert_eq!(
+        h.version.as_deref(),
+        Some(base_node_blender::STDLIB_VERSION)
+    );
     assert_eq!(h.target, ["blender"]);
     assert_eq!(h.edition.as_deref(), Some("2026"));
     assert_eq!(offer(&h)[..2], ["library", "groups"]);

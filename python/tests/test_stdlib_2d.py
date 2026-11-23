@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from base_node import STDLIB_VERSION
+from base_node_blender import STDLIB_VERSION
 from base_node_blender import check_target, format_source, infer, parse
 from base_node_blender.targets import tree_kinds
-from base_node.manifest import manifest
+from base_node_blender.manifest import manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 STDLIB_DIR = REPO_ROOT / "stdlib"

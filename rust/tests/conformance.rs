@@ -535,8 +535,18 @@ const COMPOSITE: &str = "compositor graph soften(image: Color, size: Float = 4.0
 
 #[test]
 fn test_versioning_and_manifest() {
-    // The core's constants are checked with the core (rust/tests/conformance.rs)
-    assert_eq!(base_node::VERSION, base_node::STDLIB_VERSION);
+    // The core is the version the workspace needs, which may be another than this crate's
+    let workspace = fs::read_to_string("../Cargo.toml").unwrap();
+    let needed = workspace
+        .lines()
+        .find_map(|l| {
+            l.strip_prefix("base-node = {")?
+                .split("version = \"=")
+                .nth(1)
+        })
+        .and_then(|v| v.split('"').next())
+        .expect("the version of base-node the workspace needs");
+    assert_eq!(base_node::VERSION, needed);
 
     let manifest_path = Path::new("../stdlib/manifest.json");
     let manifest_content =
@@ -544,7 +554,7 @@ fn test_versioning_and_manifest() {
 
     let v: serde_json::Value =
         serde_json::from_str(&manifest_content).expect("Invalid JSON in manifest.json");
-    assert_eq!(v["stdlib_version"], base_node::STDLIB_VERSION);
+    assert_eq!(v["stdlib_version"], base_node_blender::STDLIB_VERSION);
     assert_eq!(v["edition"], "2026");
 
     // The modules say their entries in their heads: the file holds what is the library's

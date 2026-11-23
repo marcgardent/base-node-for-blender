@@ -1,5 +1,5 @@
 """Tests for the versions of Blender's library: the stdlib, the targets, the packages, the add-on, and
-that they are the version of the core they depend on."""
+that the core they run on is the version they need."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import base_node
 from base_node_blender import EDITION, STDLIB_VERSION, __version__, check_targets, load_target, parse
-from base_node.manifest import manifest as stdlib_manifest
+from base_node_blender.manifest import manifest as stdlib_manifest
 
 ROOT = Path(__file__).resolve().parents[2]
 STDLIB_DIR = ROOT / "stdlib"
@@ -32,17 +32,25 @@ def said(path: str, pattern: str) -> str:
 
 
 def test_the_versions_agree():
-    """One version: the stdlib, the Python package, the crates and the add-on, and the core they need.
+    """One version for the stdlib, the Python package, the crates and the add-on: this library's.
 
     stdlib/manifest.json says it in SemVer; Python takes its PEP 440 form."""
     version = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))["stdlib_version"]
     assert EDITION == "2026"
-    assert STDLIB_VERSION == version == base_node.STDLIB_VERSION
-    assert __version__ == pep440(version) == base_node.__version__
+    assert STDLIB_VERSION == version
+    assert __version__ == pep440(version)
     assert said("python/pyproject.toml", r'^version = "([^"]+)"') == __version__
-    assert said("python/pyproject.toml", r'"base-node==([^"]+)"') == __version__
     for path in ("rust/Cargo.toml", "web/Cargo.toml", "addon/blender_manifest.toml"):
         assert said(path, r'^version = "([^"]+)"') == version, path
+
+
+def test_the_core_is_the_version_this_library_needs():
+    """The core this library runs on (base_node, from core/ or installed) is the version its Python
+    distribution and its crates depend on, which may be another than this library's."""
+    needed = said("python/pyproject.toml", r'"base-node==([^"]+)"')
+    assert base_node.__version__ == needed
+    cargo = said("Cargo.toml", r'^base-node = \{ path = "[^"]*", version = "=([^"]+)" \}')
+    assert pep440(cargo) == needed
     for entry in stdlib_manifest(STDLIB_DIR)["modules"].values():
         assert entry["version"] == version, entry["file"]
 
@@ -75,7 +83,7 @@ def test_targets_have_their_fields():
 def test_stdlib_manifest_structure():
     """Verify stdlib/manifest.json conforms to the manifest contract.
 
-    The file holds what is the library's; its modules are read from their heads (base_node.manifest),
+    The file holds what is the library's; its modules are read from their heads (base_node_blender.manifest),
     so that adding a module edits no shared list.
     """
     assert MANIFEST_PATH.exists(), f"Missing {MANIFEST_PATH}"

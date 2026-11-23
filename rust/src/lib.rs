@@ -2,6 +2,12 @@
 //! leaves to a host. The targets a text is checked against or translated to (`targets/`), the
 //! standard library (`stdlib/`), and the head of a file as the add-on reads it.
 
+/// The version of Base Node for Blender: of this crate, the standard library and the add-on, as
+/// Cargo.toml says it. The core's is `base_node::VERSION`, the one the workspace needs.
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// The version of the standard library (`stdlib_version` of stdlib/manifest.json): this crate's.
+pub const STDLIB_VERSION: &str = VERSION;
+
 pub mod header;
 pub mod stdlib;
 pub mod targets;

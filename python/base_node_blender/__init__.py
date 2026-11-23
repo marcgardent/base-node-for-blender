@@ -3,12 +3,17 @@ a text fits. Without bpy: the add-on answers for Blender itself (its host/schema
 
 from __future__ import annotations
 
-from ._core import (EDITION, MAX_HEIGHT, MAX_NESTING, MAX_SOURCE_BYTES, STDLIB_VERSION, BnError, Diagnostic,
-                    __version__, format_source, parse, to_source, tokenize, too_deep)
+from ._core import (EDITION, MAX_HEIGHT, MAX_NESTING, MAX_SOURCE_BYTES, BnError, Diagnostic, format_source, parse,
+                    to_source, tokenize, too_deep)
 from .header import Header, header
 from .targets import (Inference, Issue, Target, check_target, check_targets, infer, load_target, promise_names,
                       target_names, translate, variant_names)
 from .typecheck import check, deprecations, precision_warnings
+
+# The version of this library, of its standard library (stdlib/manifest.json) and of the add-on: its
+# own. The core's is base_node.__version__, the one the distribution needs (base-node==…)
+__version__ = "1.0.0rc7"
+STDLIB_VERSION = "1.0.0-rc.7"
 
 
 def compile_source(source, schema, filename="<text>", load=None, warnings=None):

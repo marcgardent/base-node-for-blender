@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from base_node import STDLIB_VERSION
+from base_node_blender import STDLIB_VERSION
 from base_node_blender import BnError, header
 from base_node.header import directives
 
