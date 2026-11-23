@@ -144,10 +144,14 @@ class BASE_NODE_OT_toggle_view(bpy.types.Operator):
             report_error(self, e)
             return {"CANCELLED"}
         area.type = "NODE_EDITOR"
+        if tree is None:
+            return {"FINISHED"}
+        # Back in the editor of its kind: the Node Editor comes back as Geometry Nodes otherwise
+        area.ui_type = tree.bl_idname
         space = area.spaces.active
+        space.tree_type = tree.bl_idname
         # A material's tree is shown through its object: the editor finds it again by itself
-        if tree is not None and space.edit_tree != tree and not tree.is_embedded_data:
-            space.tree_type = tree.bl_idname
+        if not tree.is_embedded_data and (space.node_tree is None or space.edit_tree != tree):
             space.node_tree = tree
         return {"FINISHED"}
 

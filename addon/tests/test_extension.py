@@ -773,6 +773,42 @@ def test_error_under_the_cursor():
     print("   ✓ Error under the cursor verified")
 
 
+def test_toggle_view_keeps_the_editor():
+    """Alt+Z there and back from the Shader Editor lands in the Shader Editor, not in Geometry Nodes."""
+    print("-> Test: Nodes <-> Text keeps the editor...")
+    from base_node.host import build_source
+    win = bpy.context.window_manager.windows[0]
+    area = max(win.screen.areas, key=lambda a: a.width * a.height)
+    old = area.ui_type
+    group = build_source("geometry graph toggle_gn(geometry: Geometry) -> Geometry {\n  return geometry\n}\n")[0]
+    area.ui_type = "GeometryNodeTree"
+    area.spaces.active.node_tree = group
+    obj = bpy.data.objects.new("toggle_obj", bpy.data.meshes.new("toggle_mesh"))
+    bpy.context.scene.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    mat = bpy.data.materials.new("toggle_mat")
+    obj.data.materials.append(mat)
+    area.ui_type = "ShaderNodeTree"
+    shown = area.spaces.active.edit_tree
+    assert shown == mat.node_tree, shown
+
+    def toggle():
+        region = next(r for r in area.regions if r.type == "WINDOW")
+        with bpy.context.temp_override(window=win, area=area, region=region, space_data=area.spaces.active):
+            assert bpy.ops.base_node.toggle_view() == {"FINISHED"}
+
+    toggle()
+    assert area.type == "TEXT_EDITOR"
+    text = area.spaces.active.text
+    toggle()
+    assert (area.type, area.ui_type) == ("NODE_EDITOR", "ShaderNodeTree"), (area.type, area.ui_type)
+    assert area.spaces.active.edit_tree == mat.node_tree
+    area.ui_type = old
+    bpy.data.objects.remove(obj)
+    bpy.data.materials.remove(mat)
+    print("   ✓ Nodes <-> Text keeps the editor")
+
+
 def test_live_apply():
     """While typing, a valid text is built into its tree; an invalid one changes nothing and keeps the cursor."""
     print("-> Test: Live apply...")
@@ -4241,6 +4277,7 @@ def main():
         test_targets_and_linter,
         test_pipe_symbol,
         test_error_under_the_cursor,
+        test_toggle_view_keeps_the_editor,
         test_live_apply,
         test_live_diagnostics,
         test_edition_and_deprecated,
