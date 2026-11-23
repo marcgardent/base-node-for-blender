@@ -10,6 +10,14 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-23
+
+### Repository
+
+- Changed: 1.0.0, the first stable version, the same as 1.0.0-rc.10, on the core 1.0.0. It promises
+  Blender 5.2 LTS and the latest Blender, 5.3, as [`spec/blender.md`](spec/blender.md#versions)
+  says. The corpus `corpus/v1` is frozen: a later version that does not read it is a breaking change.
+
 ### Site
 
 - Added: `make compare` writes the State of the Art page, `sitemap.xml` and `robots.txt` from

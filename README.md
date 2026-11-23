@@ -431,7 +431,7 @@ make extension
 ```
 
 ```bash
-blender --command extension install-file -r user_default -e dist/base_node-1.0.0-rc.10.zip
+blender --command extension install-file -r user_default -e dist/base_node-1.0.0.zip
 ```
 
 Run headless Blender tests (`make test-blender`, or after `make addon-lang`):
