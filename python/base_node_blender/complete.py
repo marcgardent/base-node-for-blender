@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 from ._core import colors, printer, tokenize
 from .targets import load_target, promise_names
-from .schema import ITEM_NODES, TREE_KINDS, TYPES, goes_on_name, is_word, key, snake
+from .schema import ITEM_NODES, TREE_KINDS, TYPES, by_position, enum_settings, goes_on_name, is_word, key, snake
 from .sugar import COMPONENTS, FUNCS, VECTOR, WORDS
 from .typecheck import SUBJECTS
 
@@ -629,7 +629,7 @@ class Context:
 
     def written_settings(self, name_at, spec):
         """({setting: value} of the enum and boolean settings the call's brackets write, the settings given),
-        a value by position going to the first enum setting that holds it."""
+        a value by position going to the one enum setting that holds it (schema.by_position)."""
         t = self.t
         props, given = {}, set()
         at = name_at + 1
@@ -651,7 +651,7 @@ class Context:
                 given.add(t[i].text)
                 prop, v = spec.props.get(t[i].text), t[i + 2]
             elif k in ("IDENT", "STRING"):
-                prop = next((p for p in spec.props.values() if p.kind == "ENUM" and t[i].text in p.items), None)
+                prop = spec.props.get(by_position(enum_settings(spec), t[i].text))
                 v = t[i]
                 if prop is not None:
                     given.add(prop.name)
@@ -677,14 +677,17 @@ class Context:
         return [Item(k, k + ": ", s.type, "input") for k, s in keyed(inputs)[taken:] if k not in given]
 
     def settings(self, call):
-        """In a call's brackets: the values of its enum settings not written yet, by position, then the
-        names of its other settings."""
+        """In a call's brackets: the values of its enum settings not written yet that go by position (one
+        setting holds each, schema.by_position), then the names of its settings: a value two settings
+        hold is written after the name."""
         spec = self.schema.node(self.kind, self.t[call].text) if call is not None else None
         if spec is None:
             return []
         _props, given = self.written_settings(call, spec)
+        enums = enum_settings(spec)
         out = [Item(v, enum_text(v), p.name, "enum")
-               for p in spec.props.values() if p.kind == "ENUM" and p.name not in given for v in p.items]
+               for p in spec.props.values() if p.kind == "ENUM" and p.name not in given for v in p.items
+               if by_position(enums, v) == p.name]
         out += [Item(p.name, p.name + ": ", p.kind.lower(), "setting")
                 for p in [*spec.props.values(), *spec.data.values()] if p.name not in given]
         return out

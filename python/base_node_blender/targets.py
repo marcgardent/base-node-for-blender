@@ -36,7 +36,7 @@ from pathlib import Path
 
 from ._core import ast
 from .schema import IMPLICIT as SCHEMA_IMPLICIT
-from .schema import CURVE, CURVES, EMPTY_GROUP, RAMP, is_material, key
+from .schema import CURVE, CURVES, EMPTY_GROUP, RAMP, by_position, is_material, key
 from .sugar import BINOPS, BOOL_FUNCS, EPSILON, MATH_COMPARE, MATH_FUNCS, VECTOR_FUNCS
 from .zones import word as zone_word
 
@@ -125,8 +125,8 @@ class Target:
     members: list = field(default_factory=list, repr=False)
     # The file it was read from: its bridges are paths relative to it. Not a field of the JSON
     path: Path | None = field(default=None, repr=False, compare=False)
-    # Of a version of `blender`: kind -> node -> its enum settings in Blender's order, each with
-    # its values, where a setting written by position goes (`setting_of`). Not a field of the JSON
+    # Of a version of `blender`: kind -> node -> its enum settings, each with its values, where a
+    # setting written by position goes (`setting_of`). Not a field of the JSON
     enums: dict = field(default_factory=dict, repr=False, compare=False)
 
 
@@ -319,8 +319,8 @@ def _others():
 
 def _positional(enums, node, value):
     """The setting of `node` a setting written by position goes to, of `enums` (node -> its enum
-    settings in Blender's order): the first whose values hold `value`, None when none does."""
-    return next((name for name, values in enums.get(node, {}).items() if value in values), None)
+    settings with their values): the one that holds `value`, None when none or several do (schema.by_position)."""
+    return by_position(enums.get(node, {}), value) if value is not None else None
 
 
 def _newest_enums():
@@ -333,8 +333,9 @@ def _newest_enums():
 
 def setting_of(kind, node, value, version=None):
     """The setting of `node`, in a tree of `kind`, that a setting written by position goes to:
-    `Math[MULTIPLY]` is `operation`, `Compare[INT, EQUAL]` `data_type` then `operation`. The first
-    enum setting of the node, in Blender's order, whose values hold `value`; None when none does.
+    `Math[MULTIPLY]` is `operation`, `Compare[INT, EQUAL]` `data_type` then `operation`, in any order.
+    The one enum setting of the node whose values hold `value`; None when none does, or several do
+    (`X` of AlignEulerToVector, a value of `axis` and of `pivot_axis`, is named): schema.by_position.
     Of the newest catalog of Blender, or of `version`."""
     b = blender()
     if b is None or not b.versions:
@@ -1773,7 +1774,7 @@ def catalog(root, version=None):
 def blender_catalog(backend):
     """The catalog of one version of Blender, targets/blender/<x.y>.json: for each kind of tree
     its types, zones, implicit inputs and nodes, and the enum settings of its nodes in Blender's
-    order with their values: where a setting written by position goes (`setting_of`)."""
+    order with their values: where a setting written by position goes (`setting_of`, which reads no order)."""
     trees = {}
     for kind in BLENDER_KINDS:
         nodes = backend["kinds"][kind]

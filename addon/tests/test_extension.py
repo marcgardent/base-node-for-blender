@@ -2946,6 +2946,8 @@ def test_values_that_are_no_bare_names():
     menu.value = "inf"
     text, _ = export_tree(tree)
     assert 'pivot_axis: "X"' in text and 'Menu[value: "inf"]()' in text, text
+    # Y is a value of axis and of pivot_axis: named, as the checker reads no order of the settings
+    assert "AlignEulerToVector[axis: " in text, text
     tree.name = "no_bare_names.original"
     rebuilt = build_source(text, filename="no_bare_names.bn")[-1]
     align = next(n for n in rebuilt.nodes if n.bl_idname == "FunctionNodeAlignEulerToVector")

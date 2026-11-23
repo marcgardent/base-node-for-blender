@@ -24,7 +24,7 @@ from ..blender.ir import (CLOSURE_INPUT, CLOSURE_OUTPUT, FOREACH_INPUT, FOREACH_
                        SIMULATION_INPUT, SIMULATION_OUTPUT, ZONE_INPUTS, ZONE_OUTPUTS)
 from ..blender.schema import (CLOSURE_TO_LIST, COMBINE_BUNDLE, DATABLOCKS, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT, ITEM_NODES, ITEM_TYPES, NO_VALUE,
                            CURVE, CURVES, DEPRECATED, MATERIAL, MATERIAL_OUTPUTS, RAMP, SEPARATE_BUNDLE, SIGNATURE_ITEMS,
-                           SIGNATURE_NODES, TYPES, input_key, key, snake)
+                           SIGNATURE_NODES, TYPES, by_position, enum_settings, input_key, key, snake)
 from . import comments, modules, outputs as material_outputs
 from .modules import graph_name, module_of, template_of
 from .schema import (DEPRECATION, PANEL_OPTIONS, SOCKET_TYPES, TREE_FLAGS, TREE_TYPES, BlenderSchema,
@@ -1268,16 +1268,16 @@ class GraphReader:
         return call
 
     def call_settings(self, node, spec, props, data):
-        """The settings of a call, in brackets: an enum value by position when no other enum setting of
-        the node holds it, the others by name; those by position first, each in Blender's order. Then the
-        value of an input node no literal makes (VALUE_PROPS), the one a node holds on an output
-        (OUTPUT_PROPS), its ramps and curves."""
+        """The settings of a call, in brackets: an enum value by position when it goes back to its
+        setting, as the checker reads it (schema.by_position: no other enum setting of the node holds
+        it), the others by name; those by position first, each in Blender's order. Then the value of
+        an input node no literal makes (VALUE_PROPS), the one a node holds on an output (OUTPUT_PROPS),
+        its ramps and curves."""
         positional, named = [], []
+        enums = enum_settings(spec)
         for pname, value in props.items():
             prop = spec.props[pname]
-            holders = [p for p in spec.props.values() if p.kind == "ENUM" and value in p.items] \
-                if prop.kind == "ENUM" else []
-            if holders == [prop]:
+            if prop.kind == "ENUM" and by_position(enums, value) == pname:
                 positional.append(ast.Setting(None, prop_literal(prop, value, self.taken), 0, 0))
             else:
                 named.append(ast.Setting(pname, prop_literal(prop, value, self.taken), 0, 0))

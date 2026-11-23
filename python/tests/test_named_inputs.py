@@ -233,6 +233,20 @@ def test_the_backend_gives_the_inputs_the_settings_make():
         BackendSchema("4.2")
 
 
+def test_the_pass_leaves_a_value_two_settings_hold_to_the_checker():
+    from base_node_blender.backend import BackendSchema
+
+    # X is a value of axis and of pivot_axis: which one is meant, the text does not say
+    b = BackendSchema("5.3")
+    src = "geometry graph g(r: Vector, v: Vector) -> Vector {\n  return AlignEulerToVector[X](r, 0.5, v)\n}\n"
+    named = name_inputs(src, b)
+    assert named == src.replace("(r, 0.5, v)", "(rotation: r, factor: 0.5, vector: v)")
+    with pytest.raises(BnError) as err:
+        compile_source(named, b, "t.bn")
+    assert [str(d) for d in err.value.diagnostics] == [
+        "t.bn:2:29  AlignEulerToVector: X is a value of axis and of pivot_axis; name it, AlignEulerToVector[axis: X]"]
+
+
 def test_the_command_line_names_the_inputs_without_blender(tmp_path, capsys):
     from base_node_blender.cli import main
 

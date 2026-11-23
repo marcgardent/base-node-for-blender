@@ -260,3 +260,14 @@ def test_search_as_blenders_add_menu():
     assert found("SP")[0] == "SetPosition"  # initials
     assert found("zzz") == []
     assert found("") == names
+
+
+def test_a_value_two_settings_hold_is_offered_after_a_name():
+    from test_node_settings import Axes
+
+    # X, Y, Z are values of axis and of pivot_axis: only AUTO goes by position
+    got = labels(HEAD + "  r = AlignEulerToVector[", Axes())
+    assert got == ["AUTO", "axis", "pivot_axis"], got
+    assert labels(HEAD + "  r = AlignEulerToVector[pivot_axis: ", Axes()) == ["AUTO", "X", "Y", "Z"]
+    # A value by position written: its setting is not offered again
+    assert labels(HEAD + "  r = AlignEulerToVector[AUTO, ", Axes()) == ["axis"]
