@@ -47,7 +47,7 @@ jobs:
       - name: Run the Python tests
         run: make test-python
       - name: Run add-on module security tests (no Blender)
-        run: python3 addon/tests/test_modules.py
+        run: make addon-lang && python3 addon/tests/test_modules.py
       - name: Check the regression badges against the baselines (no Blender)
         run: python3 addon/tests/regression_badges.py --check
       - name: Check the versions of the Blender library, and the core it needs
