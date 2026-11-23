@@ -196,6 +196,18 @@ class BASE_NODE_OT_copy_bn(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def arrange_pasted(context, trees):
+    """Lay out every tree a paste built, as Arrange Nodes does, the one shown with its drawn sizes."""
+    if getattr(context, "window", None) and getattr(context, "area", None):
+        try:
+            bpy.ops.wm.redraw_timer(type="DRAW", iterations=0)
+        except RuntimeError:
+            pass  # no window to draw in: the sizes are estimated
+    room = comments.room if prefs.get().show_comments else None
+    for t in trees:
+        arrange_nodes(t, room=room)
+
+
 class BASE_NODE_OT_paste_bn(bpy.types.Operator):
     """Build the .bn text of the clipboard into this file: node groups, materials, compositor.
     A graph of the name of an existing group rebuilds it in place, as File > Import does"""
@@ -229,6 +241,7 @@ class BASE_NODE_OT_paste_bn(bpy.types.Operator):
             # Pinned: else the editor goes back at once to the active object's modifier or material
             space.pin = True
             space.node_tree = tree
+        arrange_pasted(context, trees)
         message = f"'{names[0]}' pasted" if len(trees) == 1 else f"{len(trees)} trees pasted"
         if rebuilt:
             message += f"; rebuilt in place: {', '.join(rebuilt)}"

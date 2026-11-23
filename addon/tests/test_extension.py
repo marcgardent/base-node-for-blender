@@ -2694,9 +2694,17 @@ def test_copy_paste():
     assert lifted.use_fake_user and bpy.data.node_groups["lift"].use_fake_user
     assert any(g.get(modules.MODULE) == "math" for g in bpy.data.node_groups), "the use of math built nothing"
     assert actions.copy_text(lifted) == (LIFTED, [])
-    # Pasted again in the same file: the groups are rebuilt in place, and said so
+    # Pasted again in the same file: the groups are rebuilt in place, and said so, then arranged
+    from base_node.host.arrange import arrange_nodes
+    for i, n in enumerate(lifted.nodes):  # scrambled
+        n.location_absolute = ((i * 377) % 900, (i * 613) % 700)
     result, reports, _space = paste_operator(copied)
     assert reports == [({"INFO"}, "2 trees pasted; rebuilt in place: lift, lifted")], reports
+    for t in (bpy.data.node_groups["lifted"], bpy.data.node_groups["lift"]):
+        before = {n.name: tuple(n.location_absolute) for n in t.nodes}
+        arrange_nodes(t)
+        assert all(abs(a - b) < 0.01 for n in t.nodes for a, b in zip(before[n.name], n.location_absolute)), \
+            f"'{t.name}' pasted, not arranged"
 
     # A module of this file alone, a text of the .blend, is written in the text: no use left to find
     mylib = bpy.data.texts.new("mylib.bn")
