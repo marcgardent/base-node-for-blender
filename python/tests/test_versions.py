@@ -42,6 +42,8 @@ def test_the_versions_agree():
     assert said("python/pyproject.toml", r'^version = "([^"]+)"') == __version__
     for path in ("rust/Cargo.toml", "web/Cargo.toml", "addon/blender_manifest.toml"):
         assert said(path, r'^version = "([^"]+)"') == version, path
+    for entry in stdlib_manifest(STDLIB_DIR)["modules"].values():
+        assert entry["version"] == version, entry["file"]
 
 
 def test_the_core_is_the_version_this_library_needs():
@@ -51,8 +53,6 @@ def test_the_core_is_the_version_this_library_needs():
     assert base_node.__version__ == needed
     cargo = said("Cargo.toml", r'^base-node = \{ path = "[^"]*", version = "=([^"]+)" \}')
     assert pep440(cargo) == needed
-    for entry in stdlib_manifest(STDLIB_DIR)["modules"].values():
-        assert entry["version"] == version, entry["file"]
 
 
 def test_targets_have_their_fields():
