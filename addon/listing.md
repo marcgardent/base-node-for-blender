@@ -62,13 +62,13 @@ Base Node writes Geometry Nodes, Shader and Compositor node trees as text, and b
 - While you type, the tree follows the text as soon as the text is valid. A text with errors changes nothing and lists its errors in the sidebar. **Alt+P** applies the text by hand when *Apply while typing* is off.
 - The tree stays the only data. The text is a temporary view, removed when you go back to the nodes. An unchanged text leaves the tree and its layout as they were.
 - Comments are kept in the tree: each `//` comment is stored on the node of its statement and comes back the next time the text opens. The Node Editor draws them above their nodes.
-- **Ctrl+Shift+C** copies the edited tree as `.bn` text, with the groups it calls, to paste in a forum post or a chat. **Ctrl+Shift+V** builds the `.bn` text of the clipboard in the current file. *Copy Selected as .bn* copies only the selected nodes.
+- **Ctrl+Shift+C** copies the edited tree as `.bn` text, with the groups it calls, to paste in a forum post or a chat. **Ctrl+Shift+V** builds the `.bn` text of the clipboard in the current file and arranges it. *Copy Selected as .bn* copies only the selected nodes.
 - **Ctrl+Shift+A** arranges the selected nodes, or the whole tree: links go left to right, in line with their sockets, and each frame keeps its nodes together. It works in every node editor.
 
 ## Writing `.bn`
 
 - Suggestions for nodes, sockets and the graphs of used modules with **Ctrl+Space** (in `.bn` texts only; **Ctrl+Alt+Space** still maximizes the area). Alt+Space or Shift+Space can be chosen in the preferences.
-- Syntax highlighting, errors underlined as you type and listed in the sidebar, with a suggestion when one is close.
+- Syntax highlighting, errors underlined as you type and listed in the sidebar, with a suggestion when one is close. The cursor on an error shows its message under the line.
 - Target checks: a text that declares its targets (`// @target blender gltf`) has what they do not accept pointed out. Targets include the `gltf` variant (the shader nodes a glTF export keeps) and, as experimental variants, `eevee` and `cycles`.
 - Color Ramps and curves (RGB Curves, Float Curve, Vector Curves, Hue Correct) are written in the text, stop by stop and point by point.
 - **Format** rewrites a text in the canonical layout and keeps its comments.
@@ -93,7 +93,7 @@ Base Node writes Geometry Nodes, Shader and Compositor node trees as text, and b
 
 ## Links
 
-- Language reference, tutorials and examples: https://blender.basenode.ludopant.com/
+- Language reference, step-by-step tutorials (a cratered mini moon, lunar ground) and examples: https://blender.basenode.ludopant.com/
 - Source and issues: https://github.com/marcgardent/base-node-for-blender
 
 # Release notes (1.0.0)
@@ -101,11 +101,12 @@ Base Node writes Geometry Nodes, Shader and Compositor node trees as text, and b
 First release on Blender Extensions.
 
 - Geometry Nodes, Shader and Compositor trees to `.bn` text and back, in the same area (Alt+Z).
-- Live apply while typing, errors in the sidebar, suggestions, formatting.
-- Copy and paste trees as `.bn` text, node arrangement, comments kept in the tree.
+- Live apply while typing, errors underlined and explained under the cursor, suggestions, formatting.
+- Copy and paste trees as `.bn` text, node arrangement (on paste too), comments kept in the tree.
 - Import and drag and drop of `.bn` files, Module Folder for your own modules.
 - Standard library of eleven modules: math, sdf2d, curves2d, patterns2d, planar2d, fillet2d, mask2d, merge, grade, stmap, qc.
 - Blender 5.2 LTS and 5.3.
+- The `.bn` language is at 1.0.0: its grammar changes only as Semantic Versioning allows.
 
 # Featured image
 
@@ -131,3 +132,4 @@ Built from `site/images` by `listing/build_previews.py` into `listing/previews/`
 10. `10-patterns2d.png`: patterns2d: tilings, grids and radial arrays
 11. `11-qc.png`: qc: test patterns and image checks in the compositor
 12. `12-stmap.png`: stmap: image remapping by STMaps in the compositor
+13. `13-mini-moon.mp4`: The mini moon of the tutorial, about 3,400 craters scattered and dug by Geometry Nodes written as .bn, through its phases
