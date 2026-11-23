@@ -20,12 +20,14 @@ from pathlib import Path
 
 from base_node.ast import flatten
 from base_node.lexer import tokenize, width
-from base_node.manifest import manifest as stdlib_manifest
 from base_node.names import key
 from base_node.parser import parse
+from .manifest import manifest as stdlib_manifest
 from .targets import ALIASES, BLENDER, NOT_JSON, Blender, Target, catalog
 
-REPO = "https://github.com/marcgardent/base-node-language"
+# The repositories on GitHub: this library's, and the core's, whose checkout is `core`
+REPO = "https://github.com/marcgardent/base-node-for-blender"
+CORE_REPO = "https://github.com/marcgardent/base-node-language"
 KINDS = ("geometry", "shader", "compositor")
 
 # The spec's pages, by the name of their source: the language's (the core's spec/), then Blender's
@@ -160,14 +162,17 @@ def slug(text):
     return re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", text))
 
 
-def github(path, core):
-    """The address on GitHub of a file of the repository whose checkout is `core`, else None."""
+def github(path, root, core):
+    """The address on GitHub of a file of the core's checkout `core`, else of this library's `root`,
+    else None. The core is looked at first: it may be a folder of `root` (its submodule core/)."""
     path = Path(path).resolve()
-    try:
-        rel = path.relative_to(Path(core).resolve()).as_posix()
-    except ValueError:
-        return None
-    return f"{REPO}/{'tree' if path.is_dir() else 'blob'}/main/{rel}"
+    for checkout, repo in ((core, CORE_REPO), (root, REPO)):
+        try:
+            rel = path.relative_to(Path(checkout).resolve()).as_posix()
+        except ValueError:
+            continue
+        return f"{repo}/{'tree' if path.is_dir() else 'blob'}/main/{rel}"
+    return None
 
 
 def spec_dirs(root, core):
@@ -182,13 +187,17 @@ class Links:
         self.root, self.source, self.core = root, source, core
 
     def __call__(self, url):
+        path, _, anchor = url.partition("#")
+        # A page of the core's spec, linked on GitHub, is a page of the reference too
+        name = path.removeprefix(f"{CORE_REPO}/blob/main/spec/")
+        if name != path and name in PAGES:
+            return PAGES[name] + (f"#{anchor}" if anchor else "")
         if re.match(r"[a-z]+:|#", url):
             return url
-        path, _, anchor = url.partition("#")
         target = (self.source.parent / path).resolve()
         if target.name in PAGES and target.parent in spec_dirs(self.root, self.core):
             return PAGES[target.name] + (f"#{anchor}" if anchor else "")
-        address = github(target, self.core)
+        address = github(target, self.root, self.core)
         if address is None:
             return url
         return address + (f"#{anchor}" if anchor else "")
@@ -668,8 +677,8 @@ def module_page(root, module, info, manifest, backend, core):
                 f'<tr><th>Version</th><td>{esc(info.get("version", ""))} (edition {esc(info.get("edition", ""))})</td></tr>'
                 f"<tr><th>Depends on</th><td>{deps}</td></tr>"
                 f'<tr><th>Import</th><td><code>use {esc(module)}</code> or <code>use {esc(module)} (name, …)</code></td></tr>'
-                f'<tr><th>Source</th><td><a href="{github(root / "stdlib" / info["file"], core)}"><code>stdlib/{info["file"]}</code></a>'
-                + "".join(f' · example <a href="{github(e, core)}"><code>{e.relative_to(root).as_posix()}</code></a>' for e in examples)
+                f'<tr><th>Source</th><td><a href="{github(root / "stdlib" / info["file"], root, core)}"><code>stdlib/{info["file"]}</code></a>'
+                + "".join(f' · example <a href="{github(e, root, core)}"><code>{e.relative_to(root).as_posix()}</code></a>' for e in examples)
                 + "</td></tr></tbody></table>")
     for p in module_intro(source):
         body.append(f"<p>{inline(p)}</p>")

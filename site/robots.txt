@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://basenode.ludopant.com/sitemap.xml
+Sitemap: https://blender.basenode.ludopant.com/sitemap.xml

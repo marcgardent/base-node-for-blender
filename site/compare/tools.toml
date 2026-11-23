@@ -110,7 +110,7 @@ build_note = "in Blender, or headless with `blender -b`"
 licence = "open source"
 licence_note = "MIT OR Apache-2.0; Blender binding GPL-3.0-or-later"
 note = "Geometry Nodes, shaders and the compositor as a text language; text to tree and tree to text."
-sources = ["https://github.com/marcgardent/base-node-language"]
+sources = ["https://github.com/marcgardent/base-node-for-blender", "https://github.com/marcgardent/base-node-language"]
 
 [tools.nuke]
 name = "Nuke"

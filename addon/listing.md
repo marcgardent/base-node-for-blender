@@ -37,11 +37,11 @@ GPL-3.0-or-later
 
 # Website
 
-https://basenode.ludopant.com/
+https://blender.basenode.ludopant.com/
 
 # Support
 
-https://github.com/marcgardent/base-node-language/issues
+https://github.com/marcgardent/base-node-for-blender/issues
 
 # Blender version
 
@@ -93,8 +93,8 @@ Base Node writes Geometry Nodes, Shader and Compositor node trees as text, and b
 
 ## Links
 
-- Language reference, tutorials and examples: https://basenode.ludopant.com/
-- Source and issues: https://github.com/marcgardent/base-node-language
+- Language reference, tutorials and examples: https://blender.basenode.ludopant.com/
+- Source and issues: https://github.com/marcgardent/base-node-for-blender
 
 # Release notes (1.0.0)
 

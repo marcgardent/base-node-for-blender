@@ -6,7 +6,7 @@ name = "Base Node"
 tagline = "Nodes as text (.bn): read and write node trees as functions"
 maintainer = "Marc Gardent"
 type = "add-on"
-website = "https://basenode.ludopant.com/"
+website = "https://blender.basenode.ludopant.com/"
 tags = ["Node", "Geometry Nodes", "Material", "Compositing", "Text Editor", "Import-Export"]
 
 blender_version_min = "5.2.0"
