@@ -378,15 +378,24 @@ def test_what_the_gltf_exporter_reads(case):
     assert [i.name for i in check_target(parse(gltf_case(case)), "blender gltf")] == case["issues"]
 
 
-def test_a_setting_by_position_goes_to_the_first_enum_setting_that_holds_it():
-    assert setting_of("shader", "Math", "MULTIPLY") == "operation"
-    assert setting_of("geometry", "Compare", "INT") == "data_type"
-    assert setting_of("geometry", "Compare", "EQUAL") == "operation"
-    # X is in `axis` and `pivot_axis`: the first, in Blender's order
-    assert setting_of("geometry", "AlignEulerToVector", "X") == "axis"
-    assert setting_of("shader", "Math", "NOPE") is None
-    assert setting_of("shader", "Nope", "ADD") is None
+POSITIONAL = json.loads((ROOT / "conformance" / "positional-settings.json").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("case", POSITIONAL["enums"], ids=lambda c: f"{list(c['enums'])}-{c['value']}")
+def test_a_setting_by_position_goes_to_the_one_setting_that_holds_it(case):
+    from base_node_blender.schema import by_position
+
+    assert by_position(case["enums"], case["value"]) == case["setting"]
+
+
+@pytest.mark.parametrize("case", POSITIONAL["catalog"], ids=lambda c: f"{c['node']}-{c['value']}")
+def test_a_setting_by_position_of_the_catalog(case):
+    assert setting_of(case["kind"], case["node"], case["value"]) == case["setting"]
+
+
+def test_a_setting_by_position_of_a_version():
     assert setting_of("shader", "Math", "ADD", version="5.2") == "operation"
+    assert setting_of("geometry", "AlignEulerToVector", "X", version="5.2") is None
 
 
 def test_the_catalog_lists_the_enum_settings_of_each_node_in_blender_s_order():

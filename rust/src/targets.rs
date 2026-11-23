@@ -241,24 +241,40 @@ pub struct Tree {
     pub implicit: Vec<String>,
     #[serde(default)]
     pub nodes: Vec<String>,
-    /// Of a catalog of Blender: the enum settings of each node that has some, in Blender's order,
-    /// each with its values. Where a setting written by position goes ([`setting_of`]).
+    /// Of a catalog of Blender: the enum settings of each node that has some, each with its
+    /// values. Where a setting written by position goes ([`setting_of`]).
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub enums: BTreeMap<String, Enums>,
 }
 
-/// The enum settings of a node in Blender's order, each with its values: a JSON object read in
-/// the order it is written.
+/// The enum settings of a node, each with its values: a JSON object, read in the order it is
+/// written (Blender's), which [`Enums::of`] does not read.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Enums(pub Vec<(String, Vec<String>)>);
 
 impl Enums {
-    /// The setting a setting written by position goes to: the first whose values hold `value`.
-    pub fn of(&self, value: &str) -> Option<&str> {
-        self.0
+    /// The settings whose values hold `value`, sorted by name: Blender's order of the settings is
+    /// never read.
+    pub fn holders(&self, value: &str) -> Vec<&str> {
+        let mut found: Vec<&str> = self
+            .0
             .iter()
-            .find(|(_, values)| values.iter().any(|v| v == value))
+            .filter(|(_, values)| values.iter().any(|v| v == value))
             .map(|(name, _)| name.as_str())
+            .collect();
+        found.sort_unstable();
+        found
+    }
+
+    /// The setting a setting written by position goes to: the one whose values hold `value`; none
+    /// when none does, or several do (`X` of AlignEulerToVector, a value of `axis` and of
+    /// `pivot_axis`, is named). Its value alone tells where it goes, whatever the order of the
+    /// settings: the twin of `schema.by_position` of the Python library, which the checker follows.
+    pub fn of(&self, value: &str) -> Option<&str> {
+        match self.holders(value)[..] {
+            [one] => Some(one),
+            _ => None,
+        }
     }
 }
 
@@ -721,9 +737,9 @@ fn newest_enums() -> &'static BTreeMap<String, BTreeMap<String, Enums>> {
 }
 
 /// The setting of `node`, in a tree of `kind`, that a setting written by position goes to:
-/// `Math[MULTIPLY]` is `operation`, `Compare[INT, EQUAL]` `data_type` then `operation`. The
-/// first enum setting of the node, in Blender's order, whose values hold `value`, of the newest
-/// catalog of Blender; none when none does.
+/// `Math[MULTIPLY]` is `operation`, `Compare[INT, EQUAL]` `data_type` then `operation`, in any
+/// order. The one enum setting of the node whose values hold `value` ([`Enums::of`]), of the
+/// newest catalog of Blender; none when none does, or several do.
 pub fn setting_of(kind: &str, node: &str, value: &str) -> Option<&'static str> {
     newest_enums().get(kind)?.get(node)?.of(value)
 }
@@ -3891,5 +3907,31 @@ mod tests {
             assert!(std::path::Path::new(&on_disk).is_file(), "{path}");
             assert!(base_node::parse(text, path).is_ok(), "{path}");
         }
+    }
+
+    #[test]
+    fn a_setting_by_position_reads_no_order_in_any_version() {
+        let b = blender();
+        let mut seen = 0;
+        for v in &b.versions {
+            let name = b.name(v);
+            let t = b.targets.iter().find(|t| t.name == name).unwrap();
+            for nodes in t.enums.values() {
+                for enums in nodes.values() {
+                    let mut turned = enums.clone();
+                    turned.0.reverse();
+                    for (_, values) in &turned.0 {
+                        for value in values {
+                            let held = enums.0.iter().filter(|(_, vs)| vs.contains(value)).count();
+                            // Accepted when one setting holds the value, whatever their order
+                            assert_eq!(enums.of(value).is_some(), held == 1, "{value}");
+                            assert_eq!(enums.of(value), turned.of(value), "{value}");
+                            seen += 1;
+                        }
+                    }
+                }
+            }
+        }
+        assert!(seen > 1000, "{seen}");
     }
 }

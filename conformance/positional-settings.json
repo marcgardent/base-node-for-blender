@@ -1,0 +1,29 @@
+{
+  "about": "Where a setting written by position goes (spec/blender.md, Settings), the same in Python (schema.by_position, targets.setting_of) and in Rust (Enums::of, setting_of). A case of `enums` gives a node's enum settings with their values, in an order the answer must not depend on; a case of `catalog` names a node of the newest catalog of Blender. `setting` is where `value` goes, null when no setting or several hold it: such a value is named.",
+  "enums": [
+    {"enums": {"axis": ["X", "Y", "Z"], "pivot_axis": ["AUTO", "X", "Y", "Z"]}, "value": "X", "setting": null},
+    {"enums": {"pivot_axis": ["AUTO", "X", "Y", "Z"], "axis": ["X", "Y", "Z"]}, "value": "X", "setting": null},
+    {"enums": {"axis": ["X", "Y", "Z"], "pivot_axis": ["AUTO", "X", "Y", "Z"]}, "value": "AUTO", "setting": "pivot_axis"},
+    {"enums": {"pivot_axis": ["AUTO", "X", "Y", "Z"], "axis": ["X", "Y", "Z"]}, "value": "AUTO", "setting": "pivot_axis"},
+    {"enums": {"operation": ["EQUAL", "NOT_EQUAL"], "data_type": ["FLOAT", "INT"]}, "value": "INT", "setting": "data_type"},
+    {"enums": {"data_type": ["FLOAT", "INT"], "operation": ["EQUAL", "NOT_EQUAL"]}, "value": "INT", "setting": "data_type"},
+    {"enums": {"operation": ["EQUAL", "NOT_EQUAL"], "data_type": ["FLOAT", "INT"]}, "value": "NOPE", "setting": null},
+    {"enums": {}, "value": "ADD", "setting": null}
+  ],
+  "catalog": [
+    {"kind": "shader", "node": "Math", "value": "MULTIPLY", "setting": "operation"},
+    {"kind": "geometry", "node": "Compare", "value": "INT", "setting": "data_type"},
+    {"kind": "geometry", "node": "Compare", "value": "EQUAL", "setting": "operation"},
+    {"kind": "geometry", "node": "Compare", "value": "DOT_PRODUCT", "setting": "mode"},
+    {"kind": "geometry", "node": "AlignEulerToVector", "value": "X", "setting": null},
+    {"kind": "geometry", "node": "AlignEulerToVector", "value": "AUTO", "setting": "pivot_axis"},
+    {"kind": "geometry", "node": "AxesToRotation", "value": "Z", "setting": null},
+    {"kind": "shader", "node": "WaveTexture", "value": "Y", "setting": null},
+    {"kind": "shader", "node": "WaveTexture", "value": "RINGS", "setting": "wave_type"},
+    {"kind": "shader", "node": "VectorTransform", "value": "OBJECT", "setting": null},
+    {"kind": "shader", "node": "VectorTransform", "value": "NORMAL", "setting": "vector_type"},
+    {"kind": "compositor", "node": "ConvertColorspace", "value": "sRGB", "setting": null},
+    {"kind": "shader", "node": "Math", "value": "NOPE", "setting": null},
+    {"kind": "shader", "node": "Nope", "value": "ADD", "setting": null}
+  ]
+}

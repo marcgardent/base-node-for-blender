@@ -622,21 +622,54 @@ fn what_the_gltf_exporter_reads() {
     }
 }
 
+/// conformance/positional-settings.json: where a setting by position goes, as the Python library
+/// says.
+#[derive(serde::Deserialize)]
+struct Positional {
+    enums: Vec<EnumsCase>,
+    catalog: Vec<CatalogCase>,
+}
+
+#[derive(serde::Deserialize)]
+struct EnumsCase {
+    enums: base_node_blender::targets::Enums,
+    value: String,
+    setting: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+struct CatalogCase {
+    kind: String,
+    node: String,
+    value: String,
+    setting: Option<String>,
+}
+
+fn positional() -> Positional {
+    serde_json::from_str(&fs::read_to_string("../conformance/positional-settings.json").unwrap())
+        .unwrap()
+}
+
 #[test]
-fn a_setting_by_position_goes_to_the_first_enum_setting_that_holds_it() {
-    assert_eq!(setting_of("shader", "Math", "MULTIPLY"), Some("operation"));
-    assert_eq!(setting_of("geometry", "Compare", "INT"), Some("data_type"));
-    assert_eq!(
-        setting_of("geometry", "Compare", "EQUAL"),
-        Some("operation")
-    );
-    // X is in `axis` and `pivot_axis`: the first, in Blender's order
-    assert_eq!(
-        setting_of("geometry", "AlignEulerToVector", "X"),
-        Some("axis")
-    );
-    assert_eq!(setting_of("shader", "Math", "NOPE"), None);
-    assert_eq!(setting_of("shader", "Nope", "ADD"), None);
+fn a_setting_by_position_goes_to_the_one_setting_that_holds_it() {
+    for case in positional().enums {
+        assert_eq!(
+            case.enums.of(&case.value),
+            case.setting.as_deref(),
+            "{:?} {}",
+            case.enums,
+            case.value
+        );
+    }
+    for case in positional().catalog {
+        assert_eq!(
+            setting_of(&case.kind, &case.node, &case.value),
+            case.setting.as_deref(),
+            "{} {}",
+            case.node,
+            case.value
+        );
+    }
 }
 
 #[test]
