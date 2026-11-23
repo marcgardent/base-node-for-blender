@@ -8,7 +8,7 @@ says. What changed in the language and its core is in the
 [changelog of base-node-language](https://github.com/marcgardent/base-node-language/blob/main/CHANGELOG.md).
 Versions below 1.0.0 are pre-releases: the text format can change between them.
 
-## [Unreleased]
+## [1.0.0-rc.8] - 2026-11-23
 
 ### Repository
 

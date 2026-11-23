@@ -199,7 +199,7 @@ build:
 |---|---|---|
 | Git | the submodule `core/` ([`.gitmodules`](.gitmodules)), at the commit of the version needed; `make core` checks it out | `core` |
 | Make | `CORE` of the [`Makefile`](Makefile): every other place below is derived from it, or given it | `core` |
-| Python | the dependency `base-node==1.0.0rc7` of [`python/pyproject.toml`](python/pyproject.toml); from a checkout, the `PYTHONPATH` the Makefile exports, `$(CORE)/python` | `core/python` |
+| Python | the dependency `base-node==…` of [`python/pyproject.toml`](python/pyproject.toml); from a checkout, the `PYTHONPATH` the Makefile exports, `$(CORE)/python` | `core/python` |
 | Rust, the library and `web/` | `base-node` in `[workspace.dependencies]` of [`Cargo.toml`](Cargo.toml): a path and the version needed; the crates take it with `workspace = true` | `core/rust` |
 | The add-on | `make addon-lang` links the modules of `$(CORE)/python/base_node` into `addon/lang/` (not in git), and `addon/build.sh` copies them as files into the zip | `core/python/base_node` |
 | The reference pages | `make docs` gives `--core $(CORE)`: the language's pages are its `spec/` (the default of `base-node docs` is the checkout `base_node` is imported from) | `core/spec` |
@@ -431,7 +431,7 @@ make extension
 ```
 
 ```bash
-blender --command extension install-file -r user_default -e dist/base_node-1.0.0-rc.7.zip
+blender --command extension install-file -r user_default -e dist/base_node-1.0.0-rc.8.zip
 ```
 
 Run headless Blender tests (`make test-blender`, or after `make addon-lang`):
