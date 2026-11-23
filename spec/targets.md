@@ -181,9 +181,10 @@ that lists the versions:
 says it, and `"trees"`, for each kind of tree (`geometry`, `shader`, `compositor`) its `types`,
 `zones`, `implicit` inputs and `nodes`, and its `enums`: the enum settings of each node that has
 some, in Blender's order, each with its values (`"Math": {"operation": ["ADD", …]}`). They say
-where a setting written by position goes: to the first of them whose values hold it
-(`Compare[INT, EQUAL]` is `data_type` then `operation`); `setting_of(kind, node, value)` answers
-it, in Python and in Rust, of the newest catalog. It is written from
+where a setting written by position goes: to the one of them whose values hold it, whatever their
+order (`Compare[INT, EQUAL]` is `data_type` then `operation`), none when several hold it
+(`AlignEulerToVector[X]`: `axis` and `pivot_axis`, which the text names); `setting_of(kind, node, value)` answers
+it, in Python and in Rust, of the newest catalog, as the checker does ([blender.md](blender.md#5-expressions)). It is written from
 `targets/backends/blender-<x.y>.json`, the nodes that Blender reports (`make backend`, run with that Blender, writes both; a test checks
 they agree). Every catalog found is a version: `blender@latest` is the newest.
 
@@ -334,8 +335,8 @@ input of the node. A feed is one of:
 
 A rule on a setting (`ImageTexture.extension`, one of `settings`) reads the setting in the call's
 brackets, by its name (`ImageTexture[extension: CLIP]`) or by position: a setting written by
-position is an enum value, and goes to the first enum setting of the node, in Blender's order, whose
-values hold it (`ImageTexture[CLIP]` is its `extension`). Blender's catalog of each version lists
+position is an enum value, and goes to the one enum setting of the node whose values hold it
+(`ImageTexture[CLIP]` is its `extension`). Blender's catalog of each version lists
 those settings (`trees.<kind>.enums`, [below](#blender-by-version)). An argument in parentheses is
 always an input. The rule lists the values it takes:
 `["REPEAT", "EXTEND", "MIRROR"]`, or `any` for any value written. A setting without a default

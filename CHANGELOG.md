@@ -8,6 +8,21 @@ says. What changed in the language and its core is in the
 [changelog of base-node-language](https://github.com/marcgardent/base-node-language/blob/main/CHANGELOG.md).
 Versions below 1.0.0 are pre-releases: the text format can change between them.
 
+## [Unreleased]
+
+### Blender add-on
+
+- Changed, a text needs an edit: a setting by position goes to the one enum setting of the node
+  that holds its value, whatever their order, no longer to the first in Blender's order, which
+  another version of Blender may change. A value two settings hold is named:
+  `AlignEulerToVector[axis: X, pivot_axis: Z]`, where `AlignEulerToVector[X, pivot_axis: Z]` is
+  refused (`AlignEulerToVector: X is a value of axis and of pivot_axis; name it,
+  AlignEulerToVector[axis: X]`); so are `X`, `Y`, `Z` of Align Rotation to Vector, Axes to Rotation
+  and Wave Texture, the spaces of Vector Transform and the color spaces of Convert Colorspace. A
+  template's type by position goes to the one setting that has a value for it, else is named. Tree →
+  Text already named them: the texts it wrote, the corpus among them, are the same. Completion offers
+  by position only the values that go so; `setting_of` (Python and Rust) answers none for such a value.
+
 ## [1.0.0-rc.8] - 2026-11-23
 
 ### Repository
