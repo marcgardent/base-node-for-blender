@@ -10,6 +10,12 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ## [Unreleased]
 
+### Site
+
+- Added: `make compare` writes the State of the Art page, `sitemap.xml` and `robots.txt` from
+  `site/compare/tools.toml` and `site/site.toml` (`tools/compare_page.py`, until now in the private
+  studio); `python/tests/test_compare_page.py` fails when they are not up to date.
+
 ## [1.0.0-rc.10] - 2026-11-23
 
 ### Blender add-on
