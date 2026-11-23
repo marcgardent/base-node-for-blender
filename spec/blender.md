@@ -391,15 +391,15 @@ is that version. Over the core, it has three tiers of its own:
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │ Standard Library Modules (stdlib/)                     │
-│         e.g., math@1.0.0-rc.9, curves2d@1.0.0-rc.9     │
+│         e.g., math@1.0.0-rc.10, curves2d@1.0.0-rc.10   │
 │         Manifest: stdlib/manifest.json                 │
 └──────────────────────────┬─────────────────────────────┘
                            │
 ┌──────────────────────────▼─────────────────────────────┐
 │ Packages                                               │
-│         Python: base-node-blender 1.0.0rc9             │
-│         Rust:   base-node-blender 1.0.0-rc.9           │
-│         Blender Extension: 1.0.0-rc.9                  │
+│         Python: base-node-blender 1.0.0rc10            │
+│         Rust:   base-node-blender 1.0.0-rc.10          │
+│         Blender Extension: 1.0.0-rc.10                 │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -443,7 +443,7 @@ The standard library modules provide reusable computational geometry, math, and 
 
 ```json
 {
-  "stdlib_version": "1.0.0-rc.9",
+  "stdlib_version": "1.0.0-rc.10",
   "edition": "2026",
   "description": "Standard Library for the Base Node (.bn) language"
 }
@@ -456,7 +456,7 @@ modules by name:
 ```json
 "curves2d": {
   "name": "curves2d",
-  "version": "1.0.0-rc.9",
+  "version": "1.0.0-rc.10",
   "edition": "2026",
   "tier": "free",
   "targets": ["blender"],
@@ -476,7 +476,7 @@ Every official `.bn` standard library file must include standardized metadata co
 ```bn
 // Base Node Standard Library — Module curves2d
 // @module curves2d
-// @version 1.0.0-rc.9
+// @version 1.0.0-rc.10
 // @target blender
 // @edition 2026
 // @description 2D curves, resampling, curvature analysis, and path operations
@@ -544,11 +544,11 @@ in their dependencies, `base-node==…` of [`python/pyproject.toml`](../python/p
 
 | Component | Path | Version Scheme |
 |---|---|---|
-| Python package, the Blender library | [`python/pyproject.toml`](../python/pyproject.toml) | PEP 440 (`1.0.0rc9`) |
-| Rust WASM crate, the Blender library | [`rust/Cargo.toml`](../rust/Cargo.toml) | SemVer (`1.0.0-rc.9`) |
-| Rust WASM crate, `<bn-view>` | [`web/Cargo.toml`](../web/Cargo.toml) | SemVer (`1.0.0-rc.9`) |
-| Blender Extension | [`addon/blender_manifest.toml`](../addon/blender_manifest.toml) | SemVer (`1.0.0-rc.9`) |
-| Extension Repository Index | [`site/extensions/index.json`](../site/extensions/index.json) | SemVer (`1.0.0-rc.9`) |
+| Python package, the Blender library | [`python/pyproject.toml`](../python/pyproject.toml) | PEP 440 (`1.0.0rc10`) |
+| Rust WASM crate, the Blender library | [`rust/Cargo.toml`](../rust/Cargo.toml) | SemVer (`1.0.0-rc.10`) |
+| Rust WASM crate, `<bn-view>` | [`web/Cargo.toml`](../web/Cargo.toml) | SemVer (`1.0.0-rc.10`) |
+| Blender Extension | [`addon/blender_manifest.toml`](../addon/blender_manifest.toml) | SemVer (`1.0.0-rc.10`) |
+| Extension Repository Index | [`site/extensions/index.json`](../site/extensions/index.json) | SemVer (`1.0.0-rc.10`) |
 
 Blender's manifest, as Cargo, refuses the PEP 440 form of a pre-release.
 
