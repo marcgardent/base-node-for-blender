@@ -120,6 +120,12 @@ def build_source(source, filename="<text>", load=None, warnings=None):
     return [built[g.name] for g in graphs if g.module is None]
 
 
+def reselect(tree, selected):
+    """Select the nodes of these names only: none in a new tree."""
+    for n in tree.nodes:
+        n.select = n.name in selected
+
+
 def mark(tree, module, called_as=None, types=None, type_inputs=None):
     """Say which module a group comes from, so that Tree → Text writes its use back, and which
     graph of it, for one built for another kind of tree or a template's for its types."""
@@ -216,6 +222,8 @@ class Builder:
     def build(self, g, tree, built):
         # Named nodes keep their place across rebuilds
         kept = {n.name: n.location_absolute.copy() for n in tree.nodes}
+        # And their selection: a new node is selected, so a rebuild would select the whole tree
+        selected = {n.name for n in tree.nodes if n.select}
         if kept:
             self.fresh.discard(g.name)
         else:
@@ -228,6 +236,7 @@ class Builder:
                 self.fail(g, f"unknown setting '{unknown[0]}' of a material; settings: {MATERIAL}, target")
             self.ids = {}
             self.fill(tree, g, built, kept)
+            reselect(tree, selected)
             out = self.made[g.name][0][ir.GROUP_OUTPUT]
             try:
                 out.target = g.settings.get("target", "ALL")
@@ -245,6 +254,7 @@ class Builder:
         self.panels(tree, g)
         self.settings(tree, g)
         self.fill(tree, g, built, kept)
+        reselect(tree, selected)
         tree.description = g.description or ""
         # Kept on the group for Tree → Text to write it back: Blender has no word for it
         if g.deprecated is None:

@@ -3898,6 +3898,24 @@ geometry graph second_one(geometry: Geometry, t: Float = 1.0) -> Geometry {
                 f"{tree.name}: '{n.name}' was not arranged"
     print("   ✓ every new tree of a text arranged")
 
+    # A build selects nothing, and a rebuild keeps the selection: Arrange then moves only what is picked
+    first = build_source(two, filename="two.bn")[0]
+    assert not any(n.select for n in first.nodes), "a built tree comes with every node selected"
+    picked = sorted(n.name for n in first.nodes)[:2]
+    for n in first.nodes:
+        n.select = n.name in picked
+    first = build_source(two.replace("t: Float = 1.0) -> Geometry {\n  return SetPosition",
+                                     "t: Float = 2.0) -> Geometry {\n  return SetPosition"), filename="two.bn")[0]
+    assert sorted(n.name for n in first.nodes if n.select) == picked, "a rebuild lost the selection"
+    before = {n.name: tuple(n.location_absolute) for n in first.nodes}
+    for n in first.nodes:
+        if n.name in picked:
+            n.location_absolute = (n.location_absolute.x + 500, n.location_absolute.y)
+    arrange_nodes(first, [n for n in first.nodes if n.select])
+    assert all(tuple(n.location_absolute) == before[n.name] for n in first.nodes if n.name not in picked), \
+        "Arrange moved a node not selected"
+    print("   ✓ a build selects nothing, a rebuild keeps the selection")
+
 
 def test_idioms_build():
     """Every example of spec/idioms.md builds as it is written."""
