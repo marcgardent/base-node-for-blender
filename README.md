@@ -6,7 +6,15 @@
 
 Text format (`.bn`) for Blender's node graphs. Reads and writes Geometry Nodes, shader and compositor trees as functions.
 
-Site: https://basenode.ludopant.com/
+Site: https://blender.basenode.ludopant.com/. The language itself, its specification and its core in
+Python and in Rust, is [Base Node Language](https://github.com/marcgardent/base-node-language) (https://basenode.ludopant.com/), this
+repository's git submodule `core/`.
+
+```bash
+git clone --recurse-submodules https://github.com/marcgardent/base-node-for-blender.git
+# or, in a clone made without it
+make core
+```
 
 ```bn
 use math (bump)
@@ -132,8 +140,8 @@ its checks on the render of the passes scene: as it is, its false colour by stop
 
 ## Make
 
-The targets run in this folder, or from the root of the checkout, whose Makefile runs the same ones
-here. `CORE` is the checkout of the core (default `../..`). `make help` lists the targets. The common ones:
+`CORE` is the checkout of the core (default `core`, the submodule). `make help` lists the targets. The
+common ones:
 
 | Target | Does |
 |---|---|
@@ -173,26 +181,33 @@ read the file of the Blender that runs (`targets/backends/blender-<x.y>.json`). 
 | [`corpus/`](corpus/) | The node groups of third-party libraries as `.bn` text, read by Blender 5.3: version 1 of the language, which a later version must read |
 | [`examples/`](examples/) | Showcases, tutorials and the scripts that render them |
 | [`conformance/`](conformance/) | `gltf-cases.json`: materials and what Blender's glTF exporter makes of them |
-| [`site/`](site/) | The site, https://basenode.ludopant.com/ |
-| [`spec/`](spec/) | [Blender](spec/blender.md) (the language as Blender reads it, its versions), [targets](spec/targets.md) (what a destination accepts, translators, `@target`), [idioms](spec/idioms.md) (ways of writing a graph, each with an example); the language is the core's [reference](../../spec/reference.md) |
-| [`tools/bump.py`](tools/bump.py) | Writes the version of this folder everywhere it is written, and the version of the core it needs (`make bump`, `make bump-check`) |
+| [`site/`](site/) | The site, https://blender.basenode.ludopant.com/ |
+| [`spec/`](spec/) | [Blender](spec/blender.md) (the language as Blender reads it, its versions), [targets](spec/targets.md) (what a destination accepts, translators, `@target`), [idioms](spec/idioms.md) (ways of writing a graph, each with an example); the language is the core's [reference](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md) |
+| [`tools/bump.py`](tools/bump.py) | Writes the version of this repository everywhere it is written, and the version of the core it needs (`make bump`, `make bump-check`) |
 | [`Cargo.toml`](Cargo.toml) | The workspace of `rust/` and `web/`, and the one path to the core's crate |
-| [`.github/workflows/`](.github/workflows/) | The CI and the Pages of this folder as a repository of its own; the checkout's root runs the same jobs |
+| [`core/`](core/) | The core of the language, [base-node-language](https://github.com/marcgardent/base-node-language), a git submodule at the version this repository needs |
+| [`.github/workflows/`](.github/workflows/) | The CI (on a tag `v*` or by hand) and the Pages of the site |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed, by version |
 
 ## Where the core is
 
-This folder depends on the core of the language (`base-node`, at the root of the checkout) and reaches
-it through one place per build:
+This repository depends on the core of the language (`base-node`, the repository
+[base-node-language](https://github.com/marcgardent/base-node-language), its git submodule `core/`) and reaches it through one place per
+build:
 
 | Build | The one place | Today |
 |---|---|---|
-| Make | `CORE` of the [`Makefile`](Makefile): every other place below is derived from it, or given it | `../..` |
-| Python | the dependency `base-node==1.0.0rc7` of [`python/pyproject.toml`](python/pyproject.toml); from a checkout, the `PYTHONPATH` the Makefile exports, `$(CORE)/python` | `../../python` |
-| Rust, the library and `web/` | `base-node` in `[workspace.dependencies]` of [`Cargo.toml`](Cargo.toml): a path and the version needed; the crates take it with `workspace = true` | `../../rust` |
-| The add-on | `make addon-lang` links the modules of `$(CORE)/python/base_node` into `addon/lang/` (not in git), and `addon/build.sh` copies them as files into the zip | `../../python/base_node` |
-| The reference pages | `make docs` gives `--core $(CORE)`: the language's pages are its `spec/` (the default of `base-node docs` is the checkout `base_node` is imported from) | `../../spec` |
-| Conformance cases | none: the tests of this folder read its own (`conformance/`, `python/tests/fixtures/`) | |
-| The version | [`tools/bump.py`](tools/bump.py) writes the version of the core needed in the two dependencies above, and `make bump-check` checks it is `$(CORE)`'s | |
+| Git | the submodule `core/` ([`.gitmodules`](.gitmodules)), at the commit of the version needed; `make core` checks it out | `core` |
+| Make | `CORE` of the [`Makefile`](Makefile): every other place below is derived from it, or given it | `core` |
+| Python | the dependency `base-node==1.0.0rc7` of [`python/pyproject.toml`](python/pyproject.toml); from a checkout, the `PYTHONPATH` the Makefile exports, `$(CORE)/python` | `core/python` |
+| Rust, the library and `web/` | `base-node` in `[workspace.dependencies]` of [`Cargo.toml`](Cargo.toml): a path and the version needed; the crates take it with `workspace = true` | `core/rust` |
+| The add-on | `make addon-lang` links the modules of `$(CORE)/python/base_node` into `addon/lang/` (not in git), and `addon/build.sh` copies them as files into the zip | `core/python/base_node` |
+| The reference pages | `make docs` gives `--core $(CORE)`: the language's pages are its `spec/` (the default of `base-node docs` is the checkout `base_node` is imported from) | `core/spec` |
+| Conformance cases | none: the tests of this repository read its own (`conformance/`, `python/tests/fixtures/`) | |
+| The version | this repository has its own; [`tools/bump.py`](tools/bump.py) writes the version of the core needed in the two dependencies above (`CORE_VERSION`, default the checkout's), and `make bump-check` checks it is `$(CORE)`'s | |
+
+To move to another version of the core: check it out in `core/` (`git -C core checkout <tag or commit>`),
+`make bump VERSION=<this repository's> CORE_VERSION=<the core's>`, and commit `core` with the rest.
 
 ## Targets
 
@@ -218,7 +233,7 @@ promise the editor and `base-node check` hold it to.
 ## Reference pages
 
 The site's reference (language, Blender, targets, the nodes of Blender, stdlib, idioms) is written by
-`base-node docs` (`make docs`) when the site is deployed, from the core's `spec/` and from this folder's
+`base-node docs` (`make docs`) when the site is deployed, from the core's `spec/` and from this repository's
 `spec/`, `targets/` and `stdlib/`; `site/reference/` is not committed:
 
 ```bash
@@ -246,14 +261,15 @@ Blender 5.2 LTS and 5.3 are both in: after a change of the stdlib, run `make bac
 
 ## Python (`python/`)
 
-`base-node-blender` depends on `base-node`, the core, of the same version. Install both from GitHub or a local checkout:
+`base-node-blender` depends on `base-node`, the core, of the version it needs (`base-node==…` of
+`python/pyproject.toml`). Install both from GitHub or a local checkout:
 
 ```bash
 # From GitHub (pip / uv)
-pip install "base-node @ git+https://github.com/marcgardent/base-node-language.git#subdirectory=python" "base-node-blender @ git+https://github.com/marcgardent/base-node-language.git#subdirectory=plugins/blender/python"
+pip install "base-node @ git+https://github.com/marcgardent/base-node-language.git#subdirectory=python" "base-node-blender @ git+https://github.com/marcgardent/base-node-for-blender.git#subdirectory=python"
 
 # From a local clone, at its root
-pip install -e ./python -e ./plugins/blender/python
+pip install -e ./core/python -e ./python
 ```
 
 Or in `pyproject.toml`:
@@ -261,7 +277,7 @@ Or in `pyproject.toml`:
 ```toml
 dependencies = [
   "base-node @ git+https://github.com/marcgardent/base-node-language.git#subdirectory=python",
-  "base-node-blender @ git+https://github.com/marcgardent/base-node-language.git#subdirectory=plugins/blender/python",
+  "base-node-blender @ git+https://github.com/marcgardent/base-node-for-blender.git#subdirectory=python",
 ]
 ```
 
@@ -296,13 +312,13 @@ print(blender.infer(ast).lines())           # Compatible: …, Outside …: …
 Run tests:
 
 ```bash
-make test-python      # or: PYTHONPATH=../../python:python pytest python/tests
+make test-python      # or: PYTHONPATH=core/python:python pytest python/tests
 ```
 
 ## Rust (`rust/`)
 
 `base-node-blender` checks a text against a target and holds the targets and the stdlib; it depends on
-`base-node`, the core's crate, by path.
+`base-node`, the core's crate, by path (`core/rust`).
 
 Add to `Cargo.toml` (Cargo discovers each crate's `Cargo.toml` in the repository by its name):
 
@@ -310,17 +326,18 @@ Add to `Cargo.toml` (Cargo discovers each crate's `Cargo.toml` in the repository
 [dependencies]
 # From GitHub
 base-node = { git = "https://github.com/marcgardent/base-node-language.git" }
-base-node-blender = { git = "https://github.com/marcgardent/base-node-language.git" }
+base-node-blender = { git = "https://github.com/marcgardent/base-node-for-blender.git" }
 
 # Or from a local checkout
-# base-node = { path = "../base-node-language/rust" }
-# base-node-blender = { path = "../base-node-language/plugins/blender/rust" }
+# base-node = { path = "../base-node-for-blender/core/rust" }
+# base-node-blender = { path = "../base-node-for-blender/rust" }
 ```
 
 Or via `cargo add`:
 
 ```bash
-cargo add --git https://github.com/marcgardent/base-node-language.git base-node base-node-blender
+cargo add --git https://github.com/marcgardent/base-node-language.git base-node
+cargo add --git https://github.com/marcgardent/base-node-for-blender.git base-node-blender
 ```
 
 Library API:
@@ -402,9 +419,9 @@ A `.bn` file dropped on Blender from a file manager (or opened by *File > Import
 
 A `use name` without `from` finds its module in this order: the text `name.bn` of the .blend, `name.bn` next to the imported file, `name.bn` in the *Module Folder* of the add-on preferences, then the standard library bundled with the add-on (`addon/stdlib` is a link to `stdlib/`).
 
-Build the package and install it in a local Blender. In this folder, `addon/stdlib`, `addon/blender/_targets`
+Build the package and install it in a local Blender. In this repository, `addon/stdlib`, `addon/blender/_targets`
 and the modules of `addon/blender/` (what is Blender's, `python/base_node_blender`) are symbolic links
-within this folder; `addon/lang/`, the core the add-on embeds, is made by `make addon-lang`, which links
+within it; `addon/lang/`, the core the add-on embeds, is made by `make addon-lang`, which links
 there the modules of the core's package `base_node`. Blender's `extension build` skips links, so
 `addon/build.sh` builds a copy with the links resolved into files. `make extension` runs both
 (`BLENDER=` names the blender to run):
@@ -429,6 +446,6 @@ blender --background --factory-startup --python-exit-code 1 \
 - `addon/`: GPL-3.0-or-later.
 - `corpus/`: not MIT nor Apache-2.0: each `corpus/v1/<library>/` is a derived work of its library, under that library's license, in its `LICENSE` (GPL-3.0-or-later, GPL-2.0-or-later or CC0-1.0; see [`corpus/README.md`](corpus/README.md)).
 - `addon/tests/fixtures/everyday_geometry_nodes.blend`: [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/), node groups by Cartesian Caramel, from [blender-remote-asset-library-test-v1](https://github.com/cartesiancaramel/blender-remote-asset-library-test-v1) and its `.bn` text in `everyday_geometry_nodes/` (see [their README](addon/tests/fixtures/README.md)).
-- The rest of this folder (`python/`, `rust/`, `web/`, `targets/`, `stdlib/`, `examples/`, `conformance/`, `site/`, `spec/`): [MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE).
+- The rest of this repository (`python/`, `rust/`, `web/`, `targets/`, `stdlib/`, `examples/`, `conformance/`, `site/`, `spec/`): [MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE).
 
 Hosted and sponsored by [Ludopant Creative Studio](https://ludopant.com/). The licences above stay as they are.
