@@ -6,7 +6,7 @@ members = ["rust", "web"]
 resolver = "2"
 
 [workspace.dependencies]
-base-node = { path = "core/rust", version = "=1.0.0-rc.8" }
+base-node = { path = "core/rust", version = "=1.0.0" }
 
 [profile.release]
 opt-level = "s"
