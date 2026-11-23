@@ -104,7 +104,7 @@ def test_no_datablock_is_an_underscore():
     g = compile_one("  return StringToCurves(font: Font[font: _]())")
     assert next(n for n in g.nodes if n.bl_idname == "GeometryNodeInputFont").props == {"font": None}
     # Elsewhere `_` is still no name
-    assert errors("  return StringToCurves(string: _)") == ["t.bn:2:25  unknown name '_'"]
+    assert errors("  return StringToCurves(string: _)") == ["t.bn:2:33  unknown name '_'"]
 
 
 def test_values_no_literal_makes():
