@@ -595,10 +595,12 @@ class Context:
             if depth == 0 and tok.line > start_line and tok.kind != "|>" and t[i - 1].kind not in ("|>", ","):
                 break
             if tok.kind == "(":
-                if depth == 0 and t[i - 1].kind == "IDENT":
-                    name = i - 1
+                if depth == 0:
+                    name = self.name_before(i)  # past its settings, `Math[ADD](…)`, and its types
                 depth += 1
-            elif tok.kind == ")":
+            elif tok.kind == "[":
+                depth += 1
+            elif tok.kind in (")", "]"):
                 depth -= 1
             elif depth == 0 and tok.kind in ("+", "-", "*", "/"):
                 return None
@@ -721,7 +723,8 @@ class Context:
             for i in range(at, body, -1):
                 depth += {")": 1, "(": -1}.get(t[i].kind, 0)
                 if depth == 0:
-                    return self.outputs(i - 1) if t[i - 1].kind == "IDENT" else []
+                    name = self.name_before(i)
+                    return self.outputs(name) if name is not None else []
             return []
         if target.kind != "IDENT":
             return []

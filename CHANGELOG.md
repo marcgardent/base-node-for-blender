@@ -10,6 +10,31 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ## [Unreleased]
 
+## [1.0.0-rc.10] - 2026-11-23
+
+### Blender add-on
+
+- Fixed: an unknown name given to an input is underlined where it is written, no longer on the
+  input's name: `IcoSphere(radius: size)` underlines `size`, not `radius`.
+- Added: the cursor on an error, or just past it, shows its message in a box under the line, as the
+  suggestions are shown.
+- Fixed: every new tree of a text is laid out as Arrange Nodes does, the second graph of a text as
+  the first; before, only a tree with comments was.
+- Fixed: a build keeps the selection of the nodes and selects nothing in a new tree. Every node came
+  selected, so Arrange Nodes and Copy Selected took the whole tree.
+- Changed: Paste .bn arranges the trees it builds, a group rebuilt in place too.
+- Fixed: Nodes ↔ Text from the Shader Editor and back stays in the Shader Editor; it landed in
+  Geometry Nodes.
+- Changed: every `|>` is drawn ▷, wherever it is, a pipe just typed too; only the one the cursor is
+  in, or the selection covers, shows its two characters. Before, the whole line of the cursor did,
+  and so the line a failed build put the cursor on.
+- Fixed: completion offers the outputs of a node written with its settings in brackets:
+  `sites = DistributePointsOnFaces[POISSON](…)` then `sites.` offers `points`, `normal`, `rotation`.
+
+### Site and documents
+
+- Changed: the mini moon tutorial is illustrated by its phases, animated.
+
 ## [1.0.0-rc.9] - 2026-11-23
 
 ### Blender add-on

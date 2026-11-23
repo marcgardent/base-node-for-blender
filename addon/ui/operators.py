@@ -144,10 +144,14 @@ class BASE_NODE_OT_toggle_view(bpy.types.Operator):
             report_error(self, e)
             return {"CANCELLED"}
         area.type = "NODE_EDITOR"
+        if tree is None:
+            return {"FINISHED"}
+        # Back in the editor of its kind: the Node Editor comes back as Geometry Nodes otherwise
+        area.ui_type = tree.bl_idname
         space = area.spaces.active
+        space.tree_type = tree.bl_idname
         # A material's tree is shown through its object: the editor finds it again by itself
-        if tree is not None and space.edit_tree != tree and not tree.is_embedded_data:
-            space.tree_type = tree.bl_idname
+        if not tree.is_embedded_data and (space.node_tree is None or space.edit_tree != tree):
             space.node_tree = tree
         return {"FINISHED"}
 
@@ -192,6 +196,18 @@ class BASE_NODE_OT_copy_bn(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def arrange_pasted(context, trees):
+    """Lay out every tree a paste built, as Arrange Nodes does, the one shown with its drawn sizes."""
+    if getattr(context, "window", None) and getattr(context, "area", None):
+        try:
+            bpy.ops.wm.redraw_timer(type="DRAW", iterations=0)
+        except RuntimeError:
+            pass  # no window to draw in: the sizes are estimated
+    room = comments.room if prefs.get().show_comments else None
+    for t in trees:
+        arrange_nodes(t, room=room)
+
+
 class BASE_NODE_OT_paste_bn(bpy.types.Operator):
     """Build the .bn text of the clipboard into this file: node groups, materials, compositor.
     A graph of the name of an existing group rebuilds it in place, as File > Import does"""
@@ -225,6 +241,7 @@ class BASE_NODE_OT_paste_bn(bpy.types.Operator):
             # Pinned: else the editor goes back at once to the active object's modifier or material
             space.pin = True
             space.node_tree = tree
+        arrange_pasted(context, trees)
         message = f"'{names[0]}' pasted" if len(trees) == 1 else f"{len(trees)} trees pasted"
         if rebuilt:
             message += f"; rebuilt in place: {', '.join(rebuilt)}"

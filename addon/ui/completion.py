@@ -16,7 +16,7 @@ from ..host import BlenderSchema, modules
 from ..blender.complete import OPENERS, complete, product_sign, signature
 from ..blender.schema import goes_on_name
 from . import actions, draw, prefs
-from .highlight import COLORS, SOCKETS, rgb
+from .highlight import COLORS, ERROR, SOCKETS, errors_at, rgb
 
 ROWS = 10
 WATCH = 0.1
@@ -145,10 +145,12 @@ def draw_overlay():
             return
     except ReferenceError:
         return  # the text was freed with its file
-    # The prototype sticks to the line; the suggestions go past it
+    # The prototype sticks to the line; the suggestions go past it, else what is wrong there
     below, above = draw_hint(space)
     if Popup.text == text:
         draw_popup(space, below, above)
+    else:
+        draw_error(space, below, above)
 
 
 # The inputs of the call stand apart from every other suggestion
@@ -316,6 +318,47 @@ def draw_hint(space):
             blf.position(0, x + pad + dx, k.baseline(top, n), 0)
             blf.draw(0, part)
     return (height + 1, 0) if under else (0, height + 1)
+
+
+def wrap(words, widest):
+    """Rows of a message, cut between words to fit `widest` pixels (blf's size already set)."""
+    rows = [""]
+    for word in words.split(" "):
+        line = f"{rows[-1]} {word}" if rows[-1] else word
+        if rows[-1] and blf.dimensions(0, line)[0] > widest:
+            rows.append(word)
+        else:
+            rows[-1] = line
+    return rows
+
+
+def draw_error(space, gap_below=0, gap_above=0):
+    """The message of the error the cursor is on, past the prototype, as the suggestions would be."""
+    text = space.text
+    messages = errors_at(text, actions.DIAGNOSTICS.get(text.name))
+    if not messages:
+        return
+    k = Look(space)
+    lh, pad, region = k.lh, k.pad, k.region
+    blf.size(0, k.size)
+    mark = round(3 * k.scale)
+    widest = max(lh, region.width - pad * 6 - mark)
+    rows = [row for m in messages for row in wrap(m, widest)]
+    width = mark + max(blf.dimensions(0, r)[0] for r in rows) + pad * 3
+    height = lh * len(rows) + pad * 2
+
+    x, y = draw.char_box(space, text.current_line_index, text.current_character)
+    below, above = y - pad - gap_below, region.height - (y + lh) - gap_above
+    under = height <= below or below >= above
+    top = y - pad - gap_below if under else y + lh + gap_above + height
+    top = max(height, min(top, region.height))
+    x = max(0, min(x - pad, region.width - width))
+    k.box(x, top, width, height, 0.8, 0.35)
+    draw.rects([(x + pad, top - height + pad, x + pad + mark, top - pad)], ERROR)
+    blf.color(0, *k.fg, 1.0)
+    for n, row in enumerate(rows):
+        blf.position(0, x + pad * 2 + mark, k.baseline(top, n), 0)
+        blf.draw(0, row)
 
 
 # The watcher: one (line, column, body length) per text name, from the last tick

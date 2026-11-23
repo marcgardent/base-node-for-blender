@@ -150,6 +150,19 @@ def underlines(space, region, diagnostics):
     return out
 
 
+def errors_at(text, diagnostics):
+    """The messages of the errors the cursor stands on: in what their red bar underlines, or just past it."""
+    row, char = text.current_line_index, text.current_character
+    out = []
+    for d in diagnostics or ():
+        if d.file != text.name or d.line - 1 != row or not 0 <= row < len(text.lines):
+            continue
+        start, end = span_at(text.lines[row].body, d.col)
+        if start <= char <= end and d.message not in out:
+            out.append(d.message)
+    return out
+
+
 def draw_highlight():
     space = bpy.context.space_data
     text = space.text

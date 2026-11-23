@@ -696,6 +696,9 @@ class GraphChecker:
         """A name bound to nothing, with the names of this graph it looks like: a typo, most often."""
         close = difflib.get_close_matches(name, list(self.env), 3)
         hint = f"; did you mean {', '.join(close)}?" if close else ""
+        value = getattr(at, "value", None)  # an argument: point at its value, not its name
+        if getattr(value, "line", None) is not None:
+            at = value
         self.error(at, f"unknown name '{name}'{hint}")
 
     def run(self):

@@ -299,3 +299,14 @@ def test_is_condition_follows_names(monkeypatch):
     # A Compare node gives a Bool
     compile_one(graph("  gt = a >= b", FLOATS), FakeSchema())
     assert checkers[-1].is_condition(checkers[-1].env["gt"])
+
+
+@pytest.mark.parametrize("body, col", [
+    ("  a = Grid(size_x: size, vertices_x: 4).mesh", 20),  # the value, not the key `size_x`
+    ("  a = sin(t) + nope", 16),
+])
+def test_an_unknown_name_points_at_itself(schema, body, col):
+    with pytest.raises(BnError) as e:
+        compile_source(graph(body), schema, "t.bn")
+    [d] = e.value.diagnostics
+    assert (d.line, d.col) == (2, col)

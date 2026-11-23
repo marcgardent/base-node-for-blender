@@ -12,8 +12,8 @@ from .typecheck import check, deprecations, precision_warnings
 
 # The version of this library, of its standard library (stdlib/manifest.json) and of the add-on: its
 # own. The core's is base_node.__version__, the one the distribution needs (base-node==…)
-__version__ = "1.0.0rc9"
-STDLIB_VERSION = "1.0.0-rc.9"
+__version__ = "1.0.0rc10"
+STDLIB_VERSION = "1.0.0-rc.10"
 
 
 def compile_source(source, schema, filename="<text>", load=None, warnings=None):

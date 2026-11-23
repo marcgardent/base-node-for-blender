@@ -2,8 +2,9 @@
 
 The Text Editor draws one character per cell and knows no ligatures, so a
 font can't do it: this paints the theme's background over `|` and `>`, then
-draws the symbol across both. The text itself keeps `|>`. Lines the cursor
-or the selection is on show the real characters, to edit them.
+draws the symbol across both. The text itself keeps `|>`. Any `|` right
+before a `>` is one, wherever it is: no lexer, no format to wait for. Only the
+pipe the cursor stands in, or the selection covers, shows its two characters.
 """
 
 import os
@@ -11,7 +12,6 @@ import os
 import blf
 import bpy
 
-from ..lang.lexer import tokenize
 from . import actions, draw, prefs
 
 SYMBOL = "▷"
@@ -19,15 +19,24 @@ SYMBOL = "▷"
 _fonts = {}  # font path -> blf id
 
 
-def columns(tokens):
-    """0-based columns of the pipes among one line's tokens."""
-    return [t.col - 1 for t in tokens if t.kind == "|>"]
+def columns(body):
+    """0-based columns of the pipes of one line: every `|>`."""
+    out, col = [], body.find("|>")
+    while col >= 0:
+        out.append(col)
+        col = body.find("|>", col + 2)
+    return out
 
 
-def raw_lines(text):
-    """0-based lines that keep `|>`: from the cursor to the end of the selection."""
-    a, b = text.current_line_index, text.select_end_line_index
-    return range(min(a, b), max(a, b) + 1)
+def raw(text, row, col):
+    """True when the pipe at a 0-based row and column is being edited: the cursor
+    between its `|` and `>`, or the selection over one of them."""
+    a = (text.current_line_index, text.current_character)
+    b = (text.select_end_line_index, text.select_end_character)
+    start, end = min(a, b), max(a, b)
+    if start == end:
+        return start == (row, col + 1)
+    return start < (row, col + 2) and (row, col) < end
 
 
 def mono_font():
@@ -45,12 +54,11 @@ def mono_font():
 def cells(space, region):
     """(x0, y0, x1) of the two cells of each pipe to draw as a symbol."""
     text = space.text
-    keep = raw_lines(text)
     out = []
     for row in draw.visible_rows(space, region):
-        if row in keep or "|>" not in text.lines[row].body:
-            continue
-        for col in columns(tokenize(text.lines[row].body, strict=False)):
+        for col in columns(text.lines[row].body):
+            if raw(text, row, col):
+                continue
             x0, y0 = draw.char_box(space, row, col)
             x1, y1 = draw.char_box(space, row, col + 2)
             if y1 != y0 or x0 < body_left(space, (x1 - x0) / 2):
