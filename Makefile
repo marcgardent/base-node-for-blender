@@ -21,7 +21,7 @@ CORE_PACKAGE = $(abspath $(CORE)/python/base_node)
 LANG = __init__.py ast.py colors.py errors.py format.py header.py identifiers.py lexer.py names.py parser.py printer.py py.typed
 
 .DEFAULT_GOAL := help
-.PHONY: help test python-min test-python test-rust test-web test-blender test-promised test-libraries addon-lang extension backend names docs srt-check bump bump-check core release ci
+.PHONY: help test python-min test-python test-rust test-web test-blender test-promised test-libraries addon-lang extension backend names docs compare srt-check bump bump-check core release ci
 
 help: ## List the targets
 	@grep -hE '^[a-z-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  make %-16s %s\n", $$1, $$2}'
@@ -77,6 +77,9 @@ names: ## Format FILES ("a.bn b.bn"), the inputs of Blender's nodes by name, wit
 
 docs: ## Write the reference pages into site/reference/
 	python3 -m base_node_blender.cli docs --core $(CORE)
+
+compare: ## Write site/state-of-the-art-autumn-2026.html, site/sitemap.xml and robots.txt from site/compare/tools.toml and site/site.toml
+	python3 tools/compare_page.py
 
 bump: ## Write VERSION (x.y.z or x.y.z-rc.n) everywhere this repository writes its version, and CORE_VERSION (default: CORE's) where it says the core it needs; ARCHIVE=1 builds site/extensions/ again
 	python3 tools/bump.py $(if $(filter command environment,$(firstword $(origin VERSION))),$(VERSION),$(error Say the version: make bump VERSION=x.y.z)) --core $(CORE_VERSION) $(if $(ARCHIVE),--archive)
