@@ -1,7 +1,8 @@
 """Preview images and videos of the Blender Extensions listing, from the pictures of site/images.
 
 extensions.blender.org shows previews in a 16:9 frame: each picture is padded to 16:9 on a dark
-background, at its own resolution (no upscaling). Videos stay mp4 (gif is not accepted).
+background, at its own resolution (no upscaling). Videos stay mp4 (gif is not accepted); an animated
+webp of the site becomes one.
 
     python3 addon/listing/build_previews.py   ->  addon/listing/previews/
 
@@ -31,6 +32,7 @@ PREVIEWS = [
     ("10-patterns2d.png", "patterns2d.png"),
     ("11-qc.png", "qc.png"),
     ("12-stmap.png", "stmap.png"),
+    ("13-mini-moon.mp4", "tutorials/mini-moon.webp"),
 ]
 
 
@@ -63,13 +65,39 @@ def video(src, dst):
                    check=True)
 
 
+def animation(src, dst):
+    """An animated webp as mp4: its frames, decoded by Pillow, piped to ffmpeg at their own rate."""
+    im = Image.open(src)
+    frames = []
+    for i in range(im.n_frames):
+        im.seek(i)
+        frames.append(im.convert("RGB"))
+    fps = 1000 / (im.info.get("duration") or 40)
+    w, h = frames[0].size
+    fw, fh = frame(w, h)
+    pad = "0x%02x%02x%02x" % frames[0].getpixel((0, 0))  # its own background, not a band of another gray
+    ffmpeg = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
+                               "-s", f"{w}x{h}", "-framerate", f"{fps:.3f}", "-i", "-", "-vf",
+                               f"pad={fw}:{fh}:(ow-iw)/2:(oh-ih)/2:color={pad}", "-c:v", "libx264",
+                               "-pix_fmt", "yuv420p", "-crf", "18", "-an", "-movflags", "+faststart",
+                               str(dst)], stdin=subprocess.PIPE)
+    for f in frames * 2:  # two turns: a preview loops less smoothly than a webp
+        ffmpeg.stdin.write(f.tobytes())
+    ffmpeg.stdin.close()
+    if ffmpeg.wait():
+        raise RuntimeError(f"ffmpeg failed on {src}")
+
+
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir()
     shutil.copy(HERE / "featured.png", OUT / "01-cover.png")
     for name, source in PREVIEWS:
-        (video if name.endswith(".mp4") else image)(IMAGES / source, OUT / name)
+        if source.endswith(".webp"):
+            animation(IMAGES / source, OUT / name)
+        else:
+            (video if name.endswith(".mp4") else image)(IMAGES / source, OUT / name)
     for path in sorted(OUT.iterdir()):
         print(f"{path.name}: {path.stat().st_size / 1e6:.2f} MB")
 
