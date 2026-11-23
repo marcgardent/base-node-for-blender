@@ -742,6 +742,37 @@ def test_pipe_symbol():
     print("   ✓ Pipe symbol verified")
 
 
+def test_error_under_the_cursor():
+    """The cursor on a red bar shows its message, as the suggestions show theirs."""
+    print("-> Test: Error under the cursor...")
+    from base_node.ui import actions
+    from base_node.ui.completion import draw_error, wrap
+    from base_node.ui.highlight import errors_at
+
+    text = bpy.data.texts.new("cursor_error.bn")
+    text.from_string("geometry graph g(geometry: Geometry) -> Geometry {\n"
+                     "  a = SetShadeSmooth(mesh: nope)\n  return a\n}\n")
+    assert not actions.check_text(text)
+    diags = actions.DIAGNOSTICS[text.name]
+    col = text.lines[1].body.index("nope")
+    for char, want in ((col, True), (col + 2, True), (col + 4, True), (col - 2, False), (0, False)):
+        text.cursor_set(1, character=char)
+        got = errors_at(text, diags)
+        assert bool(got) == want and all("unknown name 'nope'" in m for m in got), (char, got)
+    text.cursor_set(2, character=4)
+    assert errors_at(text, diags) == [], "another line shows nothing"
+    assert errors_at(text, None) == []
+    actions.found(text, text.as_string())
+    bpy.data.texts.remove(text)
+
+    import blf
+    blf.size(0, 12)
+    rows = wrap("unknown name 'nope'; did you mean nape, rope, note?", 60)
+    assert len(rows) > 1 and " ".join(rows) == "unknown name 'nope'; did you mean nape, rope, note?", rows
+    assert callable(draw_error)
+    print("   ✓ Error under the cursor verified")
+
+
 def test_live_apply():
     """While typing, a valid text is built into its tree; an invalid one changes nothing and keeps the cursor."""
     print("-> Test: Live apply...")
@@ -4209,6 +4240,7 @@ def main():
         test_comments,
         test_targets_and_linter,
         test_pipe_symbol,
+        test_error_under_the_cursor,
         test_live_apply,
         test_live_diagnostics,
         test_edition_and_deprecated,
