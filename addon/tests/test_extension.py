@@ -324,7 +324,7 @@ def test_font_everywhere():
     same tree. A named string is no font: the checker says to write the name in place or a Font node."""
     print("-> Test: fonts in every place...")
     from base_node.host import build_source, export_tree
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     other = bundled_font().name
     src = f'''geometry graph fonts(geometry: Geometry, b: Bool) -> Geometry {{
@@ -695,23 +695,46 @@ geometry graph spiral(r: Float = 1.0) -> Geometry {
 
 
 def test_pipe_symbol():
-    """The pipes drawn as ▷: real ones only, and not on the lines being edited."""
+    """The pipes drawn as ▷: every `|>`, and only the one being edited keeps its characters."""
     print("-> Test: Pipe symbol...")
-    from base_node.lang.lexer import tokenize
     from base_node.ui import pipes, prefs
 
     line = '  return g |> F(s: "a |> b") |> G()  // c |> d'
-    assert pipes.columns(tokenize(line, strict=False)) == [11, 29], "only the pipes outside strings and comments"
-    assert pipes.columns(tokenize("a |>", strict=False)) == [2]
-    assert pipes.columns(tokenize("    |> F()", strict=False)) == [4], "a step on its own line, as printed"
+    assert pipes.columns(line) == [11, 22, 29, 42], "every | next to a >"
+    assert pipes.columns("a |>") == [2]
+    assert pipes.columns("    |> F()") == [4], "a step on its own line, as printed"
+    assert pipes.columns("x |>|> y") == [2, 4]
+    assert pipes.columns("a | > b") == [], "apart, they are two characters"
 
     text = bpy.data.texts.new("pipes.bn")
-    text.from_string("a\nb |> F()\nc |> G()\nd |> H()\n")
-    text.cursor_set(1)
-    assert list(pipes.raw_lines(text)) == [1], "the cursor's line keeps |>"
+    text.from_string("a\nb |> F() |> G()\nc |> G()\nd |> H()\n")
+    text.cursor_set(1, character=3)  # between `|` and `>`
+    assert [pipes.raw(text, 1, c) for c in pipes.columns(text.lines[1].body)] == [True, False], \
+        "only the pipe the cursor is in keeps |>"
+    text.cursor_set(1, character=4)  # right after it: drawn
+    assert not pipes.raw(text, 1, 2)
+    text.cursor_set(2)
+    assert not pipes.raw(text, 2, 2), "the cursor's line draws its pipes"
     text.cursor_set(3)
-    text.select_set(3, 0, 1, 2)  # a selection made upward still covers its lines
-    assert list(pipes.raw_lines(text)) == [1, 2, 3]
+    text.select_set(3, 0, 1, 10)  # a selection made upward, from the `>` of the second pipe
+    assert [pipes.raw(text, 1, 2), pipes.raw(text, 1, 9), pipes.raw(text, 2, 2), pipes.raw(text, 3, 2)] == \
+        [False, True, True, False], "the selection's pipes keep |>"
+    bpy.data.texts.remove(text)
+
+    # A lone `|>` just typed in an empty text is an error: the pipe stays ▷ under its red bar
+    from base_node.blender import BnError
+    from base_node.ui import actions
+    text = bpy.data.texts.new("lone_pipe.bn")
+    text.from_string("|>")
+    text.cursor_set(0, character=2)
+    assert not actions.check_text(text) and actions.DIAGNOSTICS[text.name], "a lone pipe is an error"
+    assert not pipes.raw(text, 0, 0), "typed, the pipe is drawn"
+    try:
+        actions.build_text(text)
+    except BnError:
+        pass
+    assert not pipes.raw(text, 0, 0), "the cursor a failed build puts on the error leaves it drawn"
+    actions.found(text, text.as_string())
     bpy.data.texts.remove(text)
 
     assert prefs.DEFAULTS.pipe_symbol is True, "on by default"
@@ -1203,7 +1226,7 @@ def test_shader_and_compositor():
     """Shader and compositor graphs build, read back the same, and feed a material or the Composite."""
     print("-> Test: Shader and compositor trees...")
     from base_node.host import build_source, export_tree
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     for source, tree_type in ((RUST, "ShaderNodeTree"), (LOOK, "CompositorNodeTree")):
         tree, = build_source(source, "t.bn")
@@ -1347,7 +1370,7 @@ def test_module_graphs_in_other_trees():
     print("-> Test: Module graphs in other kinds of trees...")
     needs_node("compositor", "Compare")  # math's gain compares, built here in a compositor tree
     from base_node.host import build_source, export_tree, modules
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     before = set(bpy.data.node_groups)
     tree, = build_source(CONTRAST, "t.bn")
@@ -2138,7 +2161,7 @@ def test_material_tree():
     """A material's own tree reads as a `shader(material: true)` graph, and builds back into it."""
     print("-> Test: A material's own tree...")
     from base_node.host import build_source, export_tree
-    from base_node.lang import BnError
+    from base_node.blender import BnError
     from base_node.ui import actions
 
     # Made by hand, as a user does: a new material, a noise into its Principled BSDF
@@ -2319,7 +2342,7 @@ def test_ramps_and_curves():
     """A Color Ramp's stops and the points of curves are written in the text and built back."""
     print("-> Test: Ramps and curves...")
     from base_node.host import build_source, export_tree
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     tree, = build_source(RAMPS, "t.bn")
     by_type = {n.bl_idname: n for n in tree.nodes}
@@ -2390,7 +2413,7 @@ def test_text_view():
     """5. A tree shown as text is written back into it, and the text goes away."""
     print("-> Test 5: Text view of a tree...")
     from base_node.host import build_source
-    from base_node.lang import BnError
+    from base_node.blender import BnError
     from base_node.ui import actions
 
     tree = build_source("""
@@ -2461,7 +2484,7 @@ def test_import_files():
     print("-> Test 6: Import .bn files...")
     import os
     from base_node.host import modules
-    from base_node.lang import BnError
+    from base_node.blender import BnError
     from base_node.ui import actions
 
     # curves2d uses math: found next to it, and kept with its path for a later build
@@ -2574,7 +2597,7 @@ def test_copy_paste():
     print("-> Test: Copy as .bn and Paste .bn...")
     from types import SimpleNamespace
     from base_node.host import build_source, export_tree, modules
-    from base_node.lang import BnError
+    from base_node.blender import BnError
     from base_node.ui import actions
 
     def forget(names):
@@ -2966,7 +2989,7 @@ def test_smooth_functions_and_shader_keys():
     Blender's identifiers (`Shader`, `Shader_001`) are still read."""
     print("-> Test: smooth_min, smooth_max, MixShader(a:, b:)...")
     from base_node.host import build_source, export_tree
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     smooth = ("geometry graph blend(a: Float, b: Float, k: Float = 0.25) -> Float {\n"
               "  return smooth_min(a, b, k) + smooth_max(a, 2.0, 0.5)\n}\n")
@@ -3012,7 +3035,7 @@ def test_comparisons_in_a_shader_tree():
     giving a Float 0 or 1, and read back as written. A geometry tree keeps its Compare."""
     print("-> Test: Comparisons in a shader tree...")
     from base_node.host import build_source, export_tree
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     def math(tree):
         return [n.operation for n in tree.nodes if n.bl_idname == "ShaderNodeMath"]
@@ -3086,7 +3109,7 @@ def test_ternary():
     print("-> Test: Ternary...")
     from base_node.host import build_source, export_tree
     from base_node.host.schema import BlenderSchema
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     # Blender 5.2 has no Switch in a shader tree and no Compare in the compositor, where a comparison
     # is Math nodes (spec/targets.md, what 5.3 has that 5.2 has not)
@@ -3313,7 +3336,7 @@ def test_tuples_choose_the_type():
     from base_node.host import build_source, export_tree
     from base_node.host.schema import BlenderSchema
     from base_node.blender import compile_source
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     tree = build_source(TUPLE_TYPES, filename="tuple_types.bn")[-1]
     types = sorted((n.bl_idname, getattr(n, "input_type", None) or n.data_type) for n in tree.nodes
@@ -3560,7 +3583,7 @@ def test_node_names():
     print("-> Test: Node names...")
     from base_node.host import build_source
     from base_node.host.schema import BlenderSchema
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     with BlenderSchema() as schema:
         def name(kind, idname):
@@ -3788,6 +3811,25 @@ geometry graph ripple(geometry: Geometry, frequency: Float = 2.0, amplitude: Flo
         if name not in framed:
             assert x1 <= left or x0 >= right or y1 >= top or y0 <= bottom, f"{name} is inside the frame"
     print(f"   ✓ {len(nodes)} nodes arranged")
+
+    # Every new tree of a text comes arranged, the second graph as the first: Arrange moves nothing
+    two = """
+geometry graph first_one(geometry: Geometry, t: Float = 1.0) -> Geometry {
+  return SetPosition(geometry, offset: CombineXYZ(z: sin(length(Position()) * t)))
+}
+
+geometry graph second_one(geometry: Geometry, t: Float = 1.0) -> Geometry {
+  p = Position()
+  return SetShadeSmooth(SetPosition(geometry, offset: p * t))
+}
+"""
+    for tree in build_source(two, filename="two.bn"):
+        before = {n.name: tuple(n.location_absolute) for n in tree.nodes}
+        arrange_nodes(tree)
+        for n in tree.nodes:
+            assert all(abs(a - b) < 0.01 for a, b in zip(before[n.name], n.location_absolute)), \
+                f"{tree.name}: '{n.name}' was not arranged"
+    print("   ✓ every new tree of a text arranged")
 
 
 def test_idioms_build():
@@ -4214,7 +4256,7 @@ def main():
         test_engine_variants,
     ]
     tests += pack_tests()
-    from base_node.lang import BnError
+    from base_node.blender import BnError
 
     failed, skipped = 0, []
     for fn in tests:
