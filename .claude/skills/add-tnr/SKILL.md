@@ -28,7 +28,7 @@ where they do not run.
 Read the repo's `LICENSE` (and `pyproject.toml`, `blender_manifest.toml`, the README: they may disagree; the
 `LICENSE` file wins, and a `LICENSE.OLD` or upstream notice must be kept if anything is copied).
 
-Base Node's tests live in `addon/`, which is GPL-3.0-or-later (see this folder's README, *License*).
+Base Node's tests live in `addon/`, which is GPL-3.0-or-later (see the README, *License*).
 
 | Library license | Fetch at test time | Commit the `.blend` / `.bn` | Credit |
 |---|---|---|---|
@@ -41,7 +41,7 @@ Base Node's tests live in `addon/`, which is GPL-3.0-or-later (see this folder's
 Fetching is the default even when committing is allowed: nothing large in the repository, and a new version
 is one line of the manifest. The baseline holds only group names, statuses and hashes, never their text.
 Commit a library (`file = "…"` in the manifest, the way `tests/fixtures/everyday_geometry_nodes.blend` is)
-only when Marc wants its `.bn` texts readable in the repo; then add it to the *License* list of this folder's README.
+only when Marc wants its `.bn` texts readable in the repo; then add it to the *License* list of the README.
 When the license is unclear, say so and ask Marc before going on.
 
 ## 2. Find the node groups
@@ -95,7 +95,7 @@ blender --background --factory-startup --python-exit-code 1 \
 ```
 
 Run it from a clean checkout of the commit the baseline is for (`git worktree add <scratchpad>/wt -b
-tnr/<name> main`, then work there): other sessions may be editing the reader or the builder in the main
+tnr/<name> main`, then `make core` there for the core's submodule, and work there): other sessions may be editing the reader or the builder in the main
 checkout, and a baseline written against half-written code is worthless. `git status` first.
 
 With no baseline yet, the run writes it. Run it a **second** time: it must pass unchanged, or something is not

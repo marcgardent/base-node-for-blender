@@ -1,6 +1,5 @@
-# The Pages of Base Node for Blender once this folder is its own repository (the core a git submodule
-# at core/), served at https://basenode.ludopant.com/. Not run here: the root's pages.yml deploys
-# plugins/blender/site.
+# The site of Base Node for Blender, https://blender.basenode.ludopant.com/ (site/CNAME): site/, with
+# bn-view built and the reference pages written, the language's from the core's spec (core/).
 name: Pages
 
 on:
@@ -37,7 +36,7 @@ jobs:
       - name: Build bn-view (site/view/pkg)
         run: ./web/build.sh
       - name: Write the reference pages (site/reference, the language's from core/spec/)
-        run: make docs CORE=core
+        run: make docs
       - name: Prepare site
         run: touch site/.nojekyll
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0

@@ -1,6 +1,5 @@
-# The CI of Base Node for Blender once this folder is its own repository, the core of the language a
-# git submodule at core/ (see "Where the core is" in README.md). Not run here: GitHub runs the
-# workflows of the repository's root, whose ci.yml has the same jobs on plugins/blender.
+# The CI of Base Node for Blender, the core of the language the git submodule core/ (see "Where the
+# core is" in README.md): every job checks the submodules out.
 name: CI
 
 on:
@@ -46,13 +45,13 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install "$RUNNER_TEMP"/dist/*.whl
           "$RUNNER_TEMP/venv/bin/base-node" check examples/ripples.bn
       - name: Run the Python tests
-        run: make test-python CORE=core
+        run: make test-python
       - name: Run add-on module security tests (no Blender)
         run: python3 addon/tests/test_modules.py
       - name: Check the regression badges against the baselines (no Blender)
         run: python3 addon/tests/regression_badges.py --check
       - name: Check the versions of the Blender library, and the core it needs
-        run: make bump-check CORE=core
+        run: make bump-check
 
   blender-rust:
     name: Blender library and bn-view, Rust & WASM32
@@ -71,12 +70,12 @@ jobs:
           targets: wasm32-unknown-unknown
           components: clippy, rustfmt
       - name: "Run the Rust tests of the Blender library (stdlib, targets, head of a file, corpus)"
-        run: make test-rust CORE=core
+        run: make test-rust
       - name: Check wasm32-unknown-unknown target (the Blender library)
         working-directory: rust
         run: cargo check --target wasm32-unknown-unknown
       - name: Run the tests of bn-view
-        run: make test-web CORE=core
+        run: make test-web
       - name: Build the bn-view wasm
         working-directory: web
         run: cargo build --release --target wasm32-unknown-unknown
@@ -134,7 +133,7 @@ jobs:
           key: libraries-${{ matrix.blender }}-${{ hashFiles('addon/tests/libraries/*.toml') }}
       - name: Build the extension .zip (the core linked into addon/lang/, the links resolved into files)
         run: |
-          make extension CORE=core BLENDER="$HOME/blender/blender" DIST="$RUNNER_TEMP/dist"
+          make extension BLENDER="$HOME/blender/blender" DIST="$RUNNER_TEMP/dist"
           files=$(unzip -Z1 "$RUNNER_TEMP"/dist/base_node-*.zip)
           for f in lang/parser.py blender/targets.py blender/_targets/blender.json blender/_targets/blender/gltf.json stdlib/manifest.json stdlib/math.bn; do
             echo "$files" | grep -qx "$f" || { echo "the .zip lacks $f"; exit 1; }
