@@ -1,16 +1,19 @@
-# make help lists the targets, run in this folder. BLENDER names the blender to run (default: blender
-# on the PATH).
+# make help lists the targets. BLENDER names the blender to run (default: blender on the PATH).
 #
-# The core of the language is this library's one dependency: the checkout CORE (python/ for the
-# package base_node, rust/ for the crate base-node, the path rust/Cargo.toml and web/Cargo.toml give).
+# The core of the language is this library's one dependency: the checkout CORE, the git submodule
+# core/ (python/ for the package base_node, rust/ for the crate base-node, the path Cargo.toml gives).
 
-CORE ?= ../..
+CORE ?= core
 BLENDER ?= blender
 # The Blenders of the promised versions (`promised` in targets/blender.json), a space apart, for
 # make test-promised: BLENDERS="/path/to/blender-5.2/blender /path/to/blender-5.3/blender"
 BLENDERS ?= $(BLENDER)
 PYTEST ?= pytest
 DIST ?= dist
+# The version of the core of the checkout CORE: that of its crate
+CORE_VERSION ?= $(shell sed -n 's/^version = "\(.*\)"/\1/p' $(CORE)/rust/Cargo.toml)
+# The version of this repository: that of stdlib/manifest.json
+VERSION ?= $(shell sed -n 's/.*"stdlib_version": "\(.*\)".*/\1/p' stdlib/manifest.json)
 export PYTHONPATH := $(abspath $(CORE)/python):$(abspath python)
 BLENDER_RUN = $(BLENDER) --background --factory-startup --python-exit-code 1 --python
 # The modules of the core the add-on embeds as lang/: those of its package base_node
@@ -18,17 +21,20 @@ CORE_PACKAGE = $(abspath $(CORE)/python/base_node)
 LANG = __init__.py ast.py colors.py errors.py format.py header.py identifiers.py lexer.py names.py parser.py printer.py py.typed
 
 .DEFAULT_GOAL := help
-.PHONY: help test python-min test-python test-rust test-web test-blender test-promised test-libraries addon-lang extension backend names docs srt-check bump bump-check
+.PHONY: help test python-min test-python test-rust test-web test-blender test-promised test-libraries addon-lang extension backend names docs srt-check bump bump-check core release ci
 
 help: ## List the targets
 	@grep -hE '^[a-z-]+:.*## ' Makefile | awk -F':.*## ' '{printf "  make %-16s %s\n", $$1, $$2}'
+
+core: ## Check out the core at the commit this repository pins (git submodule update --init)
+	git submodule update --init core
 
 test: python-min test-python test-rust test-web test-blender ## Every test but the third-party libraries
 
 # The oldest Python pyproject.toml accepts
 PYTHON_MIN ?= 3.10
 
-python-min: ## Every tracked .py of this folder parses with the oldest Python pyproject.toml accepts (uv fetches it)
+python-min: ## Every tracked .py parses with the oldest Python pyproject.toml accepts (uv fetches it)
 	uv run -q --no-project --python $(PYTHON_MIN) python -c "import ast, sys; [ast.parse(open(f).read(), f) for f in sys.argv[1:]]" $$(git ls-files '*.py')
 
 test-python: ## Python library: Blender's nodes, the checker, the targets, the commands (pytest)
@@ -72,8 +78,16 @@ names: ## Format FILES ("a.bn b.bn"), the inputs of Blender's nodes by name, wit
 docs: ## Write the reference pages into site/reference/
 	python3 -m base_node_blender.cli docs --core $(CORE)
 
-bump: ## Write VERSION (x.y.z or x.y.z-rc.n) everywhere this folder writes its version, and CORE_VERSION (default: VERSION) where it says the core it needs; ARCHIVE=1 builds site/extensions/ again
-	python3 tools/bump.py $(or $(VERSION),$(error Say the version: make bump VERSION=x.y.z)) --core $(or $(CORE_VERSION),$(VERSION)) $(if $(ARCHIVE),--archive)
+bump: ## Write VERSION (x.y.z or x.y.z-rc.n) everywhere this repository writes its version, and CORE_VERSION (default: CORE's) where it says the core it needs; ARCHIVE=1 builds site/extensions/ again
+	python3 tools/bump.py $(if $(filter command environment,$(firstword $(origin VERSION))),$(VERSION),$(error Say the version: make bump VERSION=x.y.z)) --core $(CORE_VERSION) $(if $(ARCHIVE),--archive)
 
 bump-check: ## Every place holds the version of stdlib/manifest.json, and the core it needs is CORE's
 	python3 tools/bump.py --check --core-dir $(CORE)
+
+release: ## Tag main's head vVERSION and push the tag: the CI runs on it
+	git fetch -q origin main
+	git tag -a v$(VERSION) origin/main -m "base-node-for-blender $(VERSION)"
+	git push origin v$(VERSION)
+
+ci: ## Run the CI by hand on the pushed head of the current branch (BRANCH=…)
+	gh workflow run ci.yml --ref $(or $(BRANCH),$(shell git branch --show-current))

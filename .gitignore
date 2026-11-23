@@ -4,3 +4,30 @@ addon/lang/
 site/view/pkg/
 # The reference pages: written by `base-node docs` when the site is deployed
 site/reference/
+
+# Python
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.venv/
+uv.lock
+
+# Rust
+target/
+Cargo.lock
+
+# Blender
+*.blend1
+*.blend2
+.cache/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+.idea/
+.vscode/

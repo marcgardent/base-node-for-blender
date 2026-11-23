@@ -4,17 +4,17 @@
     python3 tools/bump.py 1.0.0-rc.1                   write it (make bump VERSION=1.0.0-rc.1)
     python3 tools/bump.py 1.0.0-rc.1 --core 1.0.0-rc.1 and the version of the core it needs
     python3 tools/bump.py --check                      fail unless every place holds the version of stdlib/manifest.json
-    python3 tools/bump.py --check --core-dir ../..     and the core it needs is that checkout's
+    python3 tools/bump.py --check --core-dir core      and the core it needs is that checkout's
     python3 tools/bump.py 1.0.0-rc.1 --archive         write it, then build site/extensions/ again with Blender
 
-Run in this folder. The version is SemVer, `x.y.z` or `x.y.z-alpha.n`, `x.y.z-beta.n`, `x.y.z-rc.n`. It
+The version is SemVer, `x.y.z` or `x.y.z-alpha.n`, `x.y.z-beta.n`, `x.y.z-rc.n`. It
 is written as it is but where Python reads it (`version` of pyproject.toml), which takes its PEP 440
 form: `1.0.0-rc.1` is `1.0.0rc1` there. Cargo and Blender's manifest take SemVer and refuse the PEP 440
 form.
 
-This folder has its own version, and needs a version of the core of the language (base-node): the
-places of PLACES hold the one, those of CORE_PLACES the other. Without --core, a version written is
-needed of the core too. A place that must hold its version and does not stops the run, so a file
+This repository has its own version, and needs a version of the core of the language (base-node),
+the git submodule core/: the places of PLACES hold the one, those of CORE_PLACES the other. Without
+--core, the version of the core needed stays as it is. A place that must hold its version and does not stops the run, so a file
 moved or reworded is seen and not skipped. Versions of anything else (dependencies, the third-party
 libraries of the tests) match none of these texts and are left alone. The Cargo.lock of the
 workspace is not tracked; when there is one, the entries of its crates are written too.
@@ -44,12 +44,14 @@ V = r"(?P<v>\d+\.\d+\.\d+(?:-(?:alpha|beta|rc)\.\d+|(?:a|b|rc)\d+)?)"
 EACH, ONE, ANY = "each", "one", "any"
 
 # (files, text around the version with {V} for it, form, need)
-#   files: a pattern over the tracked paths of this folder (`*` crosses `/`), links left out
+#   files: a pattern over the tracked paths of this repository (`*` crosses `/`), links left out
 #   need:  EACH, every file holds it; ONE, a file at least does; ANY, no file has to
 PLACES = [
     ("stdlib/manifest.json", r'"stdlib_version": "{V}"', "semver", EACH),
     ("stdlib/*.bn", r"^// @version {V}$", "semver", EACH),
     ("python/pyproject.toml", r'^version = "{V}"', "pep440", EACH),
+    ("python/base_node_blender/__init__.py", r'^__version__ = "{V}"', "pep440", EACH),
+    ("python/base_node_blender/__init__.py", r'^STDLIB_VERSION = "{V}"', "semver", EACH),
     ("python/*.py", r"^    // @version {V}$", "semver", ANY),
     # Rust: the crates' own version (a dependency's is not at the start of a line)
     ("*/Cargo.toml", r'^version = "{V}"', "semver", EACH),
@@ -71,7 +73,7 @@ PLACES = [
     ("spec/blender.md", r"\| PEP 440 \(`{V}`\)", "pep440", EACH),
     ("spec/blender.md", r"\| SemVer \(`{V}`\)", "semver", EACH),
 ]
-# The version of the core this folder needs: the dependency of each build, the one place each names it
+# The version of the core this repository needs: the dependency of each build, the one place each names it
 CORE_PLACES = [
     ("python/pyproject.toml", r'"base-node=={V}"', "pep440", EACH),
     ("Cargo.toml", r'^base-node = \{ path = "[^"]*", version = "={V}" \}', "semver", EACH),
@@ -100,7 +102,7 @@ def tracked(root: Path) -> list[str]:
 
 
 def current(root: Path) -> str:
-    """The version this folder is at: `stdlib_version` of stdlib/manifest.json."""
+    """The version this repository is at: `stdlib_version` of stdlib/manifest.json."""
     return json.loads((root / "stdlib" / "manifest.json").read_text(encoding="utf-8"))["stdlib_version"]
 
 
@@ -116,7 +118,7 @@ def pad_boxes(before: str, after: str) -> str:
 
 
 def lock_places(root: Path, paths: list[str]) -> list[tuple[str, str, str, str]]:
-    """The entries of this folder's own crates in the Cargo.lock of its workspace (untracked)."""
+    """The entries of this repository's own crates in the Cargo.lock of its workspace (untracked)."""
     names = []
     for p in (p for p in paths if fnmatch.fnmatch(p, "*/Cargo.toml")):
         m = re.search(r'(?m)^\[package\]\n(?:.*\n)*?name = "([^"]+)"', (root / p).read_text(encoding="utf-8"))
@@ -129,11 +131,11 @@ def lock_places(root: Path, paths: list[str]) -> list[tuple[str, str, str, str]]
 
 def scan(root: Path, version: str, write: bool, core: str | None = None) -> tuple[list[str], list[str]]:
     """(problems, files written): the places that do not hold `version`, or the places of the core
-    that do not hold `core` (default: `version`), written if `write`."""
+    that do not hold `core` (default: the version they hold), written if `write`."""
     paths = tracked(root)
     texts: dict[str, str] = {}
     problems: list[str] = []
-    places = [(p, version) for p in PLACES + lock_places(root, paths)] + [(p, core or version) for p in CORE_PLACES]
+    places = [(p, version) for p in PLACES + lock_places(root, paths)] + [(p, core or needed_core(root)) for p in CORE_PLACES]
     for (pattern, around, form, need), wanted in places:
         want = forms(wanted)
         rx = re.compile(around.replace("{V}", V), re.MULTILINE)
@@ -214,7 +216,7 @@ def build_archive(root: Path) -> None:
 
 
 def core_problems(core_dir: Path, version: str) -> list[str]:
-    """What is wrong between the version of the core this folder needs and the checkout at `core_dir`."""
+    """What is wrong between the version of the core this repository needs and the checkout at `core_dir`."""
     cargo = core_dir / "rust" / "Cargo.toml"
     if not cargo.is_file():
         return [f"{core_dir}: no checkout of the core (rust/Cargo.toml)"]
@@ -224,7 +226,7 @@ def core_problems(core_dir: Path, version: str) -> list[str]:
 
 
 def needed_core(root: Path) -> str:
-    """The version of the core this folder needs, as its Cargo.toml says it."""
+    """The version of the core this repository needs, as its Cargo.toml says it."""
     m = re.search(r'(?m)^base-node = \{ path = "[^"]*", version = "=([^"]+)" \}', (root / "Cargo.toml").read_text(encoding="utf-8"))
     return m.group(1) if m else "?"
 
@@ -232,8 +234,7 @@ def needed_core(root: Path) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("version", nargs="?", help="x.y.z or x.y.z-rc.n (with --check: default, the stdlib's)")
-    ap.add_argument("--core", help="the version of the core it needs (default: the version written; with "
-                                   "--check: that of Cargo.toml)")
+    ap.add_argument("--core", help="the version of the core it needs (default: that of Cargo.toml, as it is)")
     ap.add_argument("--core-dir", type=Path, help="with --check: the checkout of the core, whose version it must be")
     ap.add_argument("--check", action="store_true", help="write nothing; fail if a place holds another version")
     ap.add_argument("--archive", action="store_true", help="build site/extensions/ again with Blender")
@@ -265,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  {line}")
     want = forms(a.version)
     python = "" if want["pep440"] == want["semver"] else f" ({want['pep440']} for Python)"
-    print(f"{want['semver']}{python}, the core {a.core or a.version}: {len(written)} files written" if written
+    print(f"{want['semver']}{python}, the core {a.core or needed_core(root)}: {len(written)} files written" if written
           else f"{want['semver']}: already there")
     for problem in archive_problems(root, a.version):
         print(f"To do: {problem}", file=sys.stderr)

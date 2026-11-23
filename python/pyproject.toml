@@ -16,7 +16,7 @@ classifiers = [
     "Topic :: Multimedia :: Graphics",
 ]
 # The core of the language, of the same version
-dependencies = ["base-node==1.0.0rc7"]
+dependencies = ["base-node==1.0.0rc8"]
 
 # base-node finds the commands of this library here (base_node_cli.cli)
 [project.entry-points."base_node.cli"]
