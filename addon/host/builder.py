@@ -112,8 +112,8 @@ def build_source(source, filename="<text>", load=None, warnings=None):
     comments.keep(source, filename, graphs, built, builder.made)
     for g in graphs:
         tree = built[g.name]
-        # A new tree is laid out by the text; once commented, it leaves room for its comments
-        if g.module is None and g.name in builder.fresh and any(comments.KEY in n for n in tree.nodes):
+        # A new tree is arranged as Arrange Nodes does, every graph of the text, with room for its comments
+        if g.module is None and g.name in builder.fresh:
             arrange_nodes(tree, room=comments.room)
         # A shader graph's return feeds a material's Material Output, a compositor graph's the Composite
         outputs.offer(tree, g, builder.called)
