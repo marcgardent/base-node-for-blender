@@ -1,0 +1,24 @@
+{
+  "name": "pixels",
+  "description": "A destination of the tests, not shipped: image nodes of its own, reached from Blender's compositor through a translator and a bridge",
+  "kinds": ["pixel"],
+  "types": ["Bool", "Color", "Float", "Int", "Vector"],
+  "zones": [],
+  "implicit": [],
+  "nodes": ["Bilateral", "Blur", "ColorRamp", "Curves", "Median", "Mix"],
+  "translators": {
+    "blender": {
+      "kinds": {"compositor": "pixel"},
+      "nodes": {
+        "BilateralBlur": {"node": "Bilateral", "inputs": {"size": "radius", "threshold": "tolerance"}},
+        "Blur": {"node": "Blur", "inputs": {"size": "radius"}},
+        "ColorRamp": {"node": "ColorRamp", "inputs": {"factor": "image"}, "settings": {"color_ramp": "ramp"}},
+        "Kuwahara": "interop::kuwahara",
+        "Mix": {"node": "Mix", "settings": {"blend_type": "blend"}},
+        "MixLegacy": {"node": "Mix", "inputs": {"color1": "a", "color2": "b"}, "settings": {"blend_type": "blend"}},
+        "RGBCurves": "Curves"
+      }
+    }
+  },
+  "bridges": ["pixels/interop.bn"]
+}

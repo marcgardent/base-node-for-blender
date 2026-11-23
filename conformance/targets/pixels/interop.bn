@@ -1,0 +1,13 @@
+// Bridges of the target pixels — Module interop
+// @module interop
+// @target pixels
+// @edition 2026
+
+// The compositor node pixels has no node for, made of its nodes: its translator from blender
+// calls it, `Kuwahara(image, size: 6.0)` becomes `interop::kuwahara(image, size: 6.0)`.
+
+pixel graph kuwahara(image: Color, size: Float = 6.0) -> Color {
+  "Kuwahara: a smoothing that keeps the edges"
+  flat = Median(image, radius: size)
+  return Bilateral(flat, radius: size, tolerance: 0.1)
+}
