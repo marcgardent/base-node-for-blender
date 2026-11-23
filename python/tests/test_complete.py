@@ -81,6 +81,13 @@ def test_outputs_of_a_bound_node(schema):
     assert labels(src, schema) == ["mesh", "uv_map"]
 
 
+def test_outputs_of_a_node_with_settings_in_brackets(schema):
+    # Bound over several lines, through a pipe: the node is the name before its brackets
+    src = HEAD + "  s = v |> VectorMath[SCALE](\n    scale: t)\n  return s."
+    assert labels(src, schema) == ["vector", "x", "y", "z"]
+    assert labels(HEAD + "  return VectorMath[SCALE](v, scale: t).", schema) == ["vector", "x", "y", "z"]
+
+
 def test_vector_output_also_has_components(schema):
     src = HEAD + "  p = Position()\n  h = p."
     assert labels(src, schema) == ["position", "x", "y", "z"]
