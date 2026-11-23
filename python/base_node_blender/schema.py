@@ -287,6 +287,28 @@ class Prop:
     datablock: str = ""  # for an ID: its Blender type, e.g. Image
 
 
+def enum_settings(spec):
+    """{name: values} of the enum settings of a node: where a setting by position may go."""
+    return {p.name: p.items for p in spec.props.values() if p.kind == "ENUM"}
+
+
+def holders(enums, values):
+    """The settings of `enums` ({name: values}) that hold `values`: one value, or several that mean the
+    same (a type's, FLOAT_VECTOR or VECTOR). Sorted by name: Blender's order of the settings is never read."""
+    values = {values} if isinstance(values, str) else set(values)
+    return sorted(name for name, items in enums.items() if values.intersection(items))
+
+
+def by_position(enums, values):
+    """The setting a value written by position goes to: the one setting of `enums` that holds it; None
+    when none does, or several do (`X` of AlignEulerToVector, a value of axis and of pivot_axis). Its
+    value alone tells where it goes, whatever the order of the settings (spec/blender.md, Settings).
+    The checker, the reader, the completion and the targets resolve it by this function, and the Rust
+    library by its twin, `Enums::of`."""
+    found = holders(enums, values)
+    return found[0] if len(found) == 1 else None
+
+
 def node_name(label):
     """The text name of a node: its English UI label in one word, `Principled BSDF` -> `PrincipledBSDF`.
 

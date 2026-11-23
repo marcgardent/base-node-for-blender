@@ -1,14 +1,19 @@
 """What the checker makes of a node's settings in brackets (spec/reference.md, Expressions).
 
-A setting by position is an enum value: it goes to the first enum setting of the node, in
-Blender's order, that holds it. Every other setting is named. An argument in parentheses is an
-input, always.
+A setting by position is an enum value: it goes to the one enum setting of the node that holds it,
+whatever their order; a value two settings hold is named. Every other setting is named. An argument
+in parentheses is an input, always.
 """
+
+import itertools
+import json
+import random
 
 import pytest
 
 from base_node_blender import BnError, compile_source
-from base_node_blender.schema import NodeSpec, Prop
+from base_node_blender.backend import BackendSchema, versions
+from base_node_blender.schema import NodeSpec, Prop, by_position, enum_settings, holders, is_word
 from fake_schema import S, FakeSchema
 
 
@@ -55,15 +60,105 @@ def test_an_enum_value_by_position_goes_to_the_setting_that_holds_it(schema):
     assert n.props == {"data_type": "INT", "operation": "EQUAL"}
 
 
-def test_a_value_two_settings_hold_goes_to_the_first():
+def test_a_value_two_settings_hold_is_named():
     schema = Axes()
-    n = node(graph("  r = AlignEulerToVector[X, pivot_axis: Z](vector: (1.0, 0.0, 0.0))\n  return geometry"),
+    # X is a value of axis and of pivot_axis: by position, Blender's order would decide
+    for written in ("X", "X, pivot_axis: Z"):
+        assert errors(graph(f"  r = AlignEulerToVector[{written}](vector: (1.0, 0.0, 0.0))\n  return geometry"),
+                      schema) == [f"t.bn:2:{26 + written.index('X')}  AlignEulerToVector: X is a value of axis and "
+                                  "of pivot_axis; name it, AlignEulerToVector[axis: X]"]
+    n = node(graph("  r = AlignEulerToVector[axis: X, pivot_axis: Z](vector: (1.0, 0.0, 0.0))\n  return geometry"),
              schema, "FunctionNodeAlignEulerToVector")
     assert n.props == {"axis": "X", "pivot_axis": "Z"}
-    # The second takes it by name
-    n = node(graph("  r = AlignEulerToVector[pivot_axis: X](vector: (1.0, 0.0, 0.0))\n  return geometry"),
+    # A value one of them holds alone goes by position
+    n = node(graph("  r = AlignEulerToVector[AUTO, axis: Y](vector: (1.0, 0.0, 0.0))\n  return geometry"),
              schema, "FunctionNodeAlignEulerToVector")
-    assert n.props == {"pivot_axis": "X"}
+    assert n.props == {"pivot_axis": "AUTO", "axis": "Y"}
+
+
+def test_two_values_by_position_for_one_setting_are_given_twice(schema):
+    assert errors(graph("  c = Compare[INT, FLOAT](a: 1, b: 2)\n  return geometry"), schema) == [
+        "t.bn:2:20  setting 'data_type' given twice"]
+
+
+BACKENDS = versions()
+
+
+@pytest.mark.parametrize("written", list(itertools.permutations(["VECTOR", "DOT_PRODUCT", "GREATER_THAN"])))
+def test_the_order_of_the_values_by_position_does_not_matter(written):
+    schema = BackendSchema(BACKENDS[-1])
+    n = node(graph(f"  c = Compare[{', '.join(written)}](a: (0.0, 0.0, 1.0), b: (0.0, 1.0, 0.0))\n  return geometry"),
+             schema, "FunctionNodeCompare")
+    assert n.props == {"data_type": "VECTOR", "mode": "DOT_PRODUCT", "operation": "GREATER_THAN"}
+
+
+def test_the_function_reads_no_order():
+    for enums in ({"axis": ("X", "Y"), "pivot_axis": ("AUTO", "X")}, {"pivot_axis": ("X", "AUTO"), "axis": ("Y", "X")}):
+        assert holders(enums, "X") == ["axis", "pivot_axis"]
+        assert by_position(enums, "X") is None
+        assert by_position(enums, "AUTO") == "pivot_axis"
+        assert by_position(enums, "NOPE") is None
+        # Several values that mean the same, a type's
+        assert by_position(enums, ("Y", "Z")) == "axis"
+
+
+def shuffled(schema, seed):
+    """`schema` with the settings of every node in another order, and each setting's values."""
+    rng = random.Random(seed)
+    for nodes in schema.entries.values():
+        for entry in nodes.values():
+            rng.shuffle(entry["settings"])
+            for s in entry["settings"]:
+                if s.get("items"):
+                    rng.shuffle(s["items"])
+    schema.specs.clear()
+    return schema
+
+
+def every_value_by_position(schema):
+    """{(kind, node, value): the error at the value, or the setting it went to} of every enum value
+    of every node of `schema`, each written alone by position."""
+    found = {}
+    for kind in ("geometry", "shader", "compositor"):
+        for name in schema.node_names(kind):
+            values = sorted({x for items in enum_settings(schema.node(kind, name)).values() for x in items})
+            if not values:
+                continue
+            lines = [f"  x{i} = {name}[{v if is_word(v) else json.dumps(v)}]()" for i, v in enumerate(values)]
+            src = f"{kind} graph g(x: Float) -> Float {{\n" + "\n".join(lines) + "\n  return x\n}\n"
+            at = len(name) + 8  # the column of the value, past `  x<i> = Name[`
+            try:
+                ir = compile_source(src, schema, "t.bn")[-1]
+            except BnError as e:
+                errs = {d.line: d.message for d in e.diagnostics if d.col == at + len(str(d.line - 2))}
+                ir = None
+            else:
+                errs = {}
+            for i, v in enumerate(values):
+                found[(kind, name, v)] = errs.get(i + 2)
+            if ir is not None:
+                made = [n for n in ir.nodes if n.bl_idname == schema.node(kind, name).bl_idname]
+                for n, v in zip(made, values):
+                    found[(kind, name, v)] = next(k for k, x in n.props.items() if x == v)
+    return found
+
+
+@pytest.mark.parametrize("version", BACKENDS)
+def test_a_value_by_position_is_accepted_iff_one_setting_holds_it(version):
+    schema = BackendSchema(version)
+    found = every_value_by_position(schema)
+    assert len(found) > 1000
+    for (kind, name, v), got in found.items():
+        held = holders(enum_settings(schema.node(kind, name)), v)
+        if len(held) == 1:
+            assert got in (None, held[0]), (kind, name, v, got)
+        else:
+            shown = v if is_word(v) else json.dumps(v)
+            assert got == (f"{name}: {shown} is a value of {' and of '.join(held)}; name it, "
+                           f"{name}[{held[0]}: {shown}]"), (kind, name, v)
+    # Blender's order of the settings, and of their values, changes nothing
+    for seed in (1, 2):
+        assert every_value_by_position(shuffled(BackendSchema(version), seed)) == found
 
 
 def test_named_settings_of_every_kind(schema):

@@ -16,7 +16,7 @@ from ._core import BnError, Diagnostic, ast, colors, parse, printer
 from .schema import (CLOSURE_INPUT, CLOSURE_OUTPUT, CLOSURE_TO_LIST, COMBINE_BUNDLE, DATABLOCKS, DEPRECATED, EVALUATE_CLOSURE, FIELD_TYPES, IMPLICIT,
                      ITEM_NODES, ITEM_TYPES, NO_DEFAULT, NO_VALUE, RANGED, SEPARATE_BUNDLE, SIGNATURE_NODES, STRICT,
                      TREE_KINDS, TYPES, CURVE, CURVES, EMPTY_GROUP, HANDLES, MAPPING_OPTIONS, MATERIAL, MATERIAL_OUTPUTS, RAMP,
-                     RAMP_OPTIONS, Socket, can_link, is_material, key, loose, snake)
+                     RAMP_OPTIONS, Socket, by_position, can_link, enum_settings, holders, is_material, key, loose, snake)
 
 
 # The type of what a node of each kind of tree works on, given first and unnamed when linked: the pipe's
@@ -335,6 +335,17 @@ def branches_type(found):
 
 def takes_list(names):
     return ", ".join(names[:-1]) + " and " + names[-1] if len(names) > 1 else "".join(names)
+
+
+# Every value a type setting gives a type by
+ALL_TYPE_SETTINGS = tuple(x for values in TYPE_SETTINGS.values() for x in values)
+
+
+def unique_hint(node, what, settings, shown):
+    """The error of a setting by position that several settings hold, `settings` sorted by name:
+    `AlignEulerToVector: X is a value of axis and of pivot_axis; name it, AlignEulerToVector[axis: X]`."""
+    of = " and of ".join([", of ".join(settings[:-1]), settings[-1]]) if len(settings) > 1 else settings[0]
+    return f"{node}: {what} of {of}; name it, {node}[{settings[0]}: {shown}]"
 
 
 def type_setting(t, items):
@@ -2381,9 +2392,9 @@ class GraphChecker:
 
     def settings(self, c, spec, node):
         """The settings a call writes in brackets, into node.props and node.data: `Math[ADD,
-        use_clamp: true]`. A setting by position is an enum value: it goes to the first enum setting
-        of the node, in Blender's order, that holds it (a template's type to the first one that has a
-        value for it). The others are named."""
+        use_clamp: true]`. A setting by position is an enum value: it goes to the one enum setting of
+        the node that holds it (a template's type to the one that has a value for it), whatever their
+        order (positional_setting). The others are named."""
         given = set()
         value = None
         names = setting_names(spec)
@@ -2441,18 +2452,25 @@ class GraphChecker:
         return self.eval(v)
 
     def positional_setting(self, c, spec, s, v):
-        """The enum setting a setting given by position goes to, or None after an error."""
-        enums = [p for p in spec.props.values() if p.kind == "ENUM"]
+        """The enum setting a setting given by position goes to, or None after an error: the one that
+        holds its value (schema.by_position), a template's type to the one that has a value for it.
+        A value two settings hold is named, whatever Blender's order of them."""
+        enums = enum_settings(spec)
         if isinstance(v, Sym) and v.name in self.type_args:
             t = self.type_args[v.name]
-            values = TYPE_SETTINGS.get(t, ())
-            found = next((p for p in enums if any(x in p.items for x in values)), None)
-            # Else the first setting of a type, which says what it holds
-            found = found or next((p for p in enums if any(x in p.items for v in TYPE_SETTINGS.values() for x in v)),
-                                  None)
-            if found is None:
-                self.error(s, f"{v.name} is {t}: {c.name} has no setting of a type")
-            return found
+            found = by_position(enums, TYPE_SETTINGS.get(t, ()))
+            if found is not None:
+                return spec.props[found]
+            several = holders(enums, TYPE_SETTINGS.get(t, ()))
+            if several:
+                self.error(s, unique_hint(c.name, f"{v.name} is {t}, a value", several, v.name))
+                return None
+            # None has a value for it: the one setting of a type says so, `NamedAttribute has no data_type for Matrix`
+            typed = holders(enums, ALL_TYPE_SETTINGS)
+            if len(typed) != 1:
+                self.error(s, f"{v.name} is {t}: {c.name} has no setting " + ("for " + t if typed else "of a type"))
+                return None
+            return spec.props[typed[0]]
         word = v.name if isinstance(v, Sym) and v.name != NO_VALUE else \
             v.value if isinstance(v, Lit) and v.type == "String" else None
         if word is None:
@@ -2460,14 +2478,20 @@ class GraphChecker:
             self.error(s, f"{c.name}: a setting by position is an enum value; name the others, "
                           f"{c.name}[{names[0] if names else 'name'}: …]")
             return None
-        found = next((p for p in enums if word in p.items), None)
-        if found is None:
-            values = [x for p in enums for x in p.items]
-            close = difflib.get_close_matches(word, values, 1)
-            hint = f"; did you mean {close[0]}?" if close else ""
-            listed = f"; settings: {short_list([p.name for p in enums])}" if enums else ""
-            self.error(s, f"no setting of {c.name} takes {word}{hint}{listed}")
-        return found
+        found = by_position(enums, word)
+        if found is not None:
+            return spec.props[found]
+        several = holders(enums, word)
+        if several:
+            shown = word if isinstance(v, Sym) else printer.expr(s.value)
+            self.error(s, unique_hint(c.name, f"{shown} is a value", several, shown))
+            return None
+        values = [x for items in enums.values() for x in items]
+        close = difflib.get_close_matches(word, values, 1)
+        hint = f"; did you mean {close[0]}?" if close else ""
+        listed = f"; settings: {short_list(list(enums))}" if enums else ""
+        self.error(s, f"no setting of {c.name} takes {word}{hint}{listed}")
+        return None
 
     def prop(self, node, prop, v, a, owner=None):
         if isinstance(v, Const):

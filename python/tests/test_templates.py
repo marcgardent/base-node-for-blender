@@ -317,3 +317,32 @@ def test_a_type_parameter_lists_its_types():
     with pytest.raises(BnError) as err:
         parse("geometry graph f<T>(x: T) -> (y: T) {\n  return (y: x)\n}\n")
     assert "a type parameter lists its types: <T: Float | Vector>" in str(err.value)
+
+
+class TwoTyped(Typed):
+    """A node with two settings of a type, both with a value for Vector."""
+
+    def node(self, kind, name):
+        if name == "Convert":
+            return NodeSpec("Convert", "GeometryNodeConvert", {
+                "from_type": Prop("from_type", "ENUM", ("FLOAT", "VECTOR")),
+                "to_type": Prop("to_type", "ENUM", ("VECTOR", "RGBA")),
+            })
+        return super().node(kind, name)
+
+    def sockets(self, kind, spec, props):
+        if spec.name == "Convert":
+            return [], [S("Value", "Float")]
+        return super().sockets(kind, spec, props)
+
+
+def test_a_type_two_settings_have_a_value_for_is_named():
+    module = ("geometry graph conv<T: Float | Vector>(a: T) -> (value: T) {\n"
+              "  c = Convert[T]()\n  return (value: a)\n}\n")
+    with pytest.raises(BnError) as err:
+        compile_source(module, TwoTyped(), "conv.bn")
+    # Float is from_type's alone; Vector is a value of both, whatever their order
+    assert [d.message for d in err.value.diagnostics] == [
+        "conv<Vector>: Convert: T is Vector, a value of from_type and of to_type; name it, Convert[from_type: T]"]
+    named = module.replace("Convert[T]", "Convert[from_type: T]")
+    assert compile_source(named, TwoTyped(), "conv.bn") == []
