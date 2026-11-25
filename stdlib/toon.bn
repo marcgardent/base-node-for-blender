@@ -1,0 +1,77 @@
+// Base Node Standard Library — Module toon
+// @module toon
+// @version 1.0.0
+// @target blender@5.3 eevee
+// @edition 2026
+// @description EEVEE toon shading lit light by light (Blender 5.3 lighting nodes): a hard band per light, its threshold and its role read on the light, a rim light that keeps the light's colour, a shadow tinted instead of black
+
+// Blender 5.3 runs what feeds a Light Accumulation once for each light, then adds the lights up:
+// a material can shape every light on its own, where Shader to RGB gave one sum of them all.
+// EEVEE alone: Cycles does not run these nodes.
+//
+// A light tunes its own style through custom properties, read by the Attribute node in Light
+// mode; a light without one takes the value the graph is given:
+//   toon_threshold  where its band starts, 0 to 1 (Factor of the light's diffuse evaluation)
+//   toon_intensity  how strong it lights, 1 by default
+//   toon_rim        1 makes it a rim light: added in its own colour, not multiplied by the surface
+// The lighting graphs ("light band", "light colour") only work upstream of a Light sock of a
+// Light Accumulation: the shading graph "toon" puts them there.
+
+// ---- Settings read on the light ----
+
+shader graph "light setting"(value: Float, found: Float, fallback: Float = 0.0) -> Float {
+  "A light's custom property as the Attribute node reads it, its factor and its alpha, or the fallback when the light has none: Blender gives an alpha of 0 to a property it does not find"
+  return Mix(factor: found, a: fallback, b: value)
+}
+
+shader graph "light threshold"(fallback: Float = 0.45) -> Float {
+  "The light's toon_threshold, or the fallback"
+  a = Attribute[LIGHT, attribute_name: "toon_threshold"]()
+  return light_setting(a.factor, a.alpha, fallback)
+}
+
+// ---- One light ----
+
+shader graph "light band"(threshold: Float = 0.45, softness: Float = 0.02) -> Float {
+  "0 in this light's shadow, 1 in its light, with an edge softness wide: how much the surface faces the light, its falloff and its cast shadow, cut at the threshold"
+  g = Geometry()
+  evaluation = LightEvaluation(position: g.position, normal: g.normal)
+  lit = evaluation.factor * evaluation.mask * RGBToBW(color: ShadowRaycast(position: g.position))
+  return MapRange(value: lit, from_min: threshold, from_max: threshold + max(softness, 0.0001))
+}
+
+shader graph "light colour"(intensity: Float = 1.0) -> Color {
+  "The light's colour times its toon_intensity, or times the intensity given"
+  a = Attribute[LIGHT, attribute_name: "toon_intensity"]()
+  i = light_setting(a.factor, a.alpha, intensity)
+  return Mix[RGBA, MULTIPLY](
+    factor: 1.0,
+    a: LightInfo().color,
+    b: CombineColor(red: i, green: i, blue: i))
+}
+
+// ---- The material ----
+
+shader graph toon(
+    color: Color = (0.0, 1.0, 0.69, 1.0),
+    shadow: Color = (0.22, 0.26, 0.42, 1.0),
+    threshold: Float = 0.45,
+    softness: Float = 0.02,
+    intensity: Float = 1.0
+) -> Shader {
+  "Two tones per light: color where a light reaches, color times shadow where none does. A light with toon_rim at 1 adds its own colour instead, as a rim"
+  b = light_band(light_threshold(threshold), softness)
+  band = Mix[RGBA, MULTIPLY](
+    factor: 1.0,
+    a: light_colour(intensity),
+    b: CombineColor(red: b, green: b, blue: b))
+  r = Attribute[LIGHT, attribute_name: "toon_rim"]()
+  rim = light_setting(r.factor, r.alpha, 0.0)
+  lights = LightAccumulation(
+    diffuse_light: Mix[RGBA](factor: rim, a: band, b: (0.0, 0.0, 0.0, 1.0)),
+    diffuse_color: color,
+    glossy_light: Mix[RGBA](factor: rim, a: (0.0, 0.0, 0.0, 1.0), b: band))
+  return AddShader(
+    a: lights,
+    b: Emission(color: Mix[RGBA, MULTIPLY](factor: 1.0, a: color, b: shadow)))
+}

@@ -1,0 +1,27 @@
+{
+ "light setting": {
+  "geometry": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))",
+  "shader": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type",
+  "compositor": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))"
+ },
+ "light threshold": {
+  "geometry": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))",
+  "shader": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type",
+  "compositor": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))"
+ },
+ "light band": {
+  "geometry": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))",
+  "shader": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type",
+  "compositor": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))"
+ },
+ "light colour": {
+  "geometry": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))",
+  "shader": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type",
+  "compositor": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))"
+ },
+ "toon": {
+  "geometry": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))",
+  "shader": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type",
+  "compositor": "toon.bn:29:17  no setting of Attribute takes LIGHT; settings: attribute_type (+6 error(s))"
+ }
+}

@@ -46,7 +46,8 @@ def needs_node(kind: str, *names: str) -> None:
 
 def promises_this_blender(module: str) -> bool:
     """Whether the stdlib module's `// @target` holds the Blender that runs: `blender` is every
-    promised version, `blender@5.3` that one alone."""
+    promised version, `blender@5.3` that one alone, and a variant (`blender@5.3 eevee`) the
+    version it is written on."""
     from base_node.blender import header
     from base_node.blender.targets import blender, load_target
 
@@ -54,7 +55,7 @@ def promises_this_blender(module: str) -> bool:
     this = blender().name(BLENDER_VERSION)
     for name in header(path.read_text(encoding="utf-8"), path.name).target:
         target = load_target(name)
-        if this in [m.name for m in target.members or [target]]:
+        if this in [m.name.split(" ")[0] for m in target.members or [target]]:
             return True
     return False
 

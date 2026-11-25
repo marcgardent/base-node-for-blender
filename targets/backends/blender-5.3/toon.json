@@ -1,0 +1,27 @@
+{
+ "light setting": {
+  "geometry": "ok",
+  "shader": "ok",
+  "compositor": "ok"
+ },
+ "light threshold": {
+  "geometry": "unknown node 'Attribute' in a geometry tree; did you mean BlurAttribute, NamedAttribute, RenameAttribute?",
+  "shader": "ok",
+  "compositor": "unknown node 'Attribute' in a compositor tree"
+ },
+ "light band": {
+  "geometry": "unknown node 'Geometry' in a geometry tree; did you mean JoinGeometry, DeleteGeometry, SetGeometryName?",
+  "shader": "ok",
+  "compositor": "unknown node 'Geometry' in a compositor tree"
+ },
+ "light colour": {
+  "geometry": "unknown node 'Attribute' in a geometry tree; did you mean BlurAttribute, NamedAttribute, RenameAttribute?",
+  "shader": "ok",
+  "compositor": "unknown node 'Attribute' in a compositor tree"
+ },
+ "toon": {
+  "geometry": "'light_threshold' is a shader graph that cannot be built in a geometry tree: unknown node 'Attribute' in a geometry tree; did you mean BlurAttribute, NamedAttribute, RenameAttribute?",
+  "shader": "ok",
+  "compositor": "'light_threshold' is a shader graph that cannot be built in a compositor tree: unknown node 'Attribute' in a compositor tree"
+ }
+}
