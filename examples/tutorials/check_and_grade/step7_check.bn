@@ -1,0 +1,62 @@
+// @module check_and_grade_step7
+// @title Check and grade a shot, step 7: the final check
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @target blender
+// @offer groups
+
+use grade (exposure_stops, grade, saturation, soft_clip)
+use mask2d (box_mask, letterbox)
+use merge (keymix, over, screen)
+use qc (ramp, radial, clip_check, diff_view)
+use stmap (reformat)
+
+compositor graph plate() -> Color {
+  "The render as Cycles gives it: premultiplied, transparent where no object is"
+  return RenderLayers().image
+}
+
+compositor graph background(image: Color) -> Color {
+  "A studio backdrop of the image's size: warm at the bottom, dark at the top, a pool of light behind the middle"
+  wall = ramp(image, from: (0.3, 0.22, 0.15, 1.0), to: (0.05, 0.06, 0.08, 1.0), angle: 1.5708)
+  pool = radial(image, center: (0.0, 0.1), radius: 0.9, softness: 1.0)
+  return screen(pool * (0.15, 0.11, 0.07, 1.0), wall)
+}
+
+compositor graph matched(fg: Color) -> Color {
+  "The plate brought to the backdrop: a stop and a half up, warmer, its blacks lifted a little, a little less saturated"
+  return fg
+    |> exposure_stops(1.5)
+    |> grade(lift: (0.012, 0.008, 0.004), gain: (1.12, 1.0, 0.8))
+    |> saturation(0.85)
+}
+
+compositor graph shot() -> Color {
+  "The graded plate over the backdrop"
+  fg = plate()
+  return over(matched(fg), background(fg))
+}
+
+compositor graph vignette(image: Color, stops: Float = -1.0) -> Color {
+  "The image darker by stops toward its edges: a rounded box, feathered wide, keeps its middle as it is"
+  middle = box_mask(image, (0.7, 0.3), 0.3, 0.9).mask
+  return keymix(image, exposure_stops(image, stops), middle)
+}
+
+compositor graph delivery(clip: Float = 1.0 in 0.0..1.0) -> Color {
+  "The shot reformatted to 960 × 540, vignetted, its highlights bent under 1 by a soft clip (faded out by clip), framed to 2.39:1"
+  framed = reformat(shot(), 960, 540, Fill)
+  graded = vignette(framed)
+    |> soft_clip(start: 0.8, limit: 1.0, mix: clip)
+  return letterbox(graded, 2.39).image
+}
+
+compositor graph soft_clip_heat() -> Color {
+  "Where the soft clip changed the delivery, as heat: the delivery with it against the delivery without it, the difference times 4"
+  return diff_view(delivery(), delivery(clip: 0.0), 4.0)
+}
+
+compositor graph check_and_grade() -> Color {
+  "The delivery's clip check: red where a channel is above 1, blue where one is below 0, its luminance in gray elsewhere"
+  return clip_check(delivery())
+}

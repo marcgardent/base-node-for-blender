@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check and grade a shot — base-node tutorials</title>
+  <meta name="description" content="Check and grade a render in Blender's compositor the way a Nuke artist would, with the free standard library only: test patterns, false colour, clip check, a grade, an over, a reformat, a letterbox, a vignette, a soft clip and a final check, in .bn.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/check_and_grade/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>Check and grade a shot</h1>
+    <p class="lead">
+      A render comes in dark, cold and with no background. Before touching a colour, a compositor looks at it with tools that show what the viewer hides: test patterns, false colour, a clip check.
+      Then the shot is put together and graded, reformatted for delivery, and checked again. Seven steps, all with the free standard library.
+    </p>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step6.png" width="960" height="540" alt="A terracotta ball, a chrome ring and a crate with a glowing bulb on a warm studio backdrop, framed in 2.39:1 between black bars">
+      <figcaption>Where we are going: the plate graded over a backdrop, reformatted to 16:9, vignetted and letterboxed.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need Blender 5 and the <a href="../index.html#blender">Base Node add-on</a>. Everything this tutorial calls is in its free standard library:
+    </p>
+    <table>
+      <tr><th>Module</th><th>What it gives here</th></tr>
+      <tr><td><a href="../reference/stdlib-qc.html"><code>qc</code></a></td><td>Test patterns (colour bars, ramp, radial) and the checks of an image: false colour, zebra, clip check, alpha check, difference as heat.</td></tr>
+      <tr><td><a href="../reference/stdlib-grade.html"><code>grade</code></a></td><td>Nuke's Grade, exposure in stops, saturation, soft clip.</td></tr>
+      <tr><td><a href="../reference/stdlib-merge.html"><code>merge</code></a></td><td>Nuke's Merge operations: over, screen, keymix.</td></tr>
+      <tr><td><a href="../reference/stdlib-mask2d.html"><code>mask2d</code></a></td><td>Masks drawn by signed distances: a rounded box for the vignette, the letterbox.</td></tr>
+      <tr><td><a href="../reference/stdlib-stmap.html"><code>stmap</code></a></td><td>Reformat (and Tile, Mirror) by STMaps, as Nuke's STMap does.</td></tr>
+    </table>
+    <p>
+      The graphs read the <em>Render Layers</em> node: any render will do. This one has its film transparent (<em>Render Properties</em>, <em>Film</em>, <em>Transparent</em>) and its floor a shadow catcher, so the objects and their shadow come with an alpha and no background. Set the scene's <em>View Transform</em> to <em>Standard</em> (<em>Color Management</em>): the checks draw fixed colours that a tone curve such as AgX would change.
+    </p>
+    <p>
+      Every block below is a complete <code>.bn</code> file, its code beside the nodes it builds. Two ways to try a step:
+    </p>
+    <ul>
+      <li><strong>Drag it.</strong> Drag the file icon of its block, or its title, onto Blender and keep <em>Import into the .blend</em>: <code>check_and_grade</code> becomes the scene's compositor, if the scene has none yet. A click on the file icon downloads the file instead.</li>
+      <li><strong>Paste it.</strong> Press the copy button of its block, open the Compositor, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>.</li>
+    </ul>
+    <p>
+      Render with <kbd>F12</kbd> to see it. The pictures are made from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/check_and_grade/render.py"><code>render.py</code></a>: it renders the plate once with Cycles, 960 × 720, then runs each step on it. It also reads the float values of the steps, before the view transform, to check the numbers this page gives.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> Test patterns</h2>
+    <p>
+      A check is only as good as the pipe it looks through. Before reading a render, feed the compositor images whose values you know, and see whether they come out as they should.
+      <code>qc</code> draws them at the size of the image it is given, without reading its pixels: here, the size of the render.
+    </p>
+    {{code step1_patterns.bn check_and_grade}}
+    <ol class="steps">
+      <li><strong>Colour bars</strong>, top. SMPTE's seven bars at 75 %: every channel is 0 or 0.75. With the <em>Standard</em> view, 0.75 shows as 224 out of 255, not 191: the screen gets the value through the sRGB curve. <code>render.py</code> checks that the float values of the bars are 0 and 0.75, nothing else.</li>
+      <li><strong>A ramp</strong>, middle, from 0 on the left to 1 on the right, in linear light. Middle grey, 0.18, sits at 18 % of the width, but looks like the middle of the ramp: the eye, and the sRGB curve, give more room to the darks. <code>zebra</code> stripes everything above 0.9, the last tenth of the width.</li>
+      <li><strong>False colour</strong>, bottom: the same ramp, each pixel coloured by its stops from middle grey. Green is half a stop either side of 0.18, from 12.7 % to 25.5 % of the width; pink and light grey are the stops above it, up to 1. Each stop down is half as wide as the one above it: on a linear ramp, the darks are crowded on the left.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step1.png" width="960" height="720" loading="lazy" alt="Seven colour bars on top; a grey ramp, striped black and white at its right end; below it, bands of false colour, purple, blue, teal, grey, green, pink, then light grey over the right half">
+      <figcaption>Step 1. Bars, a ramp with its zebra, and the ramp in false colour.</figcaption>
+    </figure>
+    <table>
+      <tr><th>False colour</th><th>Stops from 0.18</th><th>Luminance</th></tr>
+      <tr><td>purple</td><td>under −6</td><td>under 0.0028</td></tr>
+      <tr><td>blue</td><td>−6 to −4</td><td>to 0.011</td></tr>
+      <tr><td>teal</td><td>−4 to −2</td><td>to 0.045</td></tr>
+      <tr><td>dark grey</td><td>−2 to −½</td><td>to 0.127</td></tr>
+      <tr><td>green</td><td>−½ to +½</td><td>to 0.255</td></tr>
+      <tr><td>pink</td><td>½ to 1½</td><td>to 0.51</td></tr>
+      <tr><td>light grey</td><td>1½ to 2½</td><td>to 1.02</td></tr>
+      <tr><td>yellow</td><td>2½ to 4</td><td>to 2.88</td></tr>
+      <tr><td>red</td><td>over 4</td><td>over 2.88</td></tr>
+    </table>
+    <p class="try"><strong>Try:</strong> <code>ramp(frame, to: (8.0, 8.0, 8.0, 1.0))</code>: a ramp from 0 to 8. Yellow and red appear, the zebra covers almost all of it, and the stops below middle grey shrink to a few pixels on the left.</p>
+
+    <h2 id="step-2"><span class="n">2.</span> Read the plate</h2>
+    <p>
+      Now the render, the <em>plate</em>. On a monitor it looks dark; how dark, and is anything burnt? Two checks, side by side, as a viewer's wipe shows two images: the left of one, the right of the other.
+    </p>
+    {{code step2_read.bn check_and_grade wipe plate}}
+    <ul>
+      <li><strong>The alpha check</strong>, left, puts the plate over a grey checker of 16-pixel squares. Where the plate is transparent, the checker shows: there is no background. Under the ball, the shadow darkens the checker: the shadow catcher wrote it as alpha over black, a shadow to lay on any background.</li>
+      <li><strong>False colour</strong>, right. Most of the crate and the ring are teal and dark grey: two stops or more under middle grey. The plate is under. The bulb is red, more than 4 stops over: some pixels are far above 1, while most of the frame is far below it. The empty frame is purple: transparent pixels have no light.</li>
+    </ul>
+    <p>
+      Every render reaches the compositor <em>premultiplied</em>: its colours are already multiplied by its alpha. A pixel half covered by the ball has half the ball's colour and an alpha of 0.5. Every tool of these modules expects that, and says so.
+    </p>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step2.png" width="960" height="720" loading="lazy" alt="Left half: the dark ball and ring over a grey checker, a shadow under the ball. Right half: the ring and the crate in false colour, mostly teal and grey, the bulb red, the empty frame purple">
+      <figcaption>Step 2. Left, the alpha check; right, false colour: dark, and burnt only at the bulb.</figcaption>
+    </figure>
+
+    <h2 id="step-3"><span class="n">3.</span> Over a background</h2>
+    <p>
+      The plate needs a background. Here it is a studio backdrop made in the graph from <code>qc</code>'s patterns, which work as image generators as well as checks; in a real shot it would be another plate.
+    </p>
+    {{code step3_over.bn background check_and_grade}}
+    <ol class="steps">
+      <li><strong>The wall.</strong> <code>ramp</code> at an angle of 1.5708 radians, 90°, goes from bottom to top: a warm floor, a dark top.</li>
+      <li><strong>The pool of light.</strong> <code>radial</code> is a soft white disk, its colour and its alpha both falling off to 0. Times a warm colour, it is laid on the wall by <code>screen</code>, which lightens like a second projector.
+        Why not <code>plus</code>? It adds the alphas too: an opaque wall plus the pool has an alpha up to 2. A tool that divides by the alpha, as the grade of step 4 does, would then go wrong. <code>screen</code> gives <code>a + b − ab</code>, 1 over an opaque wall.</li>
+      <li><strong>Over.</strong> <code>over(fg, bg)</code> is <code>A + B(1 − a)</code>: the plate, plus the background where the plate does not cover it. Since A is premultiplied, its edges and its shadow are already weighted by their alpha, and nothing has to be multiplied again. <code>matte</code>, the over of a straight image, would weight them a second time.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step3.png" width="960" height="720" loading="lazy" alt="The dark, bluish ball, ring and crate standing on a warm brown studio backdrop, their shadows on it">
+      <figcaption>Step 3. The plate over the backdrop. The shadows sit on it, but the objects are dark and cold: they do not belong.</figcaption>
+    </figure>
+
+    <h2 id="step-4"><span class="n">4.</span> Grade the plate</h2>
+    <p>
+      Step 2 said the plate is under, and step 3 shows it is cold next to the backdrop. So the grade goes on the plate alone, before the over: the backdrop is right as it is.
+    </p>
+    {{code step4_grade.bn matched shot check_and_grade}}
+    <ol class="steps">
+      <li><strong>Exposure</strong> first: <code>exposure_stops(1.5)</code> multiplies the colours by 2<sup>1.5</sup>, about 2.83, as opening the lens a stop and a half would. Fixing the level first leaves the grade a smaller job.</li>
+      <li><strong>The grade.</strong> <code>gain</code> of 1.12, 1.0, 0.8 on red, green and blue warms the plate toward the backdrop; <code>lift</code> raises its blacks by about one hundredth, warm too, so its shadows are not deeper than the room's.</li>
+      <li><strong>Saturation</strong> at 0.85 takes back the extra colour the gain gave the terracotta.</li>
+      <li><strong>Premultiplied.</strong> A lift added to a premultiplied image would light its transparent pixels, and the whole frame would get a veil. <code>grade</code> divides the colours by the alpha, grades them, multiplies them back: a transparent pixel stays 0 and an edge keeps its colour.</li>
+    </ol>
+    <p>
+      The right half of the picture is <code>clip_check</code> of the shot: grey for the luminance, red where a channel is above 1, blue where one is below 0. The grade pushed the bulb, the top of the crate it lights and the glints of the ring above 1. The screen shows all of them as flat white.
+    </p>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step4.png" width="960" height="720" loading="lazy" alt="Left half: the warm, brighter ball and ring on the backdrop. Right half: the shot in grey, with the bulb, the top of the crate and two glints of the ring in red">
+      <figcaption>Step 4. Left, the graded shot; right, its clip check: red is above 1.</figcaption>
+    </figure>
+
+    <h2 id="step-5"><span class="n">5.</span> Reformat and letterbox</h2>
+    <p>
+      The plate is 4:3, 960 × 720; the delivery is 16:9, 960 × 540, letterboxed to 2.39:1.
+    </p>
+    {{code step5_deliver.bn delivery check_and_grade}}
+    <ul>
+      <li><strong>Reformat by Fill.</strong> <code>reformat(shot(), 960, 540, Fill)</code> fills the new frame and cuts what passes it: the width is kept, 90 rows go at the top and at the bottom. <code>Fit</code> would keep the whole plate, with empty sides; <code>Distort</code> would squash it.</li>
+      <li><strong>An STMap.</strong> <code>stmap</code> moves pixels the way Nuke's STMap does: an image whose red and green say, for each pixel of the result, where to read the source, from 0 to 1 across it. <code>reformat</code> computes that map on a 960 × 540 canvas, then reads the shot through it. The result has the size of the map.</li>
+      <li><strong>The letterbox.</strong> <code>letterbox(framed, 2.39)</code> keeps a band 960 pixels wide and about 402 high in the middle, and paints the 69 rows above and below it black. Its <code>Mask</code> output is that band, 1 inside.</li>
+    </ul>
+    <p>
+      From this step on, the graph delivers 960 × 540: set the scene's resolution to match, as <code>render.py</code> does.
+    </p>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step5.png" width="960" height="540" loading="lazy" alt="The graded shot in 16:9, black bars above and below it">
+      <figcaption>Step 5. 16:9, letterboxed to 2.39:1.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> <code>reformat(mirror(shot()), 960, 540, Fill)</code>, with <code>mirror</code> added to <code>use stmap</code>: the shot turned over left to right, the crate on the left. <code>mirror</code> is an STMap too.</p>
+
+    <h2 id="step-6"><span class="n">6.</span> Vignette and soft clip</h2>
+    <p>
+      Two last touches, after the reformat so that they follow the delivered frame, and before the letterbox so that its bars stay black.
+    </p>
+    {{code step6_finish.bn vignette delivery}}
+    <ol class="steps">
+      <li><strong>The vignette.</strong> <code>box_mask</code> draws a rounded box, half 0.7 wide and 0.3 high in the frame's uniform coordinates (its width from −1 to 1), its corners rounded by 0.3 and its edge feathered over 0.9: 1 in the middle, falling to 0 toward the edges. <code>keymix</code> takes the image there and the image a stop darker elsewhere. The eye goes to the middle.</li>
+      <li><strong>The soft clip.</strong> Step 4 found values above 1, which the screen cuts flat. <code>soft_clip(start: 0.8, limit: 1.0)</code> leaves everything below 0.8 as it is, and bends what is above toward 1 without reaching it: the bulb keeps a little shape instead of a flat disk. <code>render.py</code> checks that the delivery is between 0 and 1.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/check-and-grade-step6.png" width="960" height="540" loading="lazy" alt="The letterboxed shot, its edges a little darker">
+      <figcaption>Step 6. The delivery: the edges a stop darker, the highlights under 1.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> <code>vignette(framed, -2.0)</code>: two stops, a heavy vignette.</p>
+
+    <h2 id="step-7"><span class="n">7.</span> The final check</h2>
+    <p>
+      Before it leaves, the delivery is checked as the plate was. Has the soft clip done its job, and only its job?
+    </p>
+    {{code step7_check.bn check_and_grade soft_clip_heat delivery}}
+    <ul>
+      <li><strong>The clip check</strong> of the delivery: grey from edge to edge. No red, so no channel above 1; no blue, so none below 0, which a lift could have caused.</li>
+      <li><strong>The difference as heat.</strong> <code>delivery</code> now has a <code>clip</code> input that fades the soft clip out. <code>diff_view</code> compares the delivery with and without it, the difference times 4: black where they are the same, then red, yellow, white. Only the bulb, the top of the crate and the glints of the ring light up. <code>render.py</code> counts the pixels it changed by more than a thousandth: under 2 % of the frame, about 1 % here.</li>
+    </ul>
+    <div class="pair">
+      <figure>
+        <img src="../images/tutorials/check-and-grade-step7.png" width="960" height="540" loading="lazy" alt="The letterboxed delivery in grey, with no red and no blue anywhere">
+        <figcaption>Step 7, <code>check_and_grade</code>: the clip check of the delivery. Compare with step 4: the red is gone.</figcaption>
+      </figure>
+      <figure>
+        <img src="../images/tutorials/check-and-grade-step7-heat.png" width="960" height="540" loading="lazy" alt="A black frame with the bulb and the top of the crate in white and the glints of the ring in white and yellow">
+        <figcaption><code>soft_clip_heat</code>: where the soft clip changed the delivery.</figcaption>
+      </figure>
+    </div>
+    <p>
+      To see the heat in Blender, have <code>check_and_grade</code> return <code>soft_clip_heat()</code>. <code>qc</code> has one more check worth running on any delivery: <code>nan_inf_check</code>, which paints the pixels that are not numbers, or infinite, before a render farm or a codec finds them.
+    </p>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The finished compositor, in one file. Drag the card onto Blender and keep <em>Import into the .blend</em>: <code>check_and_grade</code> becomes the scene's compositor, if it has none yet. A click on the card downloads the file.
+    </p>
+    {{file step7_check.bn}}
+    <p>The steps before it, to start again from any of them:</p>
+    <div class="cards">
+      {{file step1_patterns.bn}}
+      {{file step2_read.bn}}
+      {{file step3_over.bn}}
+      {{file step4_grade.bn}}
+      {{file step5_deliver.bn}}
+      {{file step6_finish.bn}}
+    </div>
+    <p class="muted">
+      The files, with the script that renders this page's pictures, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/check_and_grade"><code>examples/tutorials/check_and_grade/</code></a>.
+    </p>
+
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later) · Hosted and sponsored by <a href="https://ludopant.com/">Ludopant Creative Studio</a>
+    </footer>
+  </div>
+</body>
+</html>
