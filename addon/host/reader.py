@@ -14,7 +14,7 @@ from collections import Counter
 
 import bpy
 
-from ..blender import compile_source, sugar
+from ..blender import compile_source, parse, sugar
 from ..lang import ast
 from ..lang.names import is_bare, is_word
 from ..lang.printer import quote, to_source
@@ -113,32 +113,44 @@ def read_tree(tree, schema, holders=None, portable=False):
     uses = {}
     checked = {}  # group -> whether it reads as its module builds it
 
+    decided = {}  # group -> the (name, source) of the use that writes it, None when the text holds it
+
+    def written_by(callee):
+        if callee in decided:
+            return decided[callee]
+        module = module_of(callee)
+        if module is not None and module != home and not as_built(callee, module, schema, checked):
+            # Edited since its module built it: the text holds it, as it is
+            module = None
+        if module is not None and module != home and portable:
+            shared = modules.shared(module)
+            if shared is None and graph_name(callee) == callee.name:
+                module = None
+            else:
+                if shared is None:
+                    # Built for another kind of tree than its graph's: its text is the module's alone
+                    warnings.append(f"{callee.name}: module '{module[0]}' is not in the standard library; "
+                                    "the text builds only where it is found")
+                module = shared or module
+        decided[callee] = module if module != home else None
+        return decided[callee]
+
     def visit(t, seen):
         if t in graphs or t in seen:
             return
         reader = GraphReader(t, schema, warnings)
         # The builder makes a modifier of a graph that no other one of the text calls
         reader.called = t is not tree
+        # A call names a group the text holds by the group's own name, that of the graph the text
+        # writes for it (`sdf circle (Shader)`), and one a use writes by the name of its module's graph
+        reader.call_name = lambda callee: graph_name(callee) if written_by(callee) is not None else callee.name
         graph = reader.read()
         if holders is not None:
             holders.update(reader.holders)
         # The groups its nodes call are exported with it
         for callee in sorted(reader.callees, key=lambda c: c.name):
-            module = module_of(callee)
-            if module is not None and module != home and not as_built(callee, module, schema, checked):
-                # Edited since its module built it: the text holds it, as it is
-                module = None
-            if module is not None and module != home and portable:
-                shared = modules.shared(module)
-                if shared is None and graph_name(callee) == callee.name:
-                    visit(callee, seen | {t})
-                    continue
-                if shared is None:
-                    # Built for another kind of tree than its graph's: its text is the module's alone
-                    warnings.append(f"{callee.name}: module '{module[0]}' is not in the standard library; "
-                                    "the text builds only where it is found")
-                module = shared or module
-            if module is not None and module != home:
+            module = written_by(callee)
+            if module is not None:
                 uses.setdefault(module, set()).add(key(graph_name(callee)))
             else:
                 visit(callee, seen | {t})
@@ -148,6 +160,21 @@ def read_tree(tree, schema, holders=None, portable=False):
     visit(tree, frozenset())
     return ast.File(order, [ast.Use(name, sorted(names), source, 0, 0)
                             for (name, source), names in uses.items()]), warnings
+
+
+def implicit_inputs(name, source, call, types):
+    """[(input key, type)] of the module's graph `call` whose default is a field a geometry tree takes
+    from the context (`p: Vector = Position()`), for the template's `types`; [] when it is not found."""
+    try:
+        text, filename = modules.load(name, source)
+        graph = next((g for g in parse(text, filename).graphs if key(g.name) == call), None)
+    except Exception:
+        return []
+    if graph is None:
+        return []
+    mapping = dict(zip((t.name for t in graph.type_params), types))
+    return [(p.key, mapping.get(p.type, p.type)) for p in graph.params
+            if isinstance(p.default, ast.Call) and p.default.name in IMPLICIT]
 
 
 def as_built(group, module, schema, checked):
@@ -167,7 +194,12 @@ def as_built(group, module, schema, checked):
     template = template_of(group)
     types = f"<{', '.join(template[0])}>" if template else ""
     use = f"use {name} ({call})" + (f" from {quote(source)}" if source else "")
-    probe = f"{use}\n\n{kind} graph probe() -> () {{\n  x = {call}{types}()\n}}\n"
+    # An input a geometry tree takes from the context (`p: Vector = Position()`) is given by the call
+    # in any other tree: the probe gives it one of its own inputs
+    given = implicit_inputs(name, source, call, template[0] if template else ())
+    params = ", ".join(f"given_{k}: {t}" for k, t in given)
+    args = ", ".join(f"{k}: given_{k}" for k, _t in given)
+    probe = f"{use}\n\n{kind} graph probe({params}) -> () {{\n  x = {call}{types}({args})\n}}\n"
     try:
         graphs = compile_source(probe, schema, "probe.bn", modules.load, [])
     except Exception:
@@ -224,6 +256,7 @@ class GraphReader:
         self.holders = {}  # id of an AST object -> (tree or node, slot prefix): see comments.write
         self.state_keys = {}  # repeat or simulate output name -> {state name: the key it goes by}
         self.outer = {}  # (zone input, socket) -> the key its body binds it to, see outer_names
+        self.call_name = graph_name  # a called group -> the name its call gives, see read_tree
 
     def warn(self, message):
         self.warnings.append(f"{self.name}: {message}")
@@ -1128,7 +1161,7 @@ class GraphReader:
                 # Without a tree a Group node has no socket: nothing in or out to write
                 self.warn(f"'{node.name}': Group node with no tree, written as Group()")
                 return ast.Call("Group", [], 0, 0)
-            name = key(graph_name(node.node_tree))
+            name = key(self.call_name(node.node_tree))
         elif spec is None:
             name = ui_name(node.bl_idname) or text_name(node.bl_idname)
             self.warn(f"{name} ('{node.name}') is not yet supported in text")
