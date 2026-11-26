@@ -10,6 +10,20 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ## [Unreleased]
 
+### Standard library
+
+- Added: module `toon` (Blender 5.3, EEVEE), toon shading lit light by light with the lighting
+  nodes of Blender 5.3: a hard band per light, a shadow tinted instead of black, a rim light that
+  keeps the light's colour. A light tunes its own style with the custom properties `toon_threshold`,
+  `toon_intensity` and `toon_rim`, read by the Attribute node in Light mode; a light without them
+  takes the values the graph is given.
+
+### Site
+
+- Added: the tutorial Toon lights (`examples/tutorials/toon_lights/`, `site/tutorials/toon-lights.html`),
+  five steps from one band per light to the module `toon`, rendered by its `render.py` with EEVEE in
+  Blender 5.3, which checks that step 5 renders step 4 to the pixel.
+
 ## [1.0.0] - 2026-11-23
 
 ### Repository

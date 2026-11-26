@@ -1,0 +1,73 @@
+// @module toon_lights_step4
+// @title Toon lights, step 4: a rim light
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @target blender@5.3
+// @offer groups, example
+// @example still_life
+
+shader graph band(threshold: Float = 0.45) -> Float {
+  "1 where this light reaches the surface past the threshold and nothing casts a shadow on it, 0 elsewhere"
+  g = Geometry()
+  evaluation = LightEvaluation(position: g.position, normal: g.normal)
+  shadow = RGBToBW(color: ShadowRaycast(position: g.position))
+  return MapRange(
+    value: evaluation.factor * evaluation.mask * shadow,
+    from_min: threshold,
+    from_max: threshold + 0.02)
+}
+
+shader graph light_threshold(fallback: Float = 0.45) -> Float {
+  "The custom property toon_threshold of the light, or the fallback"
+  a = Attribute[LIGHT, attribute_name: "toon_threshold"]()
+  return Mix(factor: a.alpha, a: fallback, b: a.factor)
+}
+
+shader graph light_rim() -> Float {
+  "The custom property toon_rim of the light, or 0"
+  a = Attribute[LIGHT, attribute_name: "toon_rim"]()
+  return Mix(factor: a.alpha, a: 0.0, b: a.factor)
+}
+
+shader graph shading(shadow: Color = (0.22, 0.26, 0.42, 1.0)) -> Shader {
+  "A light with toon_rim at 1 goes to the glossy light, white: its own colour on the surface, not mixed with it"
+  color = Attribute[attribute_name: "color"]().color
+  lit = LightInfo().color * band(light_threshold())
+  rim = light_rim()
+  lights = LightAccumulation(
+    diffuse_light: lit * (1.0 - rim),
+    diffuse_color: color,
+    glossy_light: lit * rim)
+  return AddShader(a: lights, b: Emission(color: color * shadow))
+}
+
+shader(material: true) graph Toon() -> (surface: Shader) {
+  "The material of the still life: shading, whose inputs on its node tune it"
+  return (surface: shading())
+}
+
+geometry graph painted(geometry: Geometry, color: Color) -> Geometry {
+  "The geometry, its colour stored on its points as the attribute color, for the material to read"
+  return StoreNamedAttribute[FLOAT_COLOR](geometry, name: "color", value: color)
+}
+
+geometry graph still_life() -> Geometry {
+  "A ball, a cone and a ring on a floor, each of its own colour, all of one material: Toon"
+  ball = UVSphere(segments: 64, rings: 32, radius: 0.5).mesh
+    |> TransformGeometry(translation: (-0.75, 0.15, 0.5))
+    |> painted(color: (0.9, 0.35, 0.15, 1.0))
+  cone = Cone(vertices: 64, radius_bottom: 0.42, depth: 1.1).mesh
+    |> TransformGeometry(translation: (0.55, 0.45, 0.55))
+    |> painted(color: (0.2, 0.55, 0.85, 1.0))
+  ring = CurveToMesh(
+      CurveCircle(resolution: 96, radius: 0.36).curve,
+      profile_curve: CurveCircle(resolution: 32, radius: 0.12).curve)
+    |> TransformGeometry(translation: (0.15, -0.45, 0.48), rotation: (1.45, 0.0, 0.5))
+    |> painted(color: (0.95, 0.8, 0.25, 1.0))
+  floor = Grid(size_x: 8.0, size_y: 8.0, vertices_x: 2, vertices_y: 2).mesh
+    |> painted(color: (0.42, 0.4, 0.38, 1.0))
+  return JoinGeometry(ball, cone, ring)
+    |> SetShadeSmooth()
+    |> JoinGeometry(floor)
+    |> SetMaterial(material: Toon)
+}

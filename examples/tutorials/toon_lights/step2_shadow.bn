@@ -1,0 +1,56 @@
+// @module toon_lights_step2
+// @title Toon lights, step 2: a shadow of a colour
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @target blender@5.3
+// @offer groups, example
+// @example still_life
+
+shader graph band(threshold: Float = 0.45) -> Float {
+  "1 where this light reaches the surface past the threshold and nothing casts a shadow on it, 0 elsewhere"
+  g = Geometry()
+  evaluation = LightEvaluation(position: g.position, normal: g.normal)
+  shadow = RGBToBW(color: ShadowRaycast(position: g.position))
+  return MapRange(
+    value: evaluation.factor * evaluation.mask * shadow,
+    from_min: threshold,
+    from_max: threshold + 0.02)
+}
+
+shader graph shading(shadow: Color = (0.22, 0.26, 0.42, 1.0)) -> Shader {
+  "The lights' bands, and where none reaches the colour times shadow: a shadow tinted, not black"
+  color = Attribute[attribute_name: "color"]().color
+  lights = LightAccumulation(diffuse_light: LightInfo().color * band(), diffuse_color: color)
+  return AddShader(a: lights, b: Emission(color: color * shadow))
+}
+
+shader(material: true) graph Toon() -> (surface: Shader) {
+  "The material of the still life: shading, whose inputs on its node tune it"
+  return (surface: shading())
+}
+
+geometry graph painted(geometry: Geometry, color: Color) -> Geometry {
+  "The geometry, its colour stored on its points as the attribute color, for the material to read"
+  return StoreNamedAttribute[FLOAT_COLOR](geometry, name: "color", value: color)
+}
+
+geometry graph still_life() -> Geometry {
+  "A ball, a cone and a ring on a floor, each of its own colour, all of one material: Toon"
+  ball = UVSphere(segments: 64, rings: 32, radius: 0.5).mesh
+    |> TransformGeometry(translation: (-0.75, 0.15, 0.5))
+    |> painted(color: (0.9, 0.35, 0.15, 1.0))
+  cone = Cone(vertices: 64, radius_bottom: 0.42, depth: 1.1).mesh
+    |> TransformGeometry(translation: (0.55, 0.45, 0.55))
+    |> painted(color: (0.2, 0.55, 0.85, 1.0))
+  ring = CurveToMesh(
+      CurveCircle(resolution: 96, radius: 0.36).curve,
+      profile_curve: CurveCircle(resolution: 32, radius: 0.12).curve)
+    |> TransformGeometry(translation: (0.15, -0.45, 0.48), rotation: (1.45, 0.0, 0.5))
+    |> painted(color: (0.95, 0.8, 0.25, 1.0))
+  floor = Grid(size_x: 8.0, size_y: 8.0, vertices_x: 2, vertices_y: 2).mesh
+    |> painted(color: (0.42, 0.4, 0.38, 1.0))
+  return JoinGeometry(ball, cone, ring)
+    |> SetShadeSmooth()
+    |> JoinGeometry(floor)
+    |> SetMaterial(material: Toon)
+}

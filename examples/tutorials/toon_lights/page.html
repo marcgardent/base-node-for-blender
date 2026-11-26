@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Toon lights — base-node tutorials</title>
+  <meta name="description" content="Toon shading lit light by light with the lighting nodes of Blender 5.3 in EEVEE, written in .bn: a hard band per light, a tinted shadow, a threshold set on each light, a rim light, then the free module toon.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/toon_lights/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>Toon lights</h1>
+    <p class="lead">
+      Toon shading as Blender 5.3 lets a material write it: light by light. Each light cuts its own hard band, sets its own threshold and can turn into a rim light, from a custom property on the light itself.
+      The tutorial ends with the same picture in one call: the module <code>toon</code> of the free standard library.
+    </p>
+    <figure>
+      <img src="../images/tutorials/toon-lights-step4.png" width="1000" height="750" alt="A ball, a cone and a ring on a grey floor in flat colours: a warm light from the front, a blue light from the left, an orange rim on the right edges and blue shadows">
+      <figcaption>Where we are going. Three lights, one material, five steps.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need <strong>Blender 5.3</strong>, with <strong>EEVEE</strong>: the lighting nodes are new in 5.3, and Cycles does not run them. You also need the <a href="../index.html#blender">Base Node add-on</a>; step 5 needs a version whose standard library has the module <code>toon</code>. Everything here is free.
+    </p>
+    <p>
+      Every block below is a complete <code>.bn</code> file, its code beside the nodes it builds. Two ways to try a step:
+    </p>
+    <ul>
+      <li><strong>Drag it.</strong> Drag the file icon of its block, or its title, onto empty space in Blender's 3D Viewport, and keep <em>Instantiate the Example</em>: a new object carries <code>still_life</code> at the 3D cursor, with its material <code>Toon</code>. A click on the file icon downloads the file instead.</li>
+      <li><strong>Paste it.</strong> Press the copy button of its block, open a Geometry Node editor, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> and pick <em>Add as Modifier</em>, on any mesh object.</li>
+    </ul>
+    <p>
+      The lights are not in the files: they belong to your scene. Each step says which ones to add. Set the viewport to <em>Rendered</em> to see the material at work.
+      The pictures are rendered from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/toon_lights/render.py"><code>render.py</code></a>.
+    </p>
+
+    <h2 id="idea">What Blender 5.3 changes</h2>
+    <p>
+      Before 5.3, a toon material in EEVEE went through <code>ShaderToRGB</code>: it turned the light on the surface into a colour, and a colour ramp cut it into bands. That light is the sum of all the lights. Two lights make one blurred sum, and nothing tells you which light lit what.
+    </p>
+    <p>
+      Blender 5.3 adds a node, <code>LightAccumulation</code>. What feeds its <em>Light</em> inputs runs <strong>once for each light</strong>, then Blender adds the lights up. Upstream of it, a handful of nodes see the light being evaluated:
+    </p>
+    <table>
+      <tr><th>Node</th><th>What it gives, for the light being evaluated</th></tr>
+      <tr><td><code>LightEvaluation</code></td><td><code>factor</code>: how much the surface faces the light, 0 to about 1; <code>mask</code>: its falloff; <code>direction</code>, <code>distance</code>.</td></tr>
+      <tr><td><code>ShadowRaycast</code></td><td>White where nothing casts a shadow from this light, black where something does.</td></tr>
+      <tr><td><code>LightInfo</code></td><td>The light's <code>color</code>, <code>power</code> and <code>position</code>.</td></tr>
+      <tr><td><code>Attribute[LIGHT]</code></td><td>A custom property of the light object.</td></tr>
+    </table>
+    <p>
+      Three rules: these nodes only reach the output through a <em>Light</em> input of <code>LightAccumulation</code>, never through its <em>Color</em> inputs, and never through <code>ShaderToRGB</code>. <code>LightAccumulation</code> renders the lights and nothing else: no world light, no ambient.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> One band per light</h2>
+    <p>
+      Add a <strong>sun</strong>, from the front left, pale warm. Then the file:
+    </p>
+    {{code step1_band.bn Toon band still_life}}
+    <ol class="steps">
+      <li><strong>The band.</strong> <code>factor * mask</code> says how much the surface faces this light. <code>MapRange</code> from <code>threshold</code> to <code>threshold + 0.02</code> turns it into 0 or 1, with an edge two hundredths wide: the hard line of a cel.</li>
+      <li><strong>The light's colour.</strong> <code>LightInfo().color * band()</code>: where the band is 1, the light adds its own colour.</li>
+      <li><strong>The surface's colour.</strong> <code>still_life</code> stores a colour on each object, the attribute <code>color</code>, and the material reads it as the <em>Diffuse Color</em>: one material for the four objects.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/toon-lights-step1.png" width="1000" height="750" loading="lazy" alt="The ball, cone and ring lit on one side in flat colours, black on the other side">
+      <figcaption>Step 1. Two tones, but the dark one is black: <code>LightAccumulation</code> renders the lights and nothing else.</figcaption>
+    </figure>
+
+    <h2 id="step-2"><span class="n">2.</span> A shadow of a colour</h2>
+    <p>
+      Same sun. Two changes in the material:
+    </p>
+    {{code step2_shadow.bn shading band Toon still_life}}
+    <ol class="steps">
+      <li><strong>Cast shadows.</strong> <code>ShadowRaycast</code> is the shadow this light casts on the surface. Multiplied into the band, the shadow of the ring on the floor is cut as hard as the rest.</li>
+      <li><strong>The shadow tone.</strong> Where no light reaches, the surface is its colour times <code>shadow</code>, a dull blue, added by an <code>Emission</code>: it does not depend on any light.</li>
+      <li><strong>Tunable.</strong> The material takes no input, so the shading goes in a graph of its own, <code>shading</code>: its <code>shadow</code> is an input of its node in the material.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/toon-lights-step2.png" width="1000" height="750" loading="lazy" alt="The same objects with blue-grey shadow sides and hard blue cast shadows on the floor">
+      <figcaption>Step 2. The shadow side and the cast shadows take the same tinted tone.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>shadow</code> to <code>(0.5, 0.3, 0.45, 1.0)</code> on the node <code>shading</code>: a dusk mauve.</p>
+
+    <h2 id="step-3"><span class="n">3.</span> The light sets its band</h2>
+    <p>
+      Add a second sun, from the left, blue, and give it a <strong>custom property</strong>: select the light, <em>Object Properties</em>, <em>Custom Properties</em>, <em>New</em>, name it <code>toon_threshold</code>, a Float, value <code>0.6</code>. Leave the first sun as it is.
+    </p>
+    {{code step3_threshold.bn light_threshold shading band Toon still_life}}
+    <ol class="steps">
+      <li><strong>Read on the light.</strong> <code>Attribute[LIGHT]</code> reads <code>toon_threshold</code> on the light being evaluated: the blue sun cuts its band at 0.6, a narrower band than the warm sun's.</li>
+      <li><strong>A light without it.</strong> A property the light does not have reads with an <code>alpha</code> of 0. <code>Mix</code> by that alpha takes the <code>fallback</code>, 0.45, for the warm sun.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/toon-lights-step3.png" width="1000" height="750" loading="lazy" alt="The objects with a second, smaller blue lit band on their left sides">
+      <figcaption>Step 3. Two lights, two bands, each cut where its own light says. With <code>ShaderToRGB</code> they would melt into one.</figcaption>
+    </figure>
+
+    <h2 id="step-4"><span class="n">4.</span> A rim light</h2>
+    <p>
+      Add a third sun, orange, almost level, from behind the objects on the right. Two custom properties on it: <code>toon_threshold</code> at <code>0.25</code> and <code>toon_rim</code> at <code>1.0</code>.
+    </p>
+    {{code step4_rim.bn shading light_rim light_threshold band Toon still_life}}
+    <ol class="steps">
+      <li><strong>Its own colour.</strong> A light on the <em>Diffuse Light</em> input is multiplied by the surface's colour: orange on blue makes a dull green. On the <em>Glossy Light</em> input, whose colour is white, it keeps its own.</li>
+      <li><strong>Which input.</strong> <code>toon_rim</code> sends the light there: <code>lit * (1.0 - rim)</code> to the diffuse, <code>lit * rim</code> to the glossy. The two other suns have no <code>toon_rim</code>: 0.</li>
+      <li><strong>Only the edges.</strong> The sun comes from behind: it reaches the sides that face away from the camera, and the edges of the others. Nearly level, it barely touches the floor, under its threshold.</li>
+    </ol>
+    <figure>
+      <img src="../images/tutorials/toon-lights-step4.png" width="1000" height="750" loading="lazy" alt="The objects with a pale orange rim along their right edges">
+      <figcaption>Step 4. The rim along the right edges of the ball, the ring and the cone.</figcaption>
+    </figure>
+
+    <h2 id="step-5"><span class="n">5.</span> The module toon</h2>
+    <p>
+      The same three lights. Steps 1 to 4 are the module <code>toon</code> of the standard library, which reads the same custom properties, and <code>toon_intensity</code> too:
+    </p>
+    {{code step5_module.bn Toon still_life}}
+    <figure>
+      <img src="../images/tutorials/toon-lights-step5.png" width="1000" height="750" loading="lazy" alt="The same picture as step 4">
+      <figcaption>Step 5. The picture of step 4, to the pixel: <code>render.py</code> checks it.</figcaption>
+    </figure>
+
+    <h2 id="tune">The knobs</h2>
+    <table>
+      <tr><th>Where</th><th>Name</th><th>What it does</th></tr>
+      <tr><td>node <code>toon</code></td><td><code>color</code>, <code>shadow</code></td><td>The surface's colour, and what it is multiplied by where no light reaches.</td></tr>
+      <tr><td>node <code>toon</code></td><td><code>threshold</code>, <code>softness</code></td><td>Where the band of a light without <code>toon_threshold</code> starts, and how wide its edge is.</td></tr>
+      <tr><td>node <code>toon</code></td><td><code>intensity</code></td><td>How strong a light without <code>toon_intensity</code> lights.</td></tr>
+      <tr><td>light</td><td><code>toon_threshold</code></td><td>Where this light's band starts, 0 to 1: higher is narrower.</td></tr>
+      <tr><td>light</td><td><code>toon_intensity</code></td><td>How strong this light lights.</td></tr>
+      <tr><td>light</td><td><code>toon_rim</code></td><td>1: this light adds its own colour, as a rim. 0: it lights the surface's colour.</td></tr>
+    </table>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The still life with the module, in one file. Drag the card onto empty space in Blender's 3D Viewport and keep <em>Instantiate the Example</em>, then add the lights of step 4. A click on the card downloads the file.
+    </p>
+    {{file step5_module.bn}}
+    <p>The steps before it, written out node by node:</p>
+    <div class="cards">
+      {{file step1_band.bn}}
+      {{file step2_shadow.bn}}
+      {{file step3_threshold.bn}}
+      {{file step4_rim.bn}}
+    </div>
+    <p class="muted">
+      The files, with the script that renders this page's pictures, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/toon_lights"><code>examples/tutorials/toon_lights/</code></a>.
+    </p>
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later)
+    </footer>
+  </div>
+</body>
+</html>
