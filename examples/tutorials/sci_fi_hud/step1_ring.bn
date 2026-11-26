@@ -1,0 +1,31 @@
+// @module sci_fi_hud_step1
+// @title Sci-fi HUD, step 1: a ring is a distance
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example sci_fi_hud
+
+use math (sdf_circle)
+use sdf2d (sdf_isolines, sdf_ring_2d)
+
+shader graph ink(d: Float, width: Float = 0.006 in 0.0..) -> Float {
+  "1 inside a shape, 0 outside, blended over width across its contour: a line drawn from a distance"
+  return Clamp(value: 0.5 - d / width)
+}
+
+shader(material: true) graph Hud() -> (surface: Shader) {
+  "The dial: one ring, drawn where its distance is below zero, and the field around it"
+  p = TextureCoordinate().object
+  circle = sdf_circle(p, radius: 1.2)
+  ring = sdf_ring_2d(circle, thickness: 0.04)
+  // The distance is defined everywhere: its contour lines every 0.1 m show it
+  field = sdf_isolines(ring, step: 0.1, width: 0.004)
+  light = ink(d: ring) + ink(d: field) * 0.15
+  return (surface: Emission(color: (0.25, 0.85, 1.0, 1.0), strength: light * 1.2))
+}
+
+geometry graph sci_fi_hud(size: Float = 3.6 in 0.0..) -> Geometry {
+  "A flat screen, size metres square, that the material Hud draws on"
+  return Grid(size_x: size, size_y: size, vertices_x: 2, vertices_y: 2).mesh
+    |> SetMaterial(material: Hud)
+}
