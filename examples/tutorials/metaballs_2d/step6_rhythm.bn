@@ -1,0 +1,84 @@
+// @module metaballs_2d_step6
+// @title 2D metaballs, step 6: rhythm
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example metaballs
+
+use math (bounce, ease_in_out, elastic, impulse, palette, recoil, sdf_circle)
+use sdf2d (sdf_isolines, sdf_ring_2d)
+
+shader(material: true) graph Canvas() -> (surface: Shader) {
+  "The colour each point of the canvas stores, as it is: no light, no shade"
+  return (surface: Emission(color: Attribute[attribute_name: "color"]().color, strength: 1.0))
+}
+
+geometry graph canvas(color: Color) -> Geometry {
+  "A 3 m square of 600 × 600 vertices, each storing the colour given at its position"
+  return Grid(size_x: 3.0, size_y: 3.0, vertices_x: 600, vertices_y: 600).mesh
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: color)
+    |> SetMaterial(material: Canvas)
+}
+
+geometry graph line(d: Float, width: Float = 0.004) -> Float {
+  "1 on a line where the distance d is 0, fading to 0 over width beyond it: a line drawn without steps"
+  return 1.0 - MapRange(value: d, from_max: width)
+}
+
+geometry graph look(d: Float, color: Color) -> Color {
+  "The blobs lit from within, with their contour lines, and their outlines rippling out on the dark"
+  ground = (0.02, 0.02, 0.04, 1.0)
+  // Inside: brighter towards the core, a contour line every 5 cm
+  core = color * (0.55 + 0.45 * MapRange(value: -d, from_max: 0.3))
+  body = Mix[RGBA](
+    factor: line(sdf_isolines(d, step: 0.05, width: 0.004)) * 0.5,
+    a: core,
+    b: ground)
+  // Outside: a glow of the blob's colour, and an outline every 8 cm, gone at 30 cm
+  glow = ground + color * (0.35 * exp(-d * 8.0))
+  fade = 1.0 - MapRange(value: d, from_max: 0.3)
+  around = Mix[RGBA](
+    factor: line(sdf_isolines(d, step: 0.08, width: 0.004)) * fade,
+    a: glow,
+    b: color)
+  inside = 1.0 - MapRange(value: d, from_min: -0.003, from_max: 0.003)
+  filled = Mix[RGBA](factor: inside, a: around, b: body)
+  return Mix[RGBA](
+    factor: line(sdf_ring_2d(d, thickness: 0.016)),
+    a: filled,
+    b: (1.0, 1.0, 1.0, 1.0))
+}
+
+geometry graph swing(t: Float, kind: Int) -> Float {
+  "Out over the first half of t, back over the second: 0 at both ends, the way out shaped by kind"
+  out = Clamp(value: t * 2.0)
+  back = Clamp(value: t * 2.0 - 1.0)
+  shaped = IndexSwitch(kind, bounce(out), elastic(out), recoil(out)).output
+  return shaped * (1.0 - ease_in_out(back))
+}
+
+geometry graph satellite(i: Int, beat: Float) -> (centre: Vector, radius: Float) {
+  "Ball i of the six around the middle: it leaves and comes back once a beat, a sixth of a beat after the one before"
+  angle = i * 1.047198 + 0.3
+  t = fract(SceneTime().frame / beat + i / 6.0)
+  reach = 0.35 + 0.6 * swing(t, mod(i, 3))
+  return (
+    centre: CombineXYZ(x: cos(angle), y: sin(angle)) * reach,
+    radius: RandomValue(min: 0.14, max: 0.26, id: i, seed: 2))
+}
+
+geometry graph metaballs(melt: Float = 0.3 in 0.0.., beat: Float = 96.0 in 1.0..) -> Geometry {
+  "The crowd of step 5 on the move, the middle ball beating twice a beat; beat is in frames"
+  p = Position()
+  pulse = impulse(fract(SceneTime().frame / beat * 2.0), stiffness: 8.0)
+  crowd = repeat(6, d: sdf_circle(p, radius: 0.42 * (1.0 + 0.12 * pulse)), color: palette(0.0)) -> {
+    ball = satellite(iteration, beat)
+    d_ball = sdf_circle(p - ball.centre, radius: ball.radius)
+    // 1 where the crowd so far is the nearer, 0 where this ball is, between over melt
+    h = Clamp(value: 0.5 + 0.5 * (d_ball - d) / melt)
+    return (
+      d: smooth_min(d, d_ball, melt),
+      color: Mix[RGBA](factor: h, a: palette((iteration + 1) / 7.0), b: color))
+  }
+  return canvas(look(crowd.d, crowd.color))
+}
