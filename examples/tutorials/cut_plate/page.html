@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cut plate — base-node tutorials</title>
+  <meta name="description" content="A brass nameplate with blue enamel, cut from closed lines in .bn with the free modules fillet2d and planar2d: round and chamfered corners, screw holes centred on the corners, a stencil, a sunken panel with raised letters.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/cut_plate/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>Cut plate</h1>
+    <p class="lead">
+      A brass nameplate: pointed ends, round corners, two screw holes, a sunken panel of blue enamel with the letters standing in it.
+      Every shape on it is a closed line, drawn in 2D, and one rule turns the pile of lines into faces: a point is metal when an odd number of lines surround it. No boolean, no modelling by hand, and only the free standard library: <code>fillet2d</code> for the corners, <code>planar2d</code> for the faces.
+    </p>
+    <figure>
+      <img src="../images/tutorials/cut-plate-step6.png" width="1000" height="500" alt="A long brass plate with pointed, rounded ends and a screw hole in each, on a dark table; in its middle a sunken panel of glossy dark blue enamel with the brass letters BASE NODE standing in it">
+      <figcaption>Where we are going. Six steps, from a hexagon to a nameplate.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need Blender 5 and the <a href="../index.html#blender">Base Node add-on</a>. The modules <code>fillet2d</code> and <code>planar2d</code> come with it, in its free standard library: a file that says <code>use planar2d</code> finds it there.
+    </p>
+    <p>
+      Every block below is a complete <code>.bn</code> file, its code beside the nodes it builds. Two ways to try a step:
+    </p>
+    <ul>
+      <li><strong>Drag it.</strong> Drag the file icon of its block, or its title, onto empty space in Blender's 3D Viewport, and keep <em>Instantiate the Example</em>: a new object carries <code>cut_plate</code> at the 3D cursor. A click on the file icon downloads the file instead.</li>
+      <li><strong>Paste it.</strong> Press the copy button of its block, open a Geometry Node editor, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> and pick <em>Add as Modifier</em>, on any mesh object: the graph draws its own lines.</li>
+    </ul>
+    <p>
+      The pictures are rendered from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/cut_plate/render.py"><code>render.py</code></a>, which also measures each step's plate and checks the numbers this page gives. Sizes are in Blender units: the plate is 4.4 long. Scale the object to the size you want.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> A closed line, its face, a plate</h2>
+    <p>
+      The plate starts as its outline: a closed line in the XY plane. A face is what is inside it; a plate is that face, given a thickness. Keeping the shape as lines until the end is what makes the next steps cheap: rounding a corner, adding a hole or a letter is adding or changing a line, never editing a mesh.
+    </p>
+    {{code step1_outline.bn cut_plate outline layer}}
+    <ul>
+      <li><strong>The outline.</strong> <code>CurveCircle</code> with a <code>resolution</code> of 6 is a hexagon: six points on a circle of radius 1, the first on the x axis. <code>TransformGeometry</code> stretches it: the tips go to x = ±2.2, half the <code>length</code>. The four other points are at 60°, where y is sin 60° = 0.866 = 1.732 / 2, so dividing <code>width</code> by 1.732 puts the long edges at y = ±0.65, half the <code>width</code>.</li>
+      <li><strong>Its face.</strong> <code>planar_faces</code> of <code>planar2d</code> fills closed lines with <code>FillCurve</code>. One closed line, one face: here a hexagon cut into triangles. Its description speaks of welding the ends of separate lines into loops first, with <code>MergeByDistance</code>; that node leaves the points of curves as they are, so three lines meeting end to end make no triangle. Give it lines that are closed already, as every shape of this plate is.</li>
+      <li><strong>A thickness.</strong> <code>layer</code> lifts the face to <code>bottom</code>, then <code>ExtrudeMesh</code> pushes it up to <code>top</code>: the face becomes the top, and walls join it to where it was. Extruding leaves nothing underneath, so <code>cut_plate</code> adds the face again, turned over by <code>FlipFaces</code> so that it faces down: the underside.</li>
+    </ul>
+    <p>
+      The extrusion's offset is written <code>CombineXYZ(z: …)</code>, not as a vector literal: with this version of the add-on, a literal given to <code>ExtrudeMesh</code>'s <code>offset</code> is not taken, and the faces go up by 1 along their normals instead.
+    </p>
+    <figure>
+      <img src="../images/tutorials/cut-plate-step1.png" width="1000" height="500" loading="lazy" alt="A flat grey plate shaped as a long hexagon, pointed at both ends, on a dark table">
+      <figcaption>Step 1. A hexagon 4.4 long and 1.3 wide, 0.08 thick.</figcaption>
+    </figure>
+
+    <h2 id="step-2"><span class="n">2.</span> Round corners, a radius per corner</h2>
+    <p>
+      Sharp corners look unfinished on metal, and catch. <code>fillet2d</code>'s <code>fillet_polygon</code> rounds them: it replaces each corner by an arc of the <code>radius</code> it is given, tangent to both sides.
+    </p>
+    {{code step2_corners.bn rounded corner_radius cut_plate}}
+    <ul>
+      <li><strong>A radius per corner.</strong> The radius is a field: it is read at each point of the curve. <code>corner_radius</code> gives 0.3 to the two tips, the points on the x axis, and 0.1 to the four others. Large arcs make the ends soft, small ones keep the long edges straight.</li>
+      <li><strong>A Bézier curve first.</strong> <code>fillet_polygon</code> runs <code>FilletCurve</code> in its Bézier mode: each corner becomes two points whose handles draw the arc. The hexagon of <code>CurveCircle</code> is a poly curve, which has no handles, and the same call would cut each corner straight. <code>SetSplineType[BEZIER]</code> gives the outline handles first.</li>
+      <li><strong>Its points.</strong> An arc is drawn with the curve's resolution, 12 segments. <code>fillet_polygon</code> also has a <code>segments</code> input, but in the Bézier mode it changes nothing: to draw finer arcs, raise the resolution with <code>SetSplineResolution</code>.</li>
+    </ul>
+    <p>
+      The tips are corners of 61.2°. The centre of an arc of radius 0.3 tangent to both sides is 0.59 in from the tip, at x = 1.61, so the rounded tip now ends at x = 1.91 instead of 2.2. <code>planar_faces</code> fills the Bézier curve as it filled the poly one: it reads its evaluated points.
+    </p>
+    <figure>
+      <img src="../images/tutorials/cut-plate-step2.png" width="1000" height="500" loading="lazy" alt="The same grey plate, its pointed ends now rounded and its four other corners slightly rounded">
+      <figcaption>Step 2. Round tips of radius 0.3, small corners of 0.1.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> take <code>SetSplineType[BEZIER]()</code> out of <code>rounded</code>: every corner is cut straight, the poly curve's fillet. Step 5 uses exactly that.</p>
+
+    <h2 id="step-3"><span class="n">3.</span> Two screw holes, centred on the round tips</h2>
+    <p>
+      A screw hole in a rounded tip looks right only when it is centred on the arc: the ring of metal around it is then as wide all round. That centre is not on the outline, and the curve does not store it. <code>fillet2d</code>'s <code>fillet_corner</code> computes it from three points: the corner and its two neighbours.
+    </p>
+    {{code step3_holes.bn corner_centres screw_holes cut_plate}}
+    <ol class="steps">
+      <li><strong>The neighbours.</strong> <code>SampleIndex</code> reads the position of the points before and after each point, at <code>i − 1</code> and <code>i + 1</code>. The outline is closed: <code>mod(…, n)</code> wraps the indices, so the point before point 0 is point 5.</li>
+      <li><strong>The centre.</strong> <code>fillet_corner</code> takes the directions to the two neighbours and the angle between them. The centre of a circle of radius <code>r</code> tangent to both sides is on the bisector, at <code>r / sin(angle / 2)</code> from the corner: at the tips, 0.3 / sin 30.6° = 0.59.</li>
+      <li><strong>On points.</strong> <code>CurveToPoints[EVALUATED]</code> of a poly curve gives its own points, in their order, so <code>Index()</code> there is the index of the corner on the curve. <code>SetPosition</code> moves each point to its arc's centre.</li>
+      <li><strong>The holes.</strong> <code>screw_holes</code> keeps the two centres on the x axis, at x = ±1.61, and puts a circle of radius 0.1 on each. It asks <code>corner_radius</code> for the radius, the same function the fillet used: change the tips' radius there, and the holes follow.</li>
+    </ol>
+    <p>
+      Now the rule that does all the cutting. <code>FillCurve</code> fills by <em>even-odd</em>: from any point, count the lines around it. One line, the edge: inside, metal. Two lines, the edge and a hole: outside again, nothing. So the holes are cut by giving <code>planar_faces</code> their circles together with the outline, <code>rounded(polygon) + screw_holes(polygon)</code>. Each closed line added flips what it surrounds.
+    </p>
+    <figure>
+      <img src="../images/tutorials/cut-plate-step3.png" width="1000" height="500" loading="lazy" alt="The rounded grey plate with a round hole in each tip, the dark table seen through them">
+      <figcaption>Step 3. A hole of radius 0.1 at the centre of each tip's arc: a ring of metal 0.2 wide around it.</figcaption>
+    </figure>
+
+    <h2 id="step-4"><span class="n">4.</span> Letters cut through: a stencil</h2>
+    <p>
+      Letters are closed lines too, so even-odd cuts them like the holes. That makes a stencil, and shows the stencil's oldest problem.
+    </p>
+    {{code step4_stencil.bn lettering cut_plate}}
+    <p>
+      <code>lettering</code> turns a text into curves: <code>StringToCurves</code> gives a curve instance per letter, <code>RealizeInstances</code> makes them plain curves. A letter is one closed line, or more: B is its outside and two counters, the closed holes of the letter. Counted from the plate, a letter's inside is surrounded by two lines, so it is cut out. Inside a counter there are three: metal again, a piece of plate in the middle of a hole, attached to nothing.
+    </p>
+    <div class="pair">
+      <figure>
+        <img src="../images/tutorials/cut-plate-step4-kept.png" width="1000" height="500" loading="lazy" alt="The thin plate with BASE NODE cut through it, the insides of B, A, O and D still in place">
+        <figcaption><code>drop</code> off: <code>planar_faces</code> alone. The counters of B, A, O and D float in their letters, held by nothing.</figcaption>
+      </figure>
+      <figure>
+        <img src="../images/tutorials/cut-plate-step4.png" width="1000" height="500" loading="lazy" alt="The same stencil without the insides of B, A, O and D: those letters are open blobs">
+        <figcaption><code>drop</code> on: what is left once cut. The 5 counters are gone, and B, A, O and D are blobs.</figcaption>
+      </figure>
+    </div>
+    <p>
+      <code>planar2d</code>'s <code>shape_builder_pick</code> makes the cut real. It fills the lines as <code>planar_faces</code> does, numbers the pieces that are not connected (<code>MeshIsland</code>), and keeps only the pieces where a seed point falls, or the nearest one within <code>pick_radius</code>. One seed at (0, 0.6), just inside the top edge at 0.65, keeps the plate; every piece that would fall out of a real stencil goes. <code>render.py</code> counts them: 5, two in the B and one in each of A, O and D.
+    </p>
+    <p>
+      This is why stencil letters have bridges, gaps that tie the counters to the plate. Here we take the other way out: stop cutting through.
+    </p>
+
+    <h2 id="step-5"><span class="n">5.</span> A sunken panel, raised letters, by parity</h2>
+    <p>
+      A nameplate keeps its letters by not cutting through: the panel around them is sunk into the plate, and the letters stand at the plate's height. Even-odd tells, for each point, whether it is high or low, if the panel is one more closed line.
+    </p>
+    {{code step5_engraved.bn panel cut_plate}}
+    <p>
+      <code>panel</code> is a rectangle 2.6 by 0.62 with its corners cut, by <code>chamfer_polygon</code> on the poly curve of <code>Quadrilateral</code>: there, the fillet cuts straight, as step 2's <em>Try</em> showed, and a cut corner is what is wanted. Its <code>distance</code> is the radius of the fillet under it: on these right angles each cut starts 0.1 from the corner; on a sharper corner it would start further, at <code>distance / tan(angle / 2)</code>.
+    </p>
+    <table>
+      <tr><th>Where</th><th>Lines around it</th><th>Count</th><th>On the plate</th></tr>
+      <tr><td>The plate, outside the panel</td><td>the edge</td><td>1, odd</td><td>high</td></tr>
+      <tr><td>A screw hole</td><td>the edge, the hole</td><td>2, even</td><td>nothing</td></tr>
+      <tr><td>The panel, between the letters</td><td>the edge, the panel</td><td>2, even</td><td>low</td></tr>
+      <tr><td>A letter</td><td>the edge, the panel, the letter</td><td>3, odd</td><td>high</td></tr>
+      <tr><td>A counter</td><td>the edge, the panel, the letter, the counter</td><td>4, even</td><td>low</td></tr>
+    </table>
+    <p>
+      So the plate is two layers. <code>under</code>, the edge and the holes, goes from 0 to 0.055, <code>thickness − depth</code>, with its underside. <code>raised</code>, everything odd, goes from 0.055 to 0.08 on top of it. Where <code>raised</code> has no face, the top of <code>under</code> shows, 0.025 lower: that is the panel's floor. The counters are part of that floor now, held by the whole plate beneath them.
+      The plate is 11 separate pieces: <code>under</code>, its underside, the raised frame and 8 raised letters, B, A, S, E, N, O, D, E.
+    </p>
+    <figure>
+      <img src="../images/tutorials/cut-plate-step5.png" width="1000" height="500" loading="lazy" alt="The grey plate with a sunken panel with cut corners in its middle, the letters BASE NODE standing in it at the plate's height">
+      <figcaption>Step 5. A panel sunk 0.025, the letters and the frame at the plate's height. The O and the D keep their middles.</figcaption>
+    </figure>
+
+    <h2 id="step-6"><span class="n">6.</span> Brass and enamel</h2>
+    <p>
+      An enamelled nameplate is made just as step 5 is: the metal is cast or etched with the panel sunk, then the panel is filled with coloured glass, which is fired and polished. The geometry needs one more layer, the enamel, and two materials.
+    </p>
+    {{code step6_enamel.bn cut_plate Brass Enamel}}
+    <ul>
+      <li><strong>The enamel's faces.</strong> <code>ground</code> is <code>planar_faces</code> of the panel and the letters, without the edge: inside the panel 1 line, filled; inside a letter 2, empty; inside a counter 3, filled. It is exactly the panel's floor of step 5.</li>
+      <li><strong>Its layer.</strong> From the floor, 0.055, up to <code>fill</code> of the depth: at 0.6, to 0.07, 0.01 below the brass. The letters stand out of the enamel by that much, and their walls catch the light. The plate is now 17 pieces: step 5's 11, the panel's enamel and 5 counters filled.</li>
+      <li><strong>Two materials.</strong> <code>SetMaterial</code> gives <code>Brass</code> to the metal and <code>Enamel</code> to the enamel before <code>JoinGeometry</code> puts them together: each face keeps its own.</li>
+    </ul>
+    <ul>
+      <li><code>Brass</code> is a metal, <code>metallic: 1.0</code>: its colour is the colour of its reflections, a warm yellow. Brushed metal is rough in fine lines: <code>p * (1.0, 100.0, 1.0)</code> squeezes the noise a hundred times across y, so it changes fast across the plate and slowly along it, and the roughness goes from 0.18 to 0.34 in streaks along x. <code>TextureCoordinate().object</code> pins the noise to the object: no UV map is needed.</li>
+      <li><code>Enamel</code> is a dark blue at <code>roughness</code> 0.3, under a clear coat, <code>coat_weight: 1.0</code>, as smooth as glass, <code>coat_roughness: 0.02</code>: the colour is satin, the shine on top of it sharp.</li>
+    </ul>
+    <figure>
+      <img src="../images/tutorials/cut-plate-step6.png" width="1000" height="500" loading="lazy" alt="The finished nameplate: brushed brass, a panel of glossy dark blue enamel, brass letters BASE NODE standing in it">
+      <figcaption>Step 6. The finished plate. The light behind it shows in the brass, streaked by the brushing, and as a sharp shine on the enamel.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>text</code> in <code>lettering</code> to your own name. Set <code>fill</code> to 1.0: the enamel comes up level with the brass, as on a polished badge.</p>
+    <p>
+      The table is a dark matt square, the light two area lights: a large one behind the plate, where its top mirrors it to the camera, and one in front on the left. The render is Cycles, 64 samples, denoised.
+    </p>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The finished plate, in one file. Drag the card onto empty space in Blender's 3D Viewport and keep <em>Instantiate the Example</em>: a new object carries <code>cut_plate</code>, with its materials. A click on the card downloads the file.
+    </p>
+    {{file step6_enamel.bn}}
+    <p>The steps before it, to start again from any of them:</p>
+    <div class="cards">
+      {{file step1_outline.bn}}
+      {{file step2_corners.bn}}
+      {{file step3_holes.bn}}
+      {{file step4_stencil.bn}}
+      {{file step5_engraved.bn}}
+    </div>
+    <p class="muted">
+      The files, with the script that renders this page's pictures, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/cut_plate"><code>examples/tutorials/cut_plate/</code></a>.
+    </p>
+
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later) · Hosted and sponsored by <a href="https://ludopant.com/">Ludopant Creative Studio</a>
+    </footer>
+  </div>
+</body>
+</html>

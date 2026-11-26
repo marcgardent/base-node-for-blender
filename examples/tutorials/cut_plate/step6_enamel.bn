@@ -1,0 +1,126 @@
+// @module cut_plate_step6
+// @title Cut plate, step 6: brass and enamel
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example cut_plate
+
+use fillet2d (chamfer_polygon, fillet_corner, fillet_polygon)
+use planar2d (planar_faces)
+
+geometry graph outline(length: Float = 4.4 in 0.0.., width: Float = 1.3 in 0.0..) -> Geometry {
+  "A long hexagon, pointed at both ends: the six points of a circle, stretched"
+  return CurveCircle(resolution: 6, radius: 1.0).curve
+    |> TransformGeometry(scale: CombineXYZ(x: length * 0.5, y: width / 1.732, z: 1.0))
+}
+
+geometry graph layer(faces: Geometry, bottom: Float, top: Float = 0.1) -> Geometry {
+  "Flat faces lifted to bottom and pushed up to top: a top, its walls, open underneath"
+  return faces
+    |> SetPosition(offset: CombineXYZ(z: bottom))
+    |> ExtrudeMesh(offset: CombineXYZ(z: top - bottom), individual: false).mesh
+}
+
+geometry graph corner_radius(tip: Float = 0.3 in 0.0.., side: Float = 0.1 in 0.0..) -> Float {
+  "The radius of each corner of the outline: tip at the two points on the x axis, side elsewhere"
+  return abs(Position().y) < 0.001 ? tip : side
+}
+
+geometry graph rounded(
+    polygon: Geometry,
+    tip: Float = 0.3 in 0.0..,
+    side: Float = 0.1 in 0.0..
+) -> Geometry {
+  "The polygon, its corners rounded into arcs: a Bézier curve, which the fillet gives handles"
+  return polygon
+    |> SetSplineType[BEZIER]()
+    |> fillet_polygon(radius: corner_radius(tip: tip, side: side))
+}
+
+geometry graph corner_centres(polygon: Geometry, radius: Float = 0.3 in 0.0..) -> Geometry {
+  "A point per corner of the polygon, at the centre of the arc a fillet of that radius draws there"
+  n = DomainSize[CURVE](polygon).point_count
+  i = Index()
+  arc = fillet_corner(
+    p_prev: SampleIndex[FLOAT_VECTOR](polygon, value: Position(), index: mod(i + n - 1, n)),
+    p: Position(),
+    p_next: SampleIndex[FLOAT_VECTOR](polygon, value: Position(), index: mod(i + 1, n)),
+    radius: radius)
+  return polygon
+    |> CurveToPoints[EVALUATED]().points
+    |> SetPosition(position: arc.center)
+}
+
+geometry graph screw_holes(polygon: Geometry, hole: Float = 0.1 in 0.0..) -> Geometry {
+  "A circle of radius hole around the centre of each tip's arc"
+  return corner_centres(polygon, radius: corner_radius())
+    |> DeleteGeometry(selection: abs(Position().y) > 0.001)
+    |> InstanceOnPoints(instance: CurveCircle(resolution: 32, radius: hole).curve)
+    |> RealizeInstances()
+}
+
+geometry graph lettering(text: String = "BASE NODE", size: Float = 0.42 in 0.0..) -> Geometry {
+  "The outlines of the letters of text, centred on the origin: closed curves, a few per letter"
+  return StringToCurves(
+      string: text,
+      size: size,
+      align_x: "Center",
+      align_y: "Middle").curve_instances
+    |> RealizeInstances()
+}
+
+geometry graph panel(
+    length: Float = 2.6 in 0.0..,
+    width: Float = 0.62 in 0.0..,
+    chamfer: Float = 0.1 in 0.0..
+) -> Geometry {
+  "A rectangle, its corners cut at 45 degrees: a poly curve, which the fillet cuts straight"
+  return Quadrilateral(width: length, height: width).curve
+    |> chamfer_polygon(distance: chamfer)
+}
+
+shader(material: true) graph Brass() -> (surface: Shader) {
+  "Brushed brass: a yellow metal, its roughness drawn in fine lines along the plate"
+  p = TextureCoordinate().object
+  // Stretched across y, a noise varies a hundred times faster across the lines than along them
+  lines = NoiseTexture(vector: p * (1.0, 100.0, 1.0), scale: 2.0, detail: 4.0).factor
+  brass = PrincipledBSDF(
+    base_color: (0.9, 0.62, 0.3, 1.0),
+    metallic: 1.0,
+    roughness: 0.18 + lines * 0.16)
+  return (surface: brass)
+}
+
+shader(material: true) graph Enamel() -> (surface: Shader) {
+  "Deep blue enamel: a coloured glass, under a clear coat that shines"
+  enamel = PrincipledBSDF(
+    base_color: (0.015, 0.04, 0.16, 1.0),
+    roughness: 0.3,
+    coat_weight: 1.0,
+    coat_roughness: 0.02)
+  return (surface: enamel)
+}
+
+geometry graph cut_plate(
+    thickness: Float = 0.08 in 0.0..,
+    depth: Float = 0.025 in 0.0..,
+    fill: Float(subtype: FACTOR) = 0.6 in 0.0..1.0
+) -> Geometry {
+  "A brass plate, a panel sunk into it filled with enamel, brass letters standing in the enamel"
+  polygon = outline()
+  edge = rounded(polygon) + screw_holes(polygon)
+  under = planar_faces(edge)
+  // Inside the edge 1 line, inside the panel 2, inside a letter 3, inside its counter 4: odd stands up
+  raised = planar_faces(edge + panel() + lettering())
+  // The panel and the letters alone: the panel's ground, between the letters and in their counters
+  ground = planar_faces(panel() + lettering())
+  sunk = thickness - depth
+  metal = JoinGeometry(
+    layer(under, top: sunk),
+    FlipFaces(under),
+    layer(raised, bottom: sunk, top: thickness))
+  enamel = layer(ground, bottom: sunk, top: sunk + depth * fill)
+  return JoinGeometry(
+    metal |> SetMaterial(material: Brass),
+    enamel |> SetMaterial(material: Enamel))
+}
