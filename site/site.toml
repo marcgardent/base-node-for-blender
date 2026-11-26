@@ -15,4 +15,10 @@ pages = [
   "tutorials/index.html",
   "tutorials/lunar-ground.html",
   "tutorials/mini-moon.html",
+  "tutorials/shaping-motion.html",
+  "tutorials/metaballs-2d.html",
+  "tutorials/sci-fi-hud.html",
+  "tutorials/cut-plate.html",
+  "tutorials/check-and-grade.html",
+  "tutorials/own-module.html",
 ]
