@@ -1484,6 +1484,38 @@ def test_module_graphs_in_other_trees():
     print("   ✓ Module graphs in other kinds of trees verified")
 
 
+CIRCLE = """use math (sdf_circle, sdf_rectangle)
+
+{kind} graph s(p: Vector, r: Float) -> Float {{
+  return min(sdf_circle(p: p, radius: r), sdf_rectangle(p: p))
+}}
+"""
+
+
+def test_module_graphs_with_implicit_inputs_in_other_trees():
+    """A module's graph with an input a geometry tree takes from the context (`p: Vector = Position()`),
+    built for a shader or a compositor tree, is read back as the use and the call it was; edited, the
+    text holds its group and calls it by that group's name."""
+    print("-> Test: Module graphs with implicit inputs in other kinds of trees...")
+    from base_node.host import build_source, export_tree
+
+    before = set(bpy.data.node_groups)
+    for kind in ("shader", "compositor"):
+        source = CIRCLE.format(kind=kind)
+        tree, = build_source(source, "t.bn")
+        text, warnings = export_tree(tree)
+        assert text == source and not warnings, (text, warnings)
+        build_source(text, "t.bn")
+        # Edited, the group is no longer the module's graph: the text writes it, and builds again
+        variant = bpy.data.node_groups[f"sdf circle ({kind.capitalize()})"]
+        variant.nodes.new("ShaderNodeMath")
+        text, warnings = export_tree(bpy.data.node_groups["s"])
+        assert f"sdf_circle_{kind}(p: p, radius: r)" in text, text
+        build_source(text, "t.bn")
+        bpy.data.batch_remove([g for g in bpy.data.node_groups if g not in before])
+    print("   ✓ Module graphs with implicit inputs in other kinds of trees verified")
+
+
 TEMPLATES = """geometry graph attribute_or<T: Float | Vector | Color>(name: String, fallback: T) -> (value: T) {
   a = NamedAttribute[T](name: name)
   return (value: Switch[T](switch: a.exists, false_: fallback, true_: a.attribute))
@@ -4314,6 +4346,7 @@ def main():
         test_planar2d_shape_builder_pick,
         test_shader_and_compositor,
         test_module_graphs_in_other_trees,
+        test_module_graphs_with_implicit_inputs_in_other_trees,
         test_templates,
         test_mask2d_render,
         test_merge_render,
