@@ -1,0 +1,27 @@
+// @module check_and_grade_step3
+// @title Check and grade a shot, step 3: over a background
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @target blender
+// @offer groups
+
+use merge (over, screen)
+use qc (ramp, radial)
+
+compositor graph plate() -> Color {
+  "The render as Cycles gives it: premultiplied, transparent where no object is"
+  return RenderLayers().image
+}
+
+compositor graph background(image: Color) -> Color {
+  "A studio backdrop of the image's size: warm at the bottom, dark at the top, a pool of light behind the middle"
+  wall = ramp(image, from: (0.3, 0.22, 0.15, 1.0), to: (0.05, 0.06, 0.08, 1.0), angle: 1.5708)
+  pool = radial(image, center: (0.0, 0.1), radius: 0.9, softness: 1.0)
+  return screen(pool * (0.15, 0.11, 0.07, 1.0), wall)
+}
+
+compositor graph check_and_grade() -> Color {
+  "The plate over the backdrop: its objects in front, its shadow darkening the backdrop"
+  fg = plate()
+  return over(fg, background(fg))
+}

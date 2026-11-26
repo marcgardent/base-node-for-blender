@@ -23,6 +23,11 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 - Added: the tutorial Toon lights (`examples/tutorials/toon_lights/`, `site/tutorials/toon-lights.html`),
   five steps from one band per light to the module `toon`, rendered by its `render.py` with EEVEE in
   Blender 5.3, which checks that step 5 renders step 4 to the pixel.
+- Added: six tutorials built on the language and the free standard library alone, each rendered
+  and round-tripped by its `render.py`: Shaping motion (`math`, a first tutorial), 2D metaballs
+  (`sdf2d`, `math`), Sci-fi HUD (`sdf2d`, `patterns2d`, `curves2d`, `math`), Cut plate (`fillet2d`,
+  `planar2d`), Check and grade a shot (`qc`, `grade`, `merge`, `mask2d`, `stmap`, in the compositor)
+  and Write your own module (a module written and installed as the standard library's are).
 
 ## [1.0.0] - 2026-11-23
 

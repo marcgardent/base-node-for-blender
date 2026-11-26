@@ -1,0 +1,37 @@
+// @module metaballs_2d_step1
+// @title 2D metaballs, step 1: the distance to a circle
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example metaballs
+
+use math (sdf_circle)
+use sdf2d (sdf_isolines, sdf_ring_2d)
+
+shader(material: true) graph Canvas() -> (surface: Shader) {
+  "The colour each point of the canvas stores, as it is: no light, no shade"
+  return (surface: Emission(color: Attribute[attribute_name: "color"]().color, strength: 1.0))
+}
+
+geometry graph canvas(color: Color) -> Geometry {
+  "A 3 m square of 600 × 600 vertices, each storing the colour given at its position"
+  return Grid(size_x: 3.0, size_y: 3.0, vertices_x: 600, vertices_y: 600).mesh
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: color)
+    |> SetMaterial(material: Canvas)
+}
+
+geometry graph view(d: Float) -> Color {
+  "A distance field as a picture: orange inside, blue outside, a line every 10 cm, white on the edge"
+  side = d < 0.0 ? (0.8, 0.3, 0.06, 1.0) : (0.1, 0.25, 0.55, 1.0)
+  far = side * (1.0 - 0.6 * MapRange(value: abs(d), from_max: 1.5))
+  lines = 1.0 - MapRange(value: sdf_isolines(d, step: 0.1, width: 0.006), from_max: 0.004)
+  edge = 1.0 - MapRange(value: sdf_ring_2d(d, thickness: 0.016), from_max: 0.004)
+  shaded = Mix[RGBA](factor: lines * 0.6, a: far, b: (0.0, 0.0, 0.0, 1.0))
+  return Mix[RGBA](factor: edge, a: shaded, b: (1.0, 1.0, 1.0, 1.0))
+}
+
+geometry graph metaballs() -> Geometry {
+  "One ball: the distance from each point of the canvas to a circle of radius 0.5"
+  d = sdf_circle(Position() - (0.2, 0.1, 0.0), radius: 0.5)
+  return canvas(view(d))
+}

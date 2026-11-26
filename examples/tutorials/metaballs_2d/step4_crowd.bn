@@ -1,0 +1,53 @@
+// @module metaballs_2d_step4
+// @title 2D metaballs, step 4: a crowd in colours
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example metaballs
+
+use math (palette, sdf_circle)
+use sdf2d (sdf_ring_2d)
+
+shader(material: true) graph Canvas() -> (surface: Shader) {
+  "The colour each point of the canvas stores, as it is: no light, no shade"
+  return (surface: Emission(color: Attribute[attribute_name: "color"]().color, strength: 1.0))
+}
+
+geometry graph canvas(color: Color) -> Geometry {
+  "A 3 m square of 600 × 600 vertices, each storing the colour given at its position"
+  return Grid(size_x: 3.0, size_y: 3.0, vertices_x: 600, vertices_y: 600).mesh
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: color)
+    |> SetMaterial(material: Canvas)
+}
+
+geometry graph look(d: Float, color: Color) -> Color {
+  "The blobs in their colours on a dark ground, a white line on their edge"
+  inside = 1.0 - MapRange(value: d, from_min: -0.003, from_max: 0.003)
+  edge = 1.0 - MapRange(value: sdf_ring_2d(d, thickness: 0.016), from_max: 0.004)
+  filled = Mix[RGBA](factor: inside, a: (0.02, 0.02, 0.04, 1.0), b: color)
+  return Mix[RGBA](factor: edge, a: filled, b: (1.0, 1.0, 1.0, 1.0))
+}
+
+geometry graph satellite(i: Int) -> (centre: Vector, radius: Float) {
+  "Ball i of the six around the middle: its own direction, distance and size"
+  angle = i * 1.047198 + 0.3
+  reach = RandomValue(min: 0.5, max: 1.0, id: i, seed: 1)
+  return (
+    centre: CombineXYZ(x: cos(angle), y: sin(angle)) * reach,
+    radius: RandomValue(min: 0.14, max: 0.26, id: i, seed: 2))
+}
+
+geometry graph metaballs(melt: Float = 0.3 in 0.0..) -> Geometry {
+  "A ball in the middle and six around it, melted one by one into the field, each in its colour"
+  p = Position()
+  crowd = repeat(6, d: sdf_circle(p, radius: 0.42), color: palette(0.0)) -> {
+    ball = satellite(iteration)
+    d_ball = sdf_circle(p - ball.centre, radius: ball.radius)
+    // 1 where the crowd so far is the nearer, 0 where this ball is, between over melt
+    h = Clamp(value: 0.5 + 0.5 * (d_ball - d) / melt)
+    return (
+      d: smooth_min(d, d_ball, melt),
+      color: Mix[RGBA](factor: h, a: palette((iteration + 1) / 7.0), b: color))
+  }
+  return canvas(look(crowd.d, crowd.color))
+}
