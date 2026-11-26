@@ -14,8 +14,14 @@ geometry graph "planar faces"(
     tolerance: Float = 0.001 in 0.0001..0.1
 ) -> Geometry {
   "Extracts closed polygonal faces from planar curve networks by welding endpoints and filling closed loops"
-  welded = MergeByDistance(curves, distance: tolerance)
-  return FillCurve(welded)
+  // A closed curve is filled as it is; open curves are welded end to end within tolerance, as edges,
+  // and the loops they close are filled with the others, by even-odd
+  closed = DeleteGeometry[CURVE](curves, selection: not IsSplineCyclic())
+  welded = DeleteGeometry[CURVE](curves, selection: IsSplineCyclic())
+    |> CurveToMesh()
+    |> MergeByDistance(distance: tolerance)
+    |> MeshToCurve()
+  return FillCurve(JoinGeometry(closed, welded))
 }
 
 geometry graph "planar split intersections"(
@@ -24,8 +30,28 @@ geometry graph "planar split intersections"(
     tolerance: Float = 0.002 in 0.0001..0.1
 ) -> Geometry {
   "Inserts vertices at segment crossings and splits edges within a planar curve network"
-  subdivided = SubdivideCurve(curves, cuts: subdivisions)
-  return MergeByDistance(subdivided, distance: tolerance)
+  // Each segment gets a point where another one crosses or touches it, the crossings are welded
+  // within tolerance, and the curves are cut there: a curve runs from crossing to crossing
+  edges = CurveToMesh(curves)
+  ends = EdgeVertices()
+  pieces = foreach[EDGE](edges, a: ends.position_1, b: ends.position_2) -> {
+    r = b - a
+    c = EdgeVertices().position_1
+    s = EdgeVertices().position_2 - c
+    denom = (r × s).z
+    t = ((c - a) × s).z / denom
+    u = ((c - a) × r).z / denom
+    eps = tolerance / max(length(r), 1e-06)
+    hit = abs(denom) > 1e-07 and t > eps and t < 1.0 - eps and u > -eps and u < 1.0 + eps
+    cuts = MeshToPoints[EDGES](edges, selection: hit, position: a + r * t)
+    points = JoinGeometry(Points(count: 1, position: a), cuts, Points(count: 1, position: b))
+    return (geometry: PointsToCurves(points, weight: (Position() - a) ⋅ r))
+  }
+  return pieces.geometry
+    |> CurveToMesh()
+    |> MergeByDistance(distance: tolerance)
+    |> MeshToCurve()
+    |> SubdivideCurve(cuts: subdivisions)
 }
 
 geometry graph "shape builder pick"(
@@ -34,9 +60,10 @@ geometry graph "shape builder pick"(
     pick_radius: Float = 0.5 in 0.01..10.0
 ) -> Geometry {
   "Selects and generates planar face regions containing or nearest to the provided seed points"
-  // Each seed picks the region it is in, else the nearest one within pick_radius; the others go
-  faces = FillCurve(curves)
-  region = MeshIsland().island_index
+  // The regions are those of planar faces, by even-odd: faces joined by an edge. Each seed picks the
+  // region it is in, else the nearest one within pick_radius; the others go
+  faces = planar_faces(curves)
+  region = EdgesToFaceGroups(boundary_edges: false).face_group_id
   near = GeometryProximity(faces, sample_position: Position()).distance < pick_radius
   seeds = DeleteGeometry(seed_points, selection: not near)
   picked = SampleNearestSurface[INT](faces, value: region, sample_position: Position())
@@ -45,7 +72,7 @@ geometry graph "shape builder pick"(
     group_id: picked,
     sample_position: Position(),
     sample_group_id: region).is_valid
-  return DeleteGeometry(faces, selection: not kept)
+  return DeleteGeometry[FACE](faces, selection: not kept)
 }
 
 geometry graph "contour outer boundary"(
@@ -53,8 +80,31 @@ geometry graph "contour outer boundary"(
     tolerance: Float = 0.001 in 0.0001..0.1,
     offset: Float = 0.0
 ) -> Geometry {
-  "Extracts the outer boundary envelope from a collection of contiguous 2D shapes"
-  welded = MergeByDistance(shapes, distance: tolerance)
-  faces = FillCurve(welded)
-  return SetPosition(faces, offset: CombineXYZ(x: 0.0, y: 0.0, z: offset))
+  "Extracts the outer boundary envelope from a collection of contiguous 2D shapes: closed curves, without the holes, moved offset outwards in the plane"
+  // The faces of the shapes (planar faces, welded within tolerance), their boundary edges as closed
+  // curves, the boundaries of holes left out, then each point moved offset outwards in the plane
+  faces = planar_faces(shapes, tolerance: tolerance)
+    |> MergeByDistance(distance: tolerance)
+  boundary = MeshToCurve(faces, selection: EdgeNeighbors().face_count == 1)
+  p = Position()
+  next = EvaluateAtIndex[FLOAT_VECTOR](value: p, index: OffsetPointInCurve(offset: 1).point_index)
+  prev = EvaluateAtIndex[FLOAT_VECTOR](value: p, index: OffsetPointInCurve(offset: -1).point_index)
+  loop = CurveOfPoint().curve_index
+  e = next - p
+  left = normalize(CombineXYZ(x: -e.y, y: e.x))
+  probe = min(tolerance * 10.0, length(e) * 0.1)
+  // Faces on the left of the segment to the next point, or on its right: the loop votes
+  beside = (p + next) * 0.5 + left * probe
+  face_left = GeometryProximity[FACES](faces, sample_position: beside).distance < probe * 0.5
+  vote = AccumulateField[FLOAT](value: face_left ? 1.0 : -1.0, group_id: loop).total
+  // Twice the signed area of the loop: an outer edge turns around its faces, a hole the other way
+  area = AccumulateField[FLOAT](value: (p × next).z, group_id: loop).total
+  outer = DeleteGeometry(boundary, selection: area * vote <= 0.0)
+  // Outwards: the side without faces, along the bisector of the normals of the two segments
+  e_in = p - prev
+  n_in = normalize(CombineXYZ(x: -e_in.y, y: e_in.x))
+  bisector = normalize(n_in + left)
+  side = vote > 0.0 ? -1.0 : 1.0
+  miter = offset / max(bisector ⋅ left, 0.2)
+  return SetPosition(outer, offset: bisector * miter * side)
 }

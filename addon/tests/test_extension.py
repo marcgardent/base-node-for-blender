@@ -1274,6 +1274,191 @@ geometry graph pick_probe_{n}() -> Geometry {{
     print("   ✓ planar2d shape builder pick: every seed's region kept whole and in place, the others deleted")
 
 
+def evaluate_graphs(src, filename):
+    """The evaluated geometry of each graph of `src` that takes no input, by name, as plain data: the
+    vertices of its mesh, else the points of its point cloud (an array of rows x, y, z), its number of faces, and each curve's points in order
+    (a list of arrays). Nothing of it is left in the file."""
+    import numpy as np
+    from base_node.host import build_source
+
+    before = set(bpy.data.node_groups)
+    groups = build_source(src, filename)
+    results = {}
+    try:
+        for group in groups:
+            ob = bpy.data.objects.new(group.name, bpy.data.meshes.new(group.name))
+            bpy.context.scene.collection.objects.link(ob)
+            ob.modifiers.new("probe", "NODES").node_group = group
+            try:
+                geometry = ob.evaluated_get(bpy.context.evaluated_depsgraph_get()).evaluated_geometry()
+                mesh, curves, cloud = geometry.mesh, geometry.curves, geometry.pointcloud
+                vertices = (np.array([v.co[:] for v in mesh.vertices]) if mesh and len(mesh.vertices)
+                            else np.array([p.co[:] for p in cloud.points]) if cloud else np.zeros(0)).reshape(-1, 3)
+                faces = len(mesh.polygons) if mesh else 0
+                splines = [np.array([p.position[:] for p in c.points]).reshape(-1, 3)
+                           for c in curves.curves] if curves else []
+                results[group.name] = (vertices, faces, splines)
+            finally:
+                bpy.data.objects.remove(ob)
+    finally:
+        bpy.data.batch_remove([g for g in bpy.data.node_groups if g not in before])
+    return results
+
+
+def test_fillet2d():
+    """fillet2d does what its graphs say: fillet polygon draws arcs of `segments` segments, on a poly
+    curve as on a Bézier one; chamfer polygon cuts straight, `distance` from the corner along each side;
+    fillet bezier handles rounds only the points where the curve turns by more than threshold_angle."""
+    print("-> Test: fillet2d...")
+    import numpy as np
+
+    src = """use fillet2d
+
+geometry graph fp_poly() -> Geometry {
+  return fillet_polygon(Quadrilateral(width: 2.0, height: 2.0), radius: 0.2, segments: 4)
+}
+geometry graph fp_bezier() -> Geometry {
+  return fillet_polygon(SetSplineType[BEZIER](Quadrilateral(width: 2.0, height: 2.0)), radius: 0.2, segments: 6)
+    |> CurveToPoints[EVALUATED]().points
+}
+geometry graph ch_triangle() -> Geometry {
+  return chamfer_polygon(CurveCircle(resolution: 3, radius: 1.0).curve, distance: 0.2)
+}
+geometry graph ch_bezier() -> Geometry {
+  return chamfer_polygon(SetSplineType[BEZIER](Quadrilateral(width: 2.0, height: 2.0)), distance: 0.2)
+    |> CurveToPoints[EVALUATED]().points
+}
+geometry graph bh_hexagon() -> Geometry {
+  hexagon = CurveCircle(resolution: 6, radius: 1.0).curve |> TransformGeometry(scale: (2.0, 0.6, 1.0))
+  return fillet_bezier_handles(hexagon, radius: 0.1, threshold_angle: 1.2)
+}
+"""
+    got = evaluate_graphs(src, "fillet2d_probe.bn")
+
+    # 1. A poly square: each of its 4 corners an arc of 4 segments, 5 points on the circle of radius 0.2
+    (curve,) = got["fp_poly"][2]
+    assert len(curve) == 4 * 5, f"fillet polygon on a poly square gives {len(curve)} points, not 20"
+    centre = np.array([0.8, 0.8])
+    corner = curve[np.all(curve[:, :2] > 0.79, axis=1), :2]
+    assert len(corner) == 5 and np.allclose(np.hypot(*(corner - centre).T), 0.2, atol=1e-4), corner
+    # A Bézier square too: its arcs of 6 segments, 7 points on the circle, whatever the curve's resolution
+    points = got["fp_bezier"][0]
+    corner = points[np.all(points[:, :2] > 0.79, axis=1), :2]
+    assert len(corner) == 7 and np.allclose(np.hypot(*(corner - centre).T), 0.2, atol=1e-4), \
+        f"fillet polygon on a Bézier square: the corner has {len(corner)} points, not 7 on the arc"
+
+    # 2. A Bézier square: straight cuts, no arc (8 points evaluated, on the lines x + y = ±1.8)
+    points = got["ch_bezier"][0]
+    assert len(points) == 8, f"chamfer polygon on a Bézier square evaluates to {len(points)} points, not 8"
+    assert np.allclose(np.abs(points[:, 0]) + np.abs(points[:, 1]), 1.8, atol=1e-4), points
+    # 3. A triangle: each corner cut 0.2 from the corner along both sides
+    (curve,) = got["ch_triangle"][2]
+    assert len(curve) == 6, f"chamfer polygon on a triangle gives {len(curve)} points, not 6"
+    tip = np.array([1.0, 0.0])
+    legs = np.sort(np.hypot(*(curve[:, :2] - tip).T))[:2]
+    assert np.allclose(legs, 0.2, atol=1e-4), f"the chamfer starts {legs} from the corner, not 0.2"
+
+    # 4. A long hexagon turns by 119° at its tips and by 60° at its other corners: with threshold_angle
+    # 1.2 (69°), only the two tips are rounded, the other four corners are left in place
+    (curve,) = got["bh_hexagon"][2]
+    assert len(curve) == 8, f"fillet bezier handles gives {len(curve)} points, not 6 + 2"
+    assert np.isclose(np.abs(curve[:, 0]), 1.0, atol=1e-4).sum() == 4, "a corner under the threshold moved"
+    assert (np.abs(curve[:, 0]) > 1.99).sum() == 0, "a tip over the threshold is still there"
+    print("   ✓ fillet2d: arcs of `segments`, chamfers of `distance`, kinks over threshold_angle only")
+
+
+def test_planar2d():
+    """planar2d does what its graphs say: planar faces welds open lines end to end; planar split
+    intersections puts a point where two segments cross and cuts the curves there; shape builder pick
+    picks the even-odd regions of overlapping curves; contour outer boundary returns the boundary curve
+    of the shapes, without their holes, offset in the plane."""
+    print("-> Test: planar2d...")
+    import numpy as np
+
+    src = """use planar2d
+
+geometry graph lines() -> Geometry {
+  return JoinGeometry(
+    CurveLine(start: (0.0, 0.0, 0.0), end: (1.0, 0.0, 0.0)),
+    CurveLine(start: (1.0, 0.0, 0.0), end: (0.0, 1.0, 0.0)),
+    CurveLine(start: (0.0, 1.0, 0.0), end: (0.0, 0.0, 0.0)))
+}
+geometry graph pf_lines() -> Geometry {
+  return planar_faces(lines())
+}
+geometry graph split_cross() -> Geometry {
+  crossing = JoinGeometry(
+    CurveLine(start: (-1.0, -0.3, 0.0), end: (1.0, 0.4, 0.0)),
+    CurveLine(start: (-0.2, -1.0, 0.0), end: (0.3, 1.0, 0.0)))
+  return planar_split_intersections(crossing, subdivisions: 1)
+}
+geometry graph star_circle() -> Geometry {
+  return JoinGeometry(
+    Star(points: 5, inner_radius: 0.4, outer_radius: 1.0).curve,
+    TransformGeometry(CurveCircle(radius: 0.5).curve, translation: (0.6, 0.0, 0.0)))
+}
+geometry graph pick_star() -> Geometry {
+  return shape_builder_pick(star_circle(), Points(count: 1, position: (-0.3, 0.0, 0.0)), pick_radius: 0.05)
+}
+geometry graph pick_circle() -> Geometry {
+  return shape_builder_pick(star_circle(), Points(count: 1, position: (1.05, 0.0, 0.0)), pick_radius: 0.05)
+}
+geometry graph pick_all() -> Geometry {
+  return FillCurve(star_circle())
+}
+geometry graph tiles() -> Geometry {
+  return JoinGeometry(
+    Quadrilateral(width: 1.0, height: 1.0),
+    TransformGeometry(Quadrilateral(width: 1.0, height: 1.0), translation: (1.0, 0.0, 0.0)),
+    TransformGeometry(Quadrilateral(width: 0.4, height: 0.4), translation: (1.0, 0.0, 0.0)))
+}
+geometry graph contour_0() -> Geometry {
+  return contour_outer_boundary(tiles())
+}
+geometry graph contour_out() -> Geometry {
+  return contour_outer_boundary(tiles(), offset: 0.1)
+}
+geometry graph contour_in() -> Geometry {
+  return contour_outer_boundary(tiles(), offset: -0.1)
+}
+"""
+    got = evaluate_graphs(src, "planar2d_probe.bn")
+
+    # 5. Three lines meeting end to end: one triangle
+    vertices, faces, _ = got["pf_lines"]
+    assert (len(vertices), faces) == (3, 1), f"planar faces of 3 lines: {len(vertices)} vertices, {faces} faces"
+
+    # 6. Two lines crossing at (0.0685, 0.0740): 4 curves, each from the crossing to an end
+    curves = got["split_cross"][2]
+    crossing = np.array([0.068493, 0.073973])
+    assert len(curves) == 4, f"planar split intersections gives {len(curves)} curves, not 4"
+    for c in curves:
+        ends = [c[0, :2], c[-1, :2]]
+        assert any(np.allclose(e, crossing, atol=1e-3) for e in ends), f"a curve does not end at the crossing: {c}"
+
+    # 8. A star overlapped by a circle: two regions, touching at two points. A seed in the star keeps
+    # the star but the circle's part; one in the circle, beyond the star's tip, keeps the rest
+    every = got["pick_all"][1]
+    star, circle = got["pick_star"][1], got["pick_circle"][1]
+    assert 0 < star < every and 0 < circle < every and star + circle == every, \
+        f"shape builder pick keeps {star} and {circle} faces of {every}"
+    assert got["pick_star"][0][:, 0].max() < 0.33, "the star's region holds a point of the circle's"
+    assert got["pick_circle"][0][:, 0].max() > 1.09, "the circle's region misses its rim"
+
+    # 7. Two tiles side by side, a hole in the second: the outline of the two, 2 by 1, the hole left out,
+    # and with an offset, the same outline grown or shrunk by it
+    for name, d in (("contour_0", 0.0), ("contour_out", 0.1), ("contour_in", -0.1)):
+        vertices, faces, curves = got[name]
+        assert faces == 0 and len(vertices) == 0, f"{name}: contour outer boundary gives faces"
+        assert len(curves) == 1, f"{name}: {len(curves)} curves, not the outline alone"
+        (c,) = curves
+        x, y = c[:, 0], c[:, 1]
+        assert np.allclose([x.min(), x.max(), np.abs(y).max()], [-0.5 - d, 1.5 + d, 0.5 + d], atol=1e-4), \
+            f"{name}: the outline spans x {x.min()}..{x.max()}, |y| {np.abs(y).max()}"
+        assert np.abs(c[:, 2]).max() < 1e-6, f"{name}: the outline left the plane"
+    print("   ✓ planar2d: faces welded, crossings split, even-odd regions picked, the outline offset")
+
+
 RUST = """shader graph rust(uv: Vector) -> Shader {
   n = NoiseTexture(vector: uv, scale: 8.0)
   return PrincipledBSDF(
@@ -4344,6 +4529,8 @@ def main():
         test_exact_round_trip,
         test_multi_input_order,
         test_planar2d_shape_builder_pick,
+        test_fillet2d,
+        test_planar2d,
         test_shader_and_compositor,
         test_module_graphs_in_other_trees,
         test_module_graphs_with_implicit_inputs_in_other_trees,
