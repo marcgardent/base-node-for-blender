@@ -1,0 +1,21 @@
+// @module sand
+// @title Write your own module, step 6: ripples drawn by the installed module
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+use waves (profile)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, its colour broken by a fine noise, wind ripples in relief: the profile of the dunes, small"
+  p = TextureCoordinate().object
+  n = NoiseTexture(vector: p, scale: 40.0).factor
+  wobble = NoiseTexture(vector: p, scale: 1.5).factor
+  // Twelve ripples a metre, 4 mm high: a height in metres, as Bump reads it at distance 1.0
+  ripples = profile(p.x * 12.0 + wobble * 3.0, windward: 0.7) * 0.004
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9,
+    normal: Bump(strength: 1.0, distance: 1.0, height: ripples)))
+}

@@ -1,0 +1,16 @@
+// @module dunes
+// @title Write your own module, step 4: a module others can read
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (lift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}

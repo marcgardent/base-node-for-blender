@@ -1,0 +1,30 @@
+// @module dunes
+// @title Write your own module, step 1: one file
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of lift"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}

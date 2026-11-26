@@ -1,0 +1,16 @@
+// @module dunes
+// @title Write your own module, step 5: a module that uses the standard library
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (drift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, its dunes drifted by the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> drift(height: 0.45, wavelength: 2.6)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}

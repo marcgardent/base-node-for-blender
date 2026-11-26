@@ -1,0 +1,14 @@
+// @module waves
+// @title Write your own module, step 3: the waves on their own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+// Waves along x, to lift any mesh. `use waves` finds this file by its name: waves.bn
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}

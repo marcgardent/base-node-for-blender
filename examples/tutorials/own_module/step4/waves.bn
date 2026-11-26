@@ -1,0 +1,27 @@
+// @module waves
+// @version 1.0.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 4)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction
+// @offer library, groups
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
