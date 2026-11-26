@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>2D metaballs — base-node tutorials</title>
+  <meta name="description" content="2D metaballs in Blender's Geometry Nodes, written in .bn with the free standard library: the distance to a circle, the smooth union that melts balls into blobs, contour lines, and motion shaped by bounce, elastic, recoil and impulse.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/metaballs_2d/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>2D metaballs</h1>
+    <p class="lead">
+      Seven balls that melt into one another and pull apart again, on a beat. No mesh is drawn: every point of a canvas asks how far it is from the balls, and the picture is that one number, coloured.
+      This is what a <em>signed distance field</em> is, and once you think in distances, merging shapes, outlining them and growing them are one line each.
+      Everything here comes from the language and two free modules of the standard library, <code>sdf2d</code> and <code>math</code>.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d.webp" width="400" height="400" alt="Coloured blobs on a dark ground: six balls leave a large one in the middle and come back, melting into it, each with its own motion, ringed by glowing contour lines">
+      <figcaption>Where we are going. Six steps, a loop of 96 frames.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need Blender 5 and the <a href="../index.html#blender">Base Node add-on</a>, whose standard library holds the modules used here: <a href="../reference/stdlib-sdf2d.html"><code>sdf2d</code></a> and <a href="../reference/stdlib-math.html"><code>math</code></a>. Everything here is free.
+    </p>
+    <p>
+      Every block below is a complete <code>.bn</code> file, its code beside the nodes it builds. Two ways to try a step:
+    </p>
+    <ul>
+      <li><strong>Drag it.</strong> Drag the file icon of its block, or its title, onto empty space in Blender's 3D Viewport, and keep <em>Instantiate the Example</em>: a new object carries <code>metaballs</code> at the 3D cursor. A click on the file icon downloads the file instead.</li>
+      <li><strong>Paste it.</strong> Press the copy button of its block, open a Geometry Node editor, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> and pick <em>Add as Modifier</em>, on any mesh object: the graph makes its own canvas.</li>
+    </ul>
+    <p>
+      Look at the canvas from the top (<kbd>7</kbd> on the numeric keypad), with the viewport in <em>Material Preview</em> or <em>Rendered</em>: its material shows the colours the graph computes, as they are.
+      The pictures are rendered from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/metaballs_2d/render.py"><code>render.py</code></a>, with EEVEE and an orthographic camera straight down on the canvas, at frame 30.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> The distance to a circle</h2>
+    <p>
+      A circle is usually a curve: a list of points to draw. Here it is a question asked everywhere at once: <em>how far is this point from the edge of the circle?</em>
+      For a circle of radius <code>r</code> centred on <code>c</code>, the answer is <code>length(p − c) − r</code>. It is negative inside, zero on the edge, positive outside, and it grows by exactly one metre for every metre you walk away from the edge. That last property is what makes it a <em>distance</em> field, and every step below leans on it.
+    </p>
+    {{code step1_circle.bn metaballs view canvas Canvas}}
+    <ol class="steps">
+      <li><strong>The field.</strong> <code>sdf_circle</code> of the module <code>math</code> is that formula, in the XY plane: it ignores <code>z</code>. Its point is <code>Position() − (0.2, 0.1, 0.0)</code>: to move a shape, move the point you ask about the other way.</li>
+      <li><strong>The canvas.</strong> A <code>Grid</code> 3 m wide of 600 × 600 vertices, one every 5 mm. <code>canvas</code> stores on each vertex the colour it is given, a field computed at that vertex's position, and <code>Canvas</code>, a material that only emits it, shows it. No light, no shade: the picture is the field.</li>
+      <li><strong>The picture.</strong> <code>view</code> turns one distance into a colour. The sign picks orange or blue; the colour darkens as <code>|d|</code> grows, by up to 60 % at 1.5 m. <code>sdf_isolines</code> of <code>sdf2d</code> draws a dark line wherever <code>d</code> is a multiple of 10 cm, and <code>sdf_ring_2d</code> a white line 16 mm wide where <code>d</code> is 0.</li>
+    </ol>
+    <p>
+      Both helpers of <code>sdf2d</code> are themselves distance fields. <code>sdf_ring_2d(d, thickness)</code> is <code>|d| − thickness / 2</code>: negative within 8 mm of the edge. <code>sdf_isolines</code> is the distance to the nearest multiple of its <code>step</code>, less half its width. So a line is drawn the way a shape is: where its field is below 0. <code>MapRange</code> from 0 to 4 mm, about one pixel of the picture, softens its edge so it does not show steps.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d-step1.png" width="800" height="800" loading="lazy" alt="An orange disc ringed in white on a blue ground, with evenly spaced dark circles around it and inside it">
+      <figcaption>Step 1. The lines are 10 cm apart everywhere, inside and out: the field grows one metre per metre.</figcaption>
+    </figure>
+
+    <h2 id="step-2"><span class="n">2.</span> Two balls: the nearest wins</h2>
+    <p>
+      With two circles, each point has two distances, <code>a</code> and <code>b</code>. The distance to the pair is the smaller one: <code>min(a, b)</code>. This is the <em>union</em> of the two shapes. Nothing is drawn twice and nothing overlaps: each point simply listens to the nearer ball.
+    </p>
+    {{code step2_union.bn metaballs}}
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d-step2.png" width="800" height="800" loading="lazy" alt="Two orange discs, a large one and a smaller one, almost touching; the dark lines around them meet in sharp corners between the two">
+      <figcaption>Step 2. Around each ball the lines stay round; where they meet, between the balls, they meet in a corner.</figcaption>
+    </figure>
+    <p>
+      Look at the lines between the two balls. On one side of a curve the first ball is nearer, on the other the second: there <code>min</code> switches from one to the other, and the lines break into a corner. The balls are 5.6 cm apart (centres 80.6 cm apart, radii 45 and 30 cm), and they stay two balls however close they come: <code>min</code> never makes a bridge.
+    </p>
+
+    <h2 id="step-3"><span class="n">3.</span> The blob</h2>
+    <p>
+      A metaball is a ball that melts into its neighbours. Replace <code>min</code> with <code>smooth_min</code>, the Math node's <em>Smooth Minimum</em>, and the corner is rounded off:
+    </p>
+    {{code step3_blob.bn metaballs}}
+    <p>
+      Where <code>a</code> and <code>b</code> differ by more than <code>melt</code>, <code>smooth_min</code> is <code>min</code>: far from the gap, each ball keeps its own field. Where they are close, it goes below both, most where they are equal: by <code>melt / 6</code> there, which <code>render.py</code> checks on Blender's node. With <code>melt</code> at 0.4 that is 6.7 cm. Midway across the gap, both balls are 2.8 cm away, and the smooth minimum is 2.8 − 6.7 = −3.9 cm: below 0, inside. The gap is filled, and the two balls are now one shape with a neck.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d-step3.png" width="800" height="800" loading="lazy" alt="The two orange discs joined by a smooth neck into one blob; the dark lines around them bend smoothly without corners">
+      <figcaption>Step 3. One blob. The lines outside are smooth too, and the white edge thickens at the neck.</figcaption>
+    </figure>
+    <p>
+      The thicker white at the neck is worth a look. The edge is drawn where <code>|d|</code> is below 8 mm, and in step 1 that was 8 mm on the canvas, as the field grew one metre per metre. In the neck the smooth minimum grows slower than that, so the same 8 mm of <code>d</code> covers more of the canvas. <code>smooth_min</code> keeps the sign right, inside is still negative, but it is no longer an exact distance near where it blends. For a picture that is harmless; for an outline of exact width, keep it in mind.
+    </p>
+    <p class="try"><strong>Try:</strong> set <code>melt</code> to 0.1: 1.7 cm is less than the 2.8 cm to fill, and the balls come apart. Set it to 1.0: one soft pebble.</p>
+
+    <h2 id="step-4"><span class="n">4.</span> A crowd, in colours</h2>
+    <p>
+      Seven balls now: one in the middle, six around it. Written out, that would be six <code>smooth_min</code> nested in one another. A <code>repeat</code> zone does it instead: it starts from the middle ball and melts one more ball into the field at each of its six turns.
+    </p>
+    {{code step4_crowd.bn metaballs satellite look}}
+    <ol class="steps">
+      <li><strong>Where each ball is.</strong> <code>satellite(i)</code> sends ball <code>i</code> in its own direction, 60° (1.047 rad) after the one before, at a distance between 0.5 and 1 m, with a radius between 14 and 26 cm. <code>RandomValue</code> with <code>id: i</code> gives each ball its own numbers, the same at every point and on every run; its two seeds keep the distance and the radius apart.</li>
+      <li><strong>Melting it in.</strong> The zone carries <code>d</code>, the field of the balls so far, and folds each new one in with <code>smooth_min(d, d_ball, melt)</code>. The order does not matter much: the smooth minimum is symmetrical, and blends only where two fields are close.</li>
+      <li><strong>The colour, blended the same way.</strong> <code>h</code> is 1 where the crowd so far is nearer by more than <code>melt</code>, 0 where the new ball is, by as much, and goes from one to the other across the neck. Mixing the colours by <code>h</code> paints each ball its own colour and blends them where they melt. The colours come from <code>palette</code> of <code>math</code>, Inigo Quilez's cosine palette: one colour for each number from 0 to 1: 0 for the middle ball, <code>(i + 1) / 7</code> for ball <code>i</code>.</li>
+    </ol>
+    <p>
+      <code>look</code> fills the inside with the blended colour on a dark ground and keeps the white edge. The inside is <code>1 − MapRange(d, −3 mm, 3 mm)</code>: 1 inside, 0 outside, with an edge one pixel or two wide.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d-step4.png" width="800" height="800" loading="lazy" alt="A large pink blob with a blue, a violet and a magenta ball melted onto it, colours blending at the necks; three more balls, green, light green and yellow, stand apart">
+      <figcaption>Step 4. Three balls are near enough to melt into the middle one; three are not. The colours blend where the field does.</figcaption>
+    </figure>
+
+    <h2 id="step-5"><span class="n">5.</span> Contours</h2>
+    <p>
+      A distance field holds more than one shape. <code>d = 0</code> is the blob; <code>d = 0.08</code> is the same blob grown by 8 cm, rounded and merged in the same way; <code>d = −0.05</code> is the blob shrunk by 5 cm. Drawing several of them, as a map draws its contour lines, shows the whole field at once, and it is only a change of <code>look</code>:
+    </p>
+    {{code step5_contours.bn look line}}
+    <ul>
+      <li><strong>Inside,</strong> a contour line every 5 cm (<code>sdf_isolines</code> with <code>step: 0.05</code>), and the colour brightens towards the core: from 55 % on the edge to full 30 cm in. The lines show how the field of a small ball dissolves into the large one: inside the blob, every ball is still there.</li>
+      <li><strong>Outside,</strong> an outline every 8 cm, fading out by 30 cm, and a glow of the blob's colour, <code>exp(−8 d)</code>: 35 % of the colour on the edge, half of that 9 cm out. The outlines are the grown copies of the blob: they merge sooner than the blobs themselves, and you can see the next merge coming.</li>
+      <li><code>line(d)</code> is the small helper of step 1, now a graph of its own: 1 where its field is below 0, fading to 0 over 4 mm.</li>
+    </ul>
+    <p>
+      The colour outside is the colour of the nearest ball, blended by <code>h</code> as inside: the field and its colour are defined at every point of the canvas, not only in the blobs.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d-step5.png" width="800" height="800" loading="lazy" alt="The same blobs, glowing, with contour lines inside each and coloured outlines rippling out around them; the outlines of the separate balls already merge with those of the large blob">
+      <figcaption>Step 5. The three lone balls are not lone in the field: their outlines already join the large blob's.</figcaption>
+    </figure>
+
+    <h2 id="step-6"><span class="n">6.</span> Rhythm</h2>
+    <p>
+      Moving a ball changes the field, and the field does the rest: the necks form and break by themselves. What is left to choose is <em>how</em> each ball moves. A straight line from A to B at constant speed looks mechanical; the module <code>math</code> has curves that take a time <code>t</code> from 0 to 1 and shape it:
+    </p>
+    <figure>
+      <img src="../images/tutorials/metaballs-2d-curves.svg" width="720" height="400" alt="Four plots over t from 0 to 1: bounce rises to 1, then bounces three times, each bounce smaller; elastic shoots up to about 1.37 and wobbles back to 1; recoil dips below 0 before rising to 1; impulse jumps to 1 at 0.125 then decays towards 0">
+      <figcaption>The four curves of <code>math</code> this step uses, as Blender computes them: <code>render.py</code> evaluates the module's graphs to draw them.</figcaption>
+    </figure>
+    <table>
+      <tr><th>Curve</th><th>What it does</th><th>The ball that uses it</th></tr>
+      <tr><td><code>bounce</code></td><td>Reaches 1 and bounces back three times, each bounce smaller.</td><td>Hits the edge of its run and bounces off it.</td></tr>
+      <tr><td><code>elastic</code></td><td>Overshoots, up to 1.37 at <code>t</code> = 0.135, and wobbles back to 1.</td><td>Springs out past its mark, then settles.</td></tr>
+      <tr><td><code>recoil</code></td><td>Goes back first, down to −0.1 at <code>t</code> = 0.42, then forward to 1.</td><td>Sinks into the middle ball before it leaves.</td></tr>
+      <tr><td><code>impulse</code></td><td>Jumps to 1 at <code>t = 1 / stiffness</code>, then decays slowly.</td><td>The middle ball's heartbeat.</td></tr>
+    </table>
+    {{code step6_rhythm.bn metaballs satellite swing}}
+    <ol class="steps">
+      <li><strong>Time.</strong> <code>SceneTime().frame / beat</code> counts beats; <code>fract</code> keeps its part after the point, a <code>t</code> that runs from 0 to 1 once a beat and starts again. <code>beat</code> is 96 frames: 4 seconds at 24 frames a second. Each ball adds <code>i / 6</code> to its <code>t</code>, so the balls leave one after another, 16 frames apart.</li>
+      <li><strong>Out and back.</strong> <code>swing</code> uses the first half of <code>t</code> to go out, shaped by its curve, and the second half to come back with <code>ease_in_out</code>. It is 0 at both ends of the beat, so the loop has no jump. <code>IndexSwitch</code> picks the curve of the way out by <code>kind</code>, and <code>mod(i, 3)</code> gives each curve to two of the six balls.</li>
+      <li><strong>Distance.</strong> A ball's distance from the middle is <code>0.35 + 0.6 × swing</code>: 35 cm, well inside the middle ball, when it is home, and 95 cm at the end of its run. The elastic balls go further, to 1.17 m, and the recoiling ones back to 29 cm, before they leave.</li>
+      <li><strong>The heartbeat.</strong> The middle ball's radius grows by up to 12 %, following <code>impulse</code>, run twice a beat. With <code>stiffness</code> 8 it peaks an eighth of the way into each half-beat, 6 frames in, and relaxes slowly: a pulse, not a sine.</li>
+    </ol>
+    <figure class="square">
+      <img src="../images/tutorials/metaballs-2d-step6.png" width="800" height="800" loading="lazy" alt="The blobs at frame 30: three balls are away from the middle one, their outlines still linked to it; two have melted back into it">
+      <figcaption>Step 6, at frame 30. Play the timeline in Blender to see it move, or look at the top of this page.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>beat</code> to 48 for twice the tempo. In <code>swing</code>, swap <code>ease_in_out(back)</code> for <code>bounce(back)</code>: the balls come home with a bounce too.</p>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The moving blobs, in one file. Drag the card onto empty space in Blender's 3D Viewport and keep <em>Instantiate the Example</em>: a new object carries <code>metaballs</code>. Press <kbd>Space</kbd> to play. A click on the card downloads the file.
+    </p>
+    {{file step6_rhythm.bn}}
+    <p>The steps before it, to start again from any of them:</p>
+    <div class="cards">
+      {{file step1_circle.bn}}
+      {{file step2_union.bn}}
+      {{file step3_blob.bn}}
+      {{file step4_crowd.bn}}
+      {{file step5_contours.bn}}
+    </div>
+    <p class="muted">
+      The files, with the script that renders this page's pictures, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/metaballs_2d"><code>examples/tutorials/metaballs_2d/</code></a>.
+    </p>
+
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later) · Hosted and sponsored by <a href="https://ludopant.com/">Ludopant Creative Studio</a>
+    </footer>
+  </div>
+</body>
+</html>
