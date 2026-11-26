@@ -1,0 +1,18 @@
+// @module dunes
+// @title Write your own module, step 6: the module installed
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+// No waves.bn next to this file: `use waves` finds the one installed in the Module Folder
+use waves
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "Two winds: long dunes from the west, small ones across them from the south-west"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> waves::drift(height: 0.45, wavelength: 2.6)
+    |> waves::drift(height: 0.06, wavelength: 0.6, direction: 0.8, windward: 0.65, meander: 0.1)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}

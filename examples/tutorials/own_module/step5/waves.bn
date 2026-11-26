@@ -1,0 +1,59 @@
+// @module waves
+// @version 1.1.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 5)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction, and dunes with a gentle and a steep side
+// @offer library, groups
+
+use math (ease_in_out, fbm)
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+// 1.1.0 adds profile and drift; lift is the same as in 1.0.0.
+
+// ---- Profiles: one period from x = 0 to x = 1 ----
+
+geometry graph profile(
+    x: Float,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95
+) -> Float {
+  "A dune across one period: 0 in the trough, 1 on the crest, up a long slope, down a short one"
+  t = fract(x)
+  climb = t / windward
+  fall = (1.0 - t) / (1.0 - windward)
+  return ease_in_out(min(climb, fall), power: 1.5)
+}
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+geometry graph drift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How high the crests stand above the troughs") = 0.4 in 0.0..,
+    wavelength: Float(subtype: DISTANCE, description: "From one crest to the next") = 2.5 in 0.01..,
+    direction: Float(subtype: ANGLE, description: "The way the wind blows, from the x axis towards y") = 0.0,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95,
+    meander: Float(subtype: DISTANCE, description: "How far the crests wander from straight lines") = 0.5 in 0.0..
+) -> Geometry {
+  "Dunes: each point raised by the profile of how far it lies downwind, the crests bent by a fractal noise"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  bend = fbm(p: p * 0.3, octaves: 3) * meander
+  z = profile((along + bend) / wavelength, windward: windward) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}

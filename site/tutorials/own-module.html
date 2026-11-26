@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Write your own module — base-node tutorials</title>
+  <meta name="description" content="Write a module in .bn, as the standard library is written: a graph moved to a file of its own, found by use, given a head, a version and documented inputs, built on the standard library, and installed in Blender.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/own_module/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>Write your own module</h1>
+    <p class="lead">
+      The standard library is a folder of <code>.bn</code> files: <code>math.bn</code>, <code>merge.bn</code>, <code>toon.bn</code>… Each is a module, and a <code>use</code> line brings its graphs into another file.
+      Nothing sets them apart from a file you write. This tutorial starts from one file of dunes, moves its waves into a module, gives the module what the standard library's have, a head, a version, documented inputs, builds it on the standard library, and installs it in Blender.
+    </p>
+    <figure>
+      <img src="../images/tutorials/own-module-step6.png" width="960" height="540" alt="A square of sand with three long dunes, their steep sides in shade, small dunes across them and wind ripples on every slope">
+      <figcaption>Where we are going: dunes drawn by a module of our own, installed in Blender, called twice.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need Blender 5 and the <a href="../index.html#blender">Base Node add-on</a>. Everything here is free: the language, the add-on and the standard library.
+    </p>
+    <p>
+      A step here is not one file but a folder of them: <code>step2/dunes.bn</code> uses <code>step2/waves.bn</code>, which must lie beside it. Each block below is one file, its code beside the nodes it builds; the cards at the end of each step are its files to download, named as Blender will look for them. To try a step:
+    </p>
+    <ol class="steps">
+      <li><strong>Download its files into one folder</strong>, a folder per step: two files of the same name from two steps would become <code>waves (1).bn</code>, which no <code>use waves</code> finds.</li>
+      <li><strong>Import the scene</strong>: <em>File &gt; Import &gt; Base Node (.bn)</em>, and select <code>dunes.bn</code>, and <code>sand.bn</code> from step 3 on; not <code>waves.bn</code>, which <code>dunes.bn</code> finds by itself. Or drop <code>dunes.bn</code> from your file manager onto Blender's 3D Viewport, and keep <em>Instantiate the Example</em>; from step 3, import <code>sand.bn</code> first.</li>
+      <li><strong>See it</strong>: without the drop, add a plane and give it a Geometry Nodes modifier whose group is <code>dunes</code>: the graph makes its own ground.</li>
+    </ol>
+    <p>
+      The pictures are rendered from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/own_module/render.py"><code>render.py</code></a>, which imports each folder with the add-on's own <em>File &gt; Import</em>, under a low sun from the west.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> One file</h2>
+    <p>
+      Everything starts in one file. <code>lift</code> raises each point of a mesh by a sine of its <code>x</code>: a wave every 2π / <code>frequency</code> metres, <code>height</code> above and below. <code>Sand</code> is a material. <code>dunes</code> makes a square grid, lifts it, and sets the material.
+    </p>
+    <p class="file">step1/dunes.bn: <code>dunes</code>, <code>lift</code>, <code>Sand</code></p>
+    <bn-view graph="dunes" height="480"><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 1: one file
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of lift"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-view>
+    <ul>
+      <li><strong>A graph called is a node group.</strong> <code>dunes</code> calls <code>lift</code> as it calls <code>Grid</code>: Blender builds <code>lift</code> into a node group of that name, and <code>dunes</code> holds a Group node of it.</li>
+      <li><strong>A material is set by its name.</strong> <code>shader(material: true) graph Sand</code> is the node tree of the material <em>Sand</em>, and <code>SetMaterial(material: Sand)</code> names it.</li>
+    </ul>
+    <figure>
+      <img src="../images/tutorials/own-module-step1.png" width="960" height="540" loading="lazy" alt="A square of sand lifted in three smooth waves, their east sides in shade">
+      <figcaption>Step 1. Three sine waves across a square of 8 metres.</figcaption>
+    </figure>
+    <p>
+      This works, and for one scene it is enough. But <code>lift</code> has nothing to do with this scene: any ground, any mesh could use it. Copied into another file, it would be two <code>lift</code>s to fix the day one of them has a bug. A graph worth reusing belongs in a file of its own, that other files point to.
+    </p>
+
+    <h2 id="step-2"><span class="n">2.</span> The waves on their own</h2>
+    <p>
+      <code>lift</code> moves, as it is, into <code>waves.bn</code>, next to <code>dunes.bn</code>:
+    </p>
+    <p class="file">step2/waves.bn: <code>lift</code></p>
+    <bn-view graph="lift" height="480"><script type="text/bn">
+// @module waves
+// @title Write your own module, step 2: the waves on their own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+// Waves along x, to lift any mesh. `use waves` finds this file by its name: waves.bn
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-view>
+    <p>
+      and <code>dunes.bn</code> says where to find it, in a <code>use</code> line at its top:
+    </p>
+    <p class="file">step2/dunes.bn: <code>dunes</code>, <code>Sand</code></p>
+    <bn-view graph="dunes" height="480"><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 2: use waves
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (lift)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of the module waves"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-view>
+    <p>
+      That is all a module is: a <code>.bn</code> file. <code>use waves</code> asks for the file <code>waves.bn</code>; Blender looks for it, in this order:
+    </p>
+    <ol class="steps">
+      <li><strong>A text of the .blend</strong> named <code>waves.bn</code>, in Blender's Text Editor.</li>
+      <li><strong>Next to the file imported</strong>: <code>waves.bn</code> in the folder of <code>dunes.bn</code>. This is how step 2 finds it.</li>
+      <li><strong>The Module Folder</strong> of the add-on's preferences (step 6).</li>
+      <li><strong>The standard library</strong> the add-on ships: <code>math.bn</code>, <code>merge.bn</code> and the others are found here, last.</li>
+    </ol>
+    <p>
+      A pasted text (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> in a node editor) has no folder: it finds its modules in the texts of the .blend, the Module Folder and the standard library only. To skip the search, <code>use waves from "//lib/waves.bn"</code> names a file by its path from the .blend, which must be saved; an absolute path or a URL is refused.
+    </p>
+    <h3>Three ways to say it</h3>
+    <table>
+      <tr><th>Line</th><th>The call</th><th>What it brings</th></tr>
+      <tr><td><code>use waves (lift)</code></td><td><code>lift(…)</code></td><td>The graphs named in parentheses, by their own names.</td></tr>
+      <tr><td><code>use waves</code></td><td><code>waves::lift(…)</code></td><td>Every graph, behind the name of the module (step 6).</td></tr>
+      <tr><td><code>use waves as w</code></td><td><code>w::lift(…)</code></td><td>The same, behind a shorter name.</td></tr>
+    </table>
+    <p>
+      The comment lines at the top are the file's head: <code>// @module waves</code> is the name of the module, the name <em>Install as Library</em> gives the file (step 6), and the name of the file you download from this page. Without it, a file is named after its last graph: <code>lift.bn</code>, which <code>use waves</code> would not find.
+    </p>
+    <figure>
+      <img src="../images/tutorials/own-module-step2.png" width="960" height="540" loading="lazy" alt="The same three waves as in step 1">
+      <figcaption>Step 2. The picture of step 1, to the pixel: <code>render.py</code> checks it. The code moved, the nodes did not.</figcaption>
+    </figure>
+    <p>
+      In Blender, <code>lift</code> is the same node group as before, with one difference: it remembers where it comes from, in its custom property <code>base_node_module</code>, <code>waves</code>. So when the text view of <code>dunes</code> writes the tree back as text, it writes <code>use waves (lift)</code> and the call, not the body of <code>lift</code>.
+    </p>
+    <p>
+      The views on this page read one file at a time. In the view of <code>dunes.bn</code>, <code>lift</code> is a node with the inputs the call gives it; its body is in the view of <code>waves.bn</code>.
+    </p>
+    <p class="try"><strong>Watch out:</strong> import <code>dunes.bn</code>, not <code>waves.bn</code> too. Imported on its own, <code>waves.bn</code> builds <code>lift</code> again as a group of its own text, and the group forgets the module it came from.</p>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 2: use waves
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (lift)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of the module waves"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module waves
+// @title Write your own module, step 2: the waves on their own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+// Waves along x, to lift any mesh. `use waves` finds this file by its name: waves.bn
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-file>
+    </div>
+
+    <h2 id="step-3"><span class="n">3.</span> The material in a third file</h2>
+    <p>
+      The material moves too, into <code>sand.bn</code>. But not as a module: <code>use</code> brings node groups, and a material is no node group. <code>dunes.bn</code> has no <code>use sand</code>; it keeps <code>SetMaterial(material: Sand)</code>, a name, which finds the material <em>Sand</em> of the .blend, whichever file made it.
+    </p>
+    <p class="file">step3/sand.bn: <code>Sand</code></p>
+    <bn-view graph="Sand" height="480"><script type="text/bn">
+// @module sand
+// @title Write your own module, step 3: the material in a file of its own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+</script></bn-view>
+    <p class="file">step3/dunes.bn: <code>dunes</code></p>
+    <bn-view graph="dunes" height="480"><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 3: three files
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (lift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-view>
+    <p>
+      So <code>sand.bn</code> must be imported before <code>dunes.bn</code>, or with it: choose both in one <em>File &gt; Import</em>, and the add-on imports again, after the others, a file that named a material it did not find yet. Imported alone, <code>dunes</code> is built with a warning for the missing material, and the ground has no material.
+      <code>waves.bn</code> is unchanged, still found beside <code>dunes.bn</code>.
+    </p>
+    <figure>
+      <img src="../images/tutorials/own-module-step3.png" width="960" height="540" loading="lazy" alt="The same three waves as in step 1">
+      <figcaption>Step 3. Three files, still the picture of step 1, to the pixel.</figcaption>
+    </figure>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 3: three files
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (lift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module sand
+// @title Write your own module, step 3: the material in a file of its own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module waves
+// @title Write your own module, step 3: the waves on their own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+// Waves along x, to lift any mesh. `use waves` finds this file by its name: waves.bn
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-file>
+    </div>
+
+    <h2 id="step-4"><span class="n">4.</span> A module others can read</h2>
+    <p>
+      <code>waves.bn</code> works, for us. Someone else, opening it, does not know what <code>frequency</code> is counted in, which version they have, or whether it will build in their Blender. The modules of the standard library answer all three in the same places. Here is the head of <code>math.bn</code>:
+    </p>
+    <pre>// Base Node Standard Library — Module math
+// @module math
+// @version 1.0.0
+// @target blender
+// @edition 2026
+// @description Mathematical toolkit for Geometry Nodes: shaping curves, waves, vectors, SDFs, and noise distributions</pre>
+    <p>
+      <code>waves.bn</code> takes the same head, and the same habits below it:
+    </p>
+    <p class="file">step4/waves.bn: <code>lift</code></p>
+    <bn-view graph="lift" height="480"><script type="text/bn">
+// @module waves
+// @version 1.0.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 4)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction
+// @offer library, groups
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-view>
+    <table>
+      <tr><th>Line</th><th>What it says</th><th>Who reads it</th></tr>
+      <tr><td><code>@module</code></td><td>The module's name, an identifier: its file is <code>&lt;name&gt;.bn</code>.</td><td>Install as Library, the file a download is named</td></tr>
+      <tr><td><code>@version</code></td><td>The version of the file, as its author numbers it.</td><td>The drop dialog shows it</td></tr>
+      <tr><td><code>@target</code></td><td>Where it promises to build: <code>blender</code> is every version of Blender this add-on promises. A version alone, <code>blender@5.3</code>, is a promise too: the module <code>toon</code> makes it.</td><td><code>base-node check waves.bn</code>: <code>OK (blender)</code>; the CI holds the standard library to it</td></tr>
+      <tr><td><code>@edition</code></td><td>The edition of the language it is written in, 2026.</td><td>Every reader: a later edition is refused rather than misread</td></tr>
+      <tr><td><code>@title</code>, <code>@author</code>, <code>@license</code></td><td>Free text, shown to whoever opens the file.</td><td>The drop dialog</td></tr>
+      <tr><td><code>@description</code></td><td>One line on what the module does.</td><td>The standard library's manifest and reference</td></tr>
+      <tr><td><code>@offer</code></td><td><code>library</code>: it may be installed as a module (step 6); <code>groups</code>: its graphs may be imported into a .blend.</td><td>The drop dialog</td></tr>
+    </table>
+    <p>
+      Then, inside the graph:
+    </p>
+    <ul>
+      <li><strong>A description.</strong> The string at the head of a graph becomes the node group's description in Blender.</li>
+      <li><strong>Each input documented.</strong> <code>height: Float(subtype: DISTANCE, description: "…")</code>: the description is the input's tooltip, and the subtype is Blender's, the unit it shows: <code>DISTANCE</code> in metres, <code>ANGLE</code> in degrees though the value is in radians, <code>FACTOR</code> as a slider.</li>
+      <li><strong>Ranges.</strong> <code>= 0.2 in 0.0..</code>: a default, and the least value Blender lets you type in the modifier's panel. A height below zero would only turn the waves over.</li>
+      <li><strong>Sections.</strong> A comment written <code>// ---- Lifting a mesh ----</code> groups the graphs that follow. In the standard library, the reference page of each module (<a href="../reference/stdlib-math.html"><code>stdlib-math.html</code></a>) is written from these: the head's description, the comment under it, a section per <code>// ----</code> line, and per graph its description and a table of its inputs, with their defaults and ranges.</li>
+    </ul>
+    <p>
+      <code>lift</code> also gains an input, <code>direction</code>, to run its waves at any angle. Its default, 0, is the <code>x</code> axis: a call written for step 3 means the same thing, and draws the same waves. That is the rule the standard library keeps between its versions:
+    </p>
+    <table>
+      <tr><th>Version</th><th>When</th></tr>
+      <tr><td>Major, 2.0.0</td><td>A text that built before builds another tree: a graph, an input or an output removed or renamed, a default changed.</td></tr>
+      <tr><td>Minor, 1.1.0</td><td>New graphs, new inputs with a default.</td></tr>
+    </table>
+    <p>
+      <code>direction</code> arrives before the first version, so <code>waves</code> starts at 1.0.0. To retire a graph without breaking its callers, mark it <code>geometry(deprecated: "use drift") graph lift(…)</code>: it still builds, and each call of it is a warning.
+    </p>
+    <figure>
+      <img src="../images/tutorials/own-module-step4.png" width="960" height="540" loading="lazy" alt="The same three waves as in step 1">
+      <figcaption>Step 4. A new input, documentation, a head: still the picture of step 1, to the pixel.</figcaption>
+    </figure>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 4: a module others can read
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (lift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module sand
+// @title Write your own module, step 4: the material in a file of its own
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module waves
+// @version 1.0.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 4)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction
+// @offer library, groups
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-file>
+    </div>
+
+    <h2 id="step-5"><span class="n">5.</span> A module that uses the standard library</h2>
+    <p>
+      A sine is no dune. A dune climbs a long gentle slope on the side the wind comes from, and falls down a short steep one behind its crest. <code>waves</code> 1.1.0 adds two graphs for it, and writes neither from scratch: a module may <code>use</code> others, the standard library's first.
+    </p>
+    <p class="file">step5/waves.bn: <code>profile</code>, <code>drift</code>, <code>lift</code></p>
+    <bn-view graph="profile" height="480"><script type="text/bn">
+// @module waves
+// @version 1.1.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 5)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction, and dunes with a gentle and a steep side
+// @offer library, groups
+
+use math (ease_in_out, fbm)
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+// 1.1.0 adds profile and drift; lift is the same as in 1.0.0.
+
+// ---- Profiles: one period from x = 0 to x = 1 ----
+
+geometry graph profile(
+    x: Float,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95
+) -> Float {
+  "A dune across one period: 0 in the trough, 1 on the crest, up a long slope, down a short one"
+  t = fract(x)
+  climb = t / windward
+  fall = (1.0 - t) / (1.0 - windward)
+  return ease_in_out(min(climb, fall), power: 1.5)
+}
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+geometry graph drift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How high the crests stand above the troughs") = 0.4 in 0.0..,
+    wavelength: Float(subtype: DISTANCE, description: "From one crest to the next") = 2.5 in 0.01..,
+    direction: Float(subtype: ANGLE, description: "The way the wind blows, from the x axis towards y") = 0.0,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95,
+    meander: Float(subtype: DISTANCE, description: "How far the crests wander from straight lines") = 0.5 in 0.0..
+) -> Geometry {
+  "Dunes: each point raised by the profile of how far it lies downwind, the crests bent by a fractal noise"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  bend = fbm(p: p * 0.3, octaves: 3) * meander
+  z = profile((along + bend) / wavelength, windward: windward) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-view>
+    <ol class="steps">
+      <li><strong><code>use math (ease_in_out, fbm)</code></strong>, the line every reader of this file needs to build it. The graph <code>"ease in out"</code> has a name with spaces: a <code>use</code> names it by its key, <code>ease_in_out</code>, and calls it so.</li>
+      <li><strong><code>profile</code></strong> is one dune across a period from 0 to 1: <code>t / windward</code> climbs to 1 over the first 75 %, <code>(1 − t) / (1 − windward)</code> falls back over the rest, and their minimum is a sharp triangle leaning downwind. <code>ease_in_out</code> rounds it: flat in the trough, flat on the crest.</li>
+      <li><strong><code>drift</code></strong> raises each point by the profile of how far it lies downwind, in <code>wavelength</code>s. <code>fbm</code>, the fractal noise of <code>math</code>, shifts that distance by up to <code>meander</code> metres: the crests wander instead of running straight.</li>
+      <li><strong><code>lift</code></strong> stays as it was in 1.0.0: new graphs, no input changed, a minor version.</li>
+    </ol>
+    <p>
+      <code>dunes.bn</code> now calls <code>drift</code>. And <code>profile</code> has a second use: wind ripples, the same shape, twelve to the metre, in the material.
+    </p>
+    <p class="file">step5/sand.bn: <code>Sand</code></p>
+    <bn-view graph="Sand" height="480"><script type="text/bn">
+// @module sand
+// @title Write your own module, step 5: ripples drawn by the module
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+use waves (profile)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, its colour broken by a fine noise, wind ripples in relief: the profile of the dunes, small"
+  p = TextureCoordinate().object
+  n = NoiseTexture(vector: p, scale: 40.0).factor
+  wobble = NoiseTexture(vector: p, scale: 1.5).factor
+  // Twelve ripples a metre, 4 mm high: a height in metres, as Bump reads it at distance 1.0
+  ripples = profile(p.x * 12.0 + wobble * 3.0, windward: 0.7) * 0.004
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9,
+    normal: Bump(strength: 1.0, distance: 1.0, height: ripples)))
+}
+</script></bn-view>
+    <p>
+      <code>Sand</code> is a shader tree, and <code>profile</code> was written as a geometry graph. A graph a <code>use</code> brings may be called from a tree of another kind: Blender builds it again for that kind, in a group of its own, <code>profile (Shader)</code>, and <code>ease in out (Shader)</code> with it. This works because <code>profile</code> is only math, which every tree has. <code>drift</code>, with its <code>SetPosition</code>, could not be called from a material: Blender would refuse it and say which node the shader tree lacks.
+    </p>
+    <p class="file">step5/dunes.bn: <code>dunes</code></p>
+    <bn-view graph="dunes" height="480"><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 5: a module that uses the standard library
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (drift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, its dunes drifted by the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> drift(height: 0.45, wavelength: 2.6)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-view>
+    <figure>
+      <img src="../images/tutorials/own-module-step5.png" width="960" height="540" loading="lazy" alt="Three dunes with long lit slopes and steep shaded sides, their crests bending a little, small ripples on every slope">
+      <figcaption>Step 5. Long slopes lit by the sun in the west, short ones in shade, crests that wander, ripples. No vertex moves for them: <code>Bump</code> lights them as relief.</figcaption>
+    </figure>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 5: a module that uses the standard library
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (drift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, its dunes drifted by the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> drift(height: 0.45, wavelength: 2.6)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module sand
+// @title Write your own module, step 5: ripples drawn by the module
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+use waves (profile)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, its colour broken by a fine noise, wind ripples in relief: the profile of the dunes, small"
+  p = TextureCoordinate().object
+  n = NoiseTexture(vector: p, scale: 40.0).factor
+  wobble = NoiseTexture(vector: p, scale: 1.5).factor
+  // Twelve ripples a metre, 4 mm high: a height in metres, as Bump reads it at distance 1.0
+  ripples = profile(p.x * 12.0 + wobble * 3.0, windward: 0.7) * 0.004
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9,
+    normal: Bump(strength: 1.0, distance: 1.0, height: ripples)))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module waves
+// @version 1.1.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 5)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction, and dunes with a gentle and a steep side
+// @offer library, groups
+
+use math (ease_in_out, fbm)
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+// 1.1.0 adds profile and drift; lift is the same as in 1.0.0.
+
+// ---- Profiles: one period from x = 0 to x = 1 ----
+
+geometry graph profile(
+    x: Float,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95
+) -> Float {
+  "A dune across one period: 0 in the trough, 1 on the crest, up a long slope, down a short one"
+  t = fract(x)
+  climb = t / windward
+  fall = (1.0 - t) / (1.0 - windward)
+  return ease_in_out(min(climb, fall), power: 1.5)
+}
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+geometry graph drift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How high the crests stand above the troughs") = 0.4 in 0.0..,
+    wavelength: Float(subtype: DISTANCE, description: "From one crest to the next") = 2.5 in 0.01..,
+    direction: Float(subtype: ANGLE, description: "The way the wind blows, from the x axis towards y") = 0.0,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95,
+    meander: Float(subtype: DISTANCE, description: "How far the crests wander from straight lines") = 0.5 in 0.0..
+) -> Geometry {
+  "Dunes: each point raised by the profile of how far it lies downwind, the crests bent by a fractal noise"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  bend = fbm(p: p * 0.3, octaves: 3) * meander
+  z = profile((along + bend) / wavelength, windward: windward) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-file>
+    </div>
+
+    <h2 id="step-6"><span class="n">6.</span> Install it</h2>
+    <p>
+      Found next to the file that uses it, <code>waves</code> serves the files of one folder. Installed, it serves every .blend:
+    </p>
+    <ol class="steps">
+      <li><strong>Choose a Module Folder</strong>: <em>Edit &gt; Preferences &gt; Add-ons &gt; Base Node &gt; Module Folder</em>, any folder of yours.</li>
+      <li><strong>Drop <code>waves.bn</code></strong> from your file manager onto Blender, and pick <em>Install as Library</em>. Its head offers it (<code>@offer library</code>). The dialog shows the title, author, license and version, and where the file goes: <code>use waves ← …/waves.bn</code>. It copies the file there under the name of its <code>@module</code>, never over another text of that name unless you tick <em>Overwrite</em>.</li>
+    </ol>
+    <p>
+      Now step 6 has no <code>waves.bn</code> beside it. Its <code>dunes.bn</code> uses the whole module, <code>use waves</code>, and calls <code>drift</code> twice by its full name: long dunes from the west, then small ones across them, blown 46° from the <code>x</code> axis (<code>direction: 0.8</code>, in radians).
+    </p>
+    <p class="file">step6/dunes.bn: <code>dunes</code></p>
+    <bn-view graph="dunes" height="480"><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 6: the module installed
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+// No waves.bn next to this file: `use waves` finds the one installed in the Module Folder
+use waves
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "Two winds: long dunes from the west, small ones across them from the south-west"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> waves::drift(height: 0.45, wavelength: 2.6)
+    |> waves::drift(height: 0.06, wavelength: 0.6, direction: 0.8, windward: 0.65, meander: 0.1)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-view>
+    <p>
+      <code>sand.bn</code> is the same as in step 5: its <code>use waves (profile)</code> finds the installed module too. <code>render.py</code> installs <code>waves.bn</code> into an empty Module Folder with the dialog's own operator, then imports this folder.
+    </p>
+    <figure>
+      <img src="../images/tutorials/own-module-step6.png" width="960" height="540" loading="lazy" alt="The dunes of step 5 with a second, smaller set of dunes across them: their shaded sides scalloped">
+      <figcaption>Step 6. Two calls of one module: the small dunes scallop the shaded side of the large ones.</figcaption>
+    </figure>
+    <p>
+      Where the module was found matters again when Blender writes a tree back as text. A group from the Module Folder reads back as <code>use waves (drift)</code>. A group found next to an imported file keeps that file's full path: in the same session, the text view writes <code>use waves (drift) from "/…/step5/waves.bn"</code>, a path Blender accepts only until it quits; in a later session, it writes the bodies of <code>drift</code> and <code>profile</code> into the text instead. A module you share is one to install.
+    </p>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 6: the module installed
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+// No waves.bn next to this file: `use waves` finds the one installed in the Module Folder
+use waves
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "Two winds: long dunes from the west, small ones across them from the south-west"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> waves::drift(height: 0.45, wavelength: 2.6)
+    |> waves::drift(height: 0.06, wavelength: 0.6, direction: 0.8, windward: 0.65, meander: 0.1)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module sand
+// @title Write your own module, step 6: ripples drawn by the installed module
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+use waves (profile)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, its colour broken by a fine noise, wind ripples in relief: the profile of the dunes, small"
+  p = TextureCoordinate().object
+  n = NoiseTexture(vector: p, scale: 40.0).factor
+  wobble = NoiseTexture(vector: p, scale: 1.5).factor
+  // Twelve ripples a metre, 4 mm high: a height in metres, as Bump reads it at distance 1.0
+  ripples = profile(p.x * 12.0 + wobble * 3.0, windward: 0.7) * 0.004
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9,
+    normal: Bump(strength: 1.0, distance: 1.0, height: ripples)))
+}
+</script></bn-file>
+    </div>
+
+    <h2 id="stdlib">The standard library, read again</h2>
+    <p>
+      Everything above is how the standard library is made. Each of its modules is one file of <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/stdlib"><code>stdlib/</code></a>, with the head of step 4, built on others by <code>use</code> as in step 5: <code>curves2d.bn</code> starts with <code>use math (bump, fbm)</code>. The add-on ships the folder, and it is the last place a <code>use</code> looks.
+      Its manifest is read from the heads: each module's name, version, targets and description, and its dependencies, the modules its <code>use</code> lines name. Adding a module is adding its file.
+    </p>
+    <p>
+      The order of the search has one more consequence: a module of yours is found before the standard library's. A <code>math.bn</code> in your Module Folder would hide the one every <code>use math</code> expects. Give your modules names of their own.
+    </p>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The finished module, and the scene that uses it. Download the three files into one folder, import <code>dunes.bn</code> and <code>sand.bn</code>, or install <code>waves.bn</code> first and take <code>dunes.bn</code> and <code>sand.bn</code> of step 6 anywhere.
+    </p>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module waves
+// @version 1.1.0
+// @target blender
+// @edition 2026
+// @title Waves (Write your own module, step 5)
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @description Waves that lift any mesh: a sine along a direction, and dunes with a gentle and a steep side
+// @offer library, groups
+
+use math (ease_in_out, fbm)
+
+// Waves to lift any mesh, as the wind lifts sand. The string at the head of a graph is its
+// description; each input says what it does in its own description, its tooltip in Blender.
+// 1.1.0 adds profile and drift; lift is the same as in 1.0.0.
+
+// ---- Profiles: one period from x = 0 to x = 1 ----
+
+geometry graph profile(
+    x: Float,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95
+) -> Float {
+  "A dune across one period: 0 in the trough, 1 on the crest, up a long slope, down a short one"
+  t = fract(x)
+  climb = t / windward
+  fall = (1.0 - t) / (1.0 - windward)
+  return ease_in_out(min(climb, fall), power: 1.5)
+}
+
+// ---- Lifting a mesh ----
+
+geometry graph lift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How far the crests rise, and the troughs sink") = 0.2 in 0.0..,
+    frequency: Float(description: "Radians per metre: a wave every 2π / frequency metres") = 4.0 in 0.0..,
+    direction: Float(subtype: ANGLE, description: "The way the waves run, from the x axis towards y") = 0.0
+) -> Geometry {
+  "Waves along a direction: each point raised by a sine of how far it lies along it"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  z = sin(along * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+geometry graph drift(
+    geometry: Geometry,
+    height: Float(subtype: DISTANCE, description: "How high the crests stand above the troughs") = 0.4 in 0.0..,
+    wavelength: Float(subtype: DISTANCE, description: "From one crest to the next") = 2.5 in 0.01..,
+    direction: Float(subtype: ANGLE, description: "The way the wind blows, from the x axis towards y") = 0.0,
+    windward: Float(subtype: FACTOR, description: "The share of a period that climbs: the rest falls") = 0.75 in 0.05..0.95,
+    meander: Float(subtype: DISTANCE, description: "How far the crests wander from straight lines") = 0.5 in 0.0..
+) -> Geometry {
+  "Dunes: each point raised by the profile of how far it lies downwind, the crests bent by a fractal noise"
+  p = Position()
+  along = p.x * cos(direction) + p.y * sin(direction)
+  bend = fbm(p: p * 0.3, octaves: 3) * meander
+  z = profile((along + bend) / wavelength, windward: windward) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module sand
+// @title Write your own module, step 5: ripples drawn by the module
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups
+
+use waves (profile)
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, its colour broken by a fine noise, wind ripples in relief: the profile of the dunes, small"
+  p = TextureCoordinate().object
+  n = NoiseTexture(vector: p, scale: 40.0).factor
+  wobble = NoiseTexture(vector: p, scale: 1.5).factor
+  // Twelve ripples a metre, 4 mm high: a height in metres, as Bump reads it at distance 1.0
+  ripples = profile(p.x * 12.0 + wobble * 3.0, windward: 0.7) * 0.004
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9,
+    normal: Bump(strength: 1.0, distance: 1.0, height: ripples)))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 5: a module that uses the standard library
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+use waves (drift)
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, its dunes drifted by the module waves, in the material Sand of sand.bn"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> drift(height: 0.45, wavelength: 2.6)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+    </div>
+    <p>Step 1, everything in one file:</p>
+    <bn-file><script type="text/bn">
+// @module dunes
+// @title Write your own module, step 1: one file
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example dunes
+
+geometry graph lift(geometry: Geometry, height: Float = 0.2, frequency: Float = 4.0) -> Geometry {
+  "Waves along x: each point raised by a sine of its x"
+  p = Position()
+  z = sin(p.x * frequency) * height
+  return SetPosition(geometry, offset: CombineXYZ(z: z))
+}
+
+shader(material: true) graph Sand() -> (surface: Shader) {
+  "Pale sand, rough, its colour broken by a fine noise"
+  n = NoiseTexture(scale: 40.0).factor
+  grey = 0.45 + n * 0.15
+  return (surface: PrincipledBSDF(
+    base_color: CombineColor(red: grey, green: grey * 0.72, blue: grey * 0.45),
+    roughness: 0.9))
+}
+
+geometry graph dunes(size: Float = 8.0) -> Geometry {
+  "A square of sand, lifted by the waves of lift"
+  return Grid(size_x: size, size_y: size, vertices_x: 320, vertices_y: 320).mesh
+    |> lift(height: 0.3, frequency: 2.0)
+    |> SetShadeSmooth()
+    |> SetMaterial(material: Sand)
+}
+</script></bn-file>
+    <p class="muted">
+      The files, with the script that renders this page's pictures, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/own_module"><code>examples/tutorials/own_module/</code></a>.
+    </p>
+
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later) · Hosted and sponsored by <a href="https://ludopant.com/">Ludopant Creative Studio</a>
+    </footer>
+  </div>
+</body>
+</html>
