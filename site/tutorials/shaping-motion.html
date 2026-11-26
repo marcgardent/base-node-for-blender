@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shaping motion — base-node tutorials</title>
+  <meta name="description" content="A first .bn tutorial: a grid of columns lifted by a wave, reshaped with bias, gain and steps, ten shaping curves of the free module math side by side, then a drop and its ripples, animated.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/shaping_motion/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>Shaping motion</h1>
+    <p class="lead">
+      A square of 1,600 columns, and one number per column: how high it stands. A wave gives that number, a handful of small functions bend it, and the same functions, run over time instead of space, make it move.
+      Everything here comes from the language and the free module <code>math</code> of the standard library. It is a good first tutorial: each idea of the language is explained where it first appears.
+    </p>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-step5.webp" width="640" height="448" alt="A drop falls on a square of columns; rings of ripples run out from where it lands and die away, in a loop">
+      <figcaption>Where we are going. A drop, its ripples, a loop of 2.5 seconds. Five steps.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need Blender 5 and the <a href="../index.html#blender">Base Node add-on</a>, whose standard library has the module <code>math</code>. Nothing else: no texture, no add-on of its own, nothing to buy.
+    </p>
+    <p>
+      Every block below is a complete <code>.bn</code> file, its code beside the nodes it builds. Two ways to try a step:
+    </p>
+    <ul>
+      <li><strong>Drag it.</strong> Drag the file icon of its block, or its title, onto empty space in Blender's 3D Viewport, and keep <em>Instantiate the Example</em>: a new object carries <code>shaping_motion</code> at the 3D cursor. A click on the file icon downloads the file instead.</li>
+      <li><strong>Paste it.</strong> Press the copy button of its block, open a Geometry Node editor, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> and pick <em>Add as Modifier</em>, on any mesh object: the graph makes its own columns.</li>
+    </ul>
+    <p>
+      The pictures are rendered from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/shaping_motion/render.py"><code>render.py</code></a>, with EEVEE. The plots are drawn by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/shaping_motion/curves.py"><code>curves.py</code></a> from the same formulas, and <code>render.py</code> checks that Blender's columns follow them.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> A grid lifted by a wave</h2>
+    <p>
+      Start with the whole file. A <code>.bn</code> file is a list of <em>graphs</em>; each graph becomes a node group in Blender, and its body is the nodes inside, written as calls.
+    </p>
+    <p class="file">step1_wave.bn: <code>shaping_motion</code>, <code>columns</code>, <code>column</code>, <code>shade</code>, <code>Painted</code></p>
+    <bn-view graph="shaping_motion" height="480"><script type="text/bn">
+// @module shaping_motion_step1
+// @title Shaping motion, step 1: a grid lifted by a wave
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(rings: Float = 1.0) -> Geometry {
+  "Columns lifted by a wave that runs out from the centre: rings crests per metre"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  return columns(sine01(d * rings))
+}
+</script></bn-view>
+    <ul>
+      <li><strong><code>use math (sine01, palette)</code></strong> brings two graphs of the module <code>math</code> into this file. They are node groups like the ones you write; once in Blender, you can open them and read their nodes.</li>
+      <li><strong><code>geometry graph shaping_motion(rings: Float = 1.0) -&gt; Geometry</code></strong> declares a Geometry Nodes group: one input, <code>rings</code>, a float of default 1.0, and a geometry out. <code>@example shaping_motion</code>, in the head of the file, is the graph a drag puts on a new object; its inputs show on the modifier.</li>
+      <li><strong>Calling a graph.</strong> <code>sine01(d * rings)</code> is a call: a <em>sine01</em> node in the tree, its input wired to <code>d * rings</code>. Built-in nodes are called the same way, by their name: <code>Grid(…)</code>, <code>Cube(…)</code>, <code>RealizeInstances()</code>.</li>
+      <li><strong><code>|&gt;</code></strong> passes what is on its left as the first input of the node on its right: <code>Grid(…) |&gt; MeshToPoints()</code> is a grid, then its points. Read <code>columns</code> top to bottom as a chain: a grid of 40 by 40 vertices, 4 m wide, made points, each point given a colour, a column put on each point, the columns made real geometry, then painted.</li>
+    </ul>
+
+    <h3>A value per point: a field</h3>
+    <p>
+      <code>Position()</code> is not one position. It is a <em>field</em>: a recipe that Blender evaluates once for each point, where the value is used. So <code>d</code>, the distance to the centre in the XY plane, is a different number on every point of the grid, and so is <code>sine01(d * rings)</code>.
+      <code>shaping_motion</code> hands that recipe to <code>columns</code> as its <code>value</code>; there, <code>InstanceOnPoints</code> reads it on each point to scale its column, from 5 cm up to 65 cm (<code>value * height + 0.05</code>, <code>height</code> 0.6), and <code>StoreNamedAttribute</code> reads it again to store a colour: <code>shade</code> calls <code>palette</code>, a cosine palette, with inputs that go from azure at 0 through green at 0.5 to orange at 1. The material <code>Painted</code> reads that colour back by its name, <code>color</code>.
+    </p>
+    <p>
+      <code>sine01</code> is a sine squeezed between 0 and 1, one period per unit: 0.5 at whole numbers, 1 a quarter of the way, 0 at three quarters. With <code>rings</code> at 1.0 the crests stand at 0.25 m and 1.25 m from the centre, and in the corners at 2.25 m.
+    </p>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-step1.png" width="800" height="560" loading="lazy" alt="A square of columns whose heights make round waves around the centre, orange on the crests, blue in the troughs">
+      <figcaption>Step 1. One wave, from the centre out. Orange is high, blue is low.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>rings</code> to 2.0 for twice as many crests, or to 0.5 for one.</p>
+
+    <h2 id="step-2"><span class="n">2.</span> The same wave, reshaped</h2>
+    <p>
+      A sine is round everywhere. Most of the time you want another shape: sharp crests and wide flat troughs, or plateaus with steep sides. You could look for another formula each time; it is simpler to keep the sine and <em>bend its values</em>.
+      That is what the shaping functions of <code>math</code> do: they take a value from 0 to 1 and give back a value from 0 to 1, with 0 still at 0 and 1 still at 1, but a different way between.
+    </p>
+    <p class="file">step2_shape.bn: <code>shaping_motion</code></p>
+    <bn-view graph="shaping_motion" height="480"><script type="text/bn">
+// @module shaping_motion_step2
+// @title Shaping motion, step 2: the same wave, reshaped
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, bias, gain, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    rings: Float = 1.0,
+    force: Float = 0.3 in 0.001..0.999,
+    contrast: Float = 0.25 in 0.001..0.999
+) -> Geometry {
+  "The wave of step 1, its crests narrowed by bias, then squared off by gain"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  wave = sine01(d * rings)
+  return columns(gain(bias(wave, force), contrast))
+}
+</script></bn-view>
+    <ul>
+      <li><strong><code>bias(x, force)</code></strong> pushes values toward 0 when <code>force</code> is below 0.5, toward 1 above it; 0.5 changes nothing. At 0.3, a value of 0.5 comes out at 0.3: the columns spend longer low, the crests get thinner.</li>
+      <li><strong><code>gain(x, contrast)</code></strong> is two biases back to back, one each side of 0.5: below 0.5, contrast pushes values away from the middle, toward 0 and 1. At 0.25, the slopes get steeper and the tops and bottoms flatter: the wave turns toward a square.</li>
+    </ul>
+    <p>
+      They nest: <code>gain(bias(wave, force), contrast)</code> bends the wave with <code>bias</code>, then bends the result with <code>gain</code>. The three inputs show on the modifier, with their ranges: <code>in 0.001..0.999</code> keeps <code>force</code> and <code>contrast</code> off 0 and 1, where <code>bias</code> would divide by zero.
+    </p>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-profile.svg" width="720" height="300" alt="Three curves of height against the distance to the centre, from 0 to 2 m: a dashed sine, a steeper version of it with flat bottoms, and a staircase following the sine in four steps">
+      <figcaption>The profile of steps 1 to 3, from the centre of the grid to the middle of an edge. Dashed: the sine of step 1. Yellow: reshaped by <code>bias</code> and <code>gain</code>, step 2. Red: cut into steps, step 3.</figcaption>
+    </figure>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-step2.png" width="800" height="560" loading="lazy" alt="The same square of columns, now with steep walls of orange columns around wide blue floors">
+      <figcaption>Step 2. Same rings, same crests: the walls are steeper and the floors between them flat.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>force</code> to 0.7: the crests widen and the troughs narrow. Set <code>contrast</code> to 0.75: <code>gain</code> does the opposite, values gather around 0.5.</p>
+
+    <h2 id="step-3"><span class="n">3.</span> In steps</h2>
+    <p>
+      <code>steps</code> turns a smooth slope into a staircase. It keeps the whole part of its input, <code>floor(x)</code>, and over the last <code>rise</code> of each unit it climbs smoothly to the next: 0.25 is a step whose riser takes the last quarter of its width.
+      Since a step is one unit wide, the wave is first spread over <code>levels</code> units, then brought back between 0 and 1:
+    </p>
+    <p class="file">step3_steps.bn: <code>shaping_motion</code></p>
+    <bn-view graph="shaping_motion" height="480"><script type="text/bn">
+// @module shaping_motion_step3
+// @title Shaping motion, step 3: in steps
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, steps, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    rings: Float = 1.0,
+    levels: Int = 4 in 1..,
+    rise: Float = 0.25 in 0.0001..1.0
+) -> Geometry {
+  "The wave of step 1 cut into terraces: levels steps from 0 to 1, each rising over the last rise of its width"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  wave = sine01(d * rings)
+  return columns(steps(wave * levels, rise) / levels)
+}
+</script></bn-view>
+    <p>
+      <code>steps(wave * levels, rise) / levels</code>, with <code>levels</code> 4, gives the heights 0, 0.25, 0.5, 0.75 and, on the very crests, 1. Here it cuts the plain wave of step 1, so the terraces are as wide as the slopes they replace.
+      <code>levels</code> is an <code>Int</code>: multiplied by a float, it is converted, as in any language.
+    </p>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-step3.png" width="800" height="560" loading="lazy" alt="The square of columns in terraces: rings of columns at a few fixed heights, like stairs">
+      <figcaption>Step 3. Rings of terraces, a colour per level.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>rise</code> to 1.0: the risers take the whole step, and the staircase is nearly the wave again. Set it to 0.01 for hard edges.</p>
+
+    <h2 id="step-4"><span class="n">4.</span> Ten curves side by side</h2>
+    <p>
+      The module has more shapes than a wave can show at once. To compare them, the grid becomes a chart: one row of 40 columns per function, <code>t</code> from 0 at the left end of the row to 1 at the right end, and each column as high as the function at its <code>t</code>.
+    </p>
+    <p class="file">step4_gallery.bn: <code>shaping_motion</code>, <code>row</code>, <code>t</code></p>
+    <bn-view graph="shaping_motion" height="480"><script type="text/bn">
+// @module shaping_motion_step4
+// @title Shaping motion, step 4: ten curves side by side
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (
+  sine01,
+  triangle,
+  square,
+  parabola,
+  bump,
+  impulse,
+  ease_in_out,
+  bounce,
+  recoil,
+  elastic,
+  palette,
+)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph t() -> Float {
+  "Where a column stands along its row: 0 at the left end, x = -2 m, and 1 at the right end, x = 2 m"
+  return Position().x / 4.0 + 0.5
+}
+
+geometry graph row(value: Float, name: String, index: Int, height: Float = 0.4) -> Geometry {
+  "One curve: 40 columns along X, each value × height high, and its name on the floor at the left"
+  y = (index - 4.5) * 0.7
+  bars = MeshLine(
+      count: 40,
+      start_location: CombineXYZ(x: -2.0, y: y),
+      offset: (0.1025641, 0.0, 0.0))
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+  label = StringToCurves(
+      string: name,
+      size: 0.24,
+      align_x: "Right",
+      align_y: "Middle").curve_instances
+    |> RealizeInstances()
+    |> FillCurve()
+    |> TransformGeometry(translation: CombineXYZ(x: -2.15, y: y))
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: (0.8, 0.8, 0.8, 1.0))
+  return bars + label
+}
+
+geometry graph shaping_motion() -> Geometry {
+  "Ten curves of the module math, one per row, from the front: t from 0 at the left to 1 at the right"
+  x = t()
+  return JoinGeometry(
+      row(sine01(x), "sine01", 0),
+      row(triangle(x), "triangle", 1),
+      row(square(x), "square", 2),
+      row(parabola(x), "parabola", 3),
+      row(bump(x), "bump", 4),
+      row(impulse(x), "impulse", 5),
+      row(ease_in_out(x), "ease in out", 6),
+      row(bounce(x), "bounce", 7),
+      row(recoil(x), "recoil", 8),
+      row(elastic(x), "elastic", 9))
+    |> SetMaterial(material: Painted)
+}
+</script></bn-view>
+    <ul>
+      <li><strong><code>t()</code></strong> is a graph with no input that returns a field: <code>Position().x / 4.0 + 0.5</code>, 0 at <code>x = -2</code>, 1 at <code>x = 2</code>. Named once, it is read in every row, on that row's own points.</li>
+      <li><strong><code>row</code></strong> takes the field <code>value</code> and a <code>name</code>. <code>MeshLine</code> lays 40 points along X, 0.7 m behind the row before it; each gets a column <code>value * 0.4 + 0.05</code> high. <code>StringToCurves</code> writes the name, <code>FillCurve</code> turns its letters into faces, on the floor at the left.</li>
+      <li><strong><code>JoinGeometry</code></strong> puts the ten rows together, and <code>SetMaterial</code> paints them all at once.</li>
+    </ul>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-step4.png" width="800" height="560" loading="lazy" alt="Ten rows of columns, each named on the floor: sine01, triangle, square, parabola, bump, impulse, ease in out, bounce, recoil, elastic">
+      <figcaption>Step 4. From the front: sine01, triangle, square, parabola, bump, impulse, ease in out, bounce, recoil, elastic. <code>render.py</code> checks every column against <code>curves.py</code>.</figcaption>
+    </figure>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-curves.svg" width="736" height="256" alt="Ten small plots of the same functions, t from 0 to 1, with the lines 0 and 1 marked">
+      <figcaption>The same ten curves, flat, with their default inputs. The two faint lines are 0 and 1.</figcaption>
+    </figure>
+    <table>
+      <tr><th>Function</th><th>Its shape, t from 0 to 1</th><th>Good for</th></tr>
+      <tr><td><code>sine01</code></td><td>One period of a sine, 0.5 to 1 to 0 and back to 0.5.</td><td>Smooth back-and-forth: breathing, waves.</td></tr>
+      <tr><td><code>triangle</code></td><td>0 up to 1 at the middle, straight down to 0.</td><td>Back-and-forth at a constant speed.</td></tr>
+      <tr><td><code>square</code></td><td>1 for the first half (<code>duty_cycle</code> 0.5), then 0.</td><td>On and off: blinking, a switch.</td></tr>
+      <tr><td><code>parabola</code></td><td>0 at both ends, 1 at the middle.</td><td>A jump: up then down, once.</td></tr>
+      <tr><td><code>bump</code></td><td>1 at <code>center</code> 0.5, 0 beyond <code>half_width</code> 0.25 on each side.</td><td>A soft local bulge, then nothing.</td></tr>
+      <tr><td><code>impulse</code></td><td>Up to 1 at <code>t = 1 / stiffness</code>, 0.25 with the default 4, then a slow fall.</td><td>A kick, a shock, a flash.</td></tr>
+      <tr><td><code>ease in out</code></td><td>0 to 1, slow at both ends.</td><td>A move from one place to another.</td></tr>
+      <tr><td><code>bounce</code></td><td>0 to 1 in four arcs, touching 1 at <code>t</code> ≈ 0.36, 0.73 and 0.91 before it settles.</td><td>A ball: its height is <code>1 − bounce(t)</code>.</td></tr>
+      <tr><td><code>recoil</code></td><td>Down to −0.1 at <code>t</code> ≈ 0.42, then up to 1.</td><td>A wind-up before the move.</td></tr>
+      <tr><td><code>elastic</code></td><td>Past 1, to about 1.37 at <code>t</code> ≈ 0.13, then rings and settles at 1.</td><td>A spring let go.</td></tr>
+    </table>
+    <p>
+      Every column has a base of 5 cm, so <code>recoil</code>'s dip below 0 still shows: there its columns are 1 cm high. And <code>square</code>'s last column is low: <code>t</code> there is a hair short of 1 in single precision, still in the second half of the period.
+    </p>
+    <p class="try"><strong>Try:</strong> give <code>impulse</code> a <code>stiffness</code> of 10 (<code>impulse(x, 10.0)</code>): the peak moves to 0.1, the fall gets quicker. Give <code>parabola</code> a <code>sharpness</code> of 4: a narrow spike.</p>
+
+    <h2 id="step-5"><span class="n">5.</span> A drop and its ripples</h2>
+    <p>
+      So far <code>t</code> was a place. Make it a time, and the same functions describe motion: <code>ease in</code> is something speeding up, <code>impulse</code> a kick that dies away. A drop, falling, then its ripples:
+    </p>
+    <p class="file">step5_drop.bn: <code>shaping_motion</code></p>
+    <bn-view graph="shaping_motion" height="480"><script type="text/bn">
+// @module shaping_motion_step5
+// @title Shaping motion, step 5: a drop and its ripples
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (ease_in, impulse, bump, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    period: Float = 2.5 in 0.1..,
+    fall: Float = 0.25 in 0.01..0.9,
+    lag: Float = 0.15 in 0.0..,
+    stiffness: Float = 14.0,
+    crests: Float = 10.0,
+    reach: Float = 3.0 in 0.0001..
+) -> Geometry {
+  "A drop falls on the columns once every period seconds; its ripples run out and die away"
+  // u: the time in the loop, from 0 to 1 once every period
+  u = fract(SceneTime().seconds / period)
+  // The drop falls from 2 m to the water, 0.45 m, faster and faster, during the first fall of the loop
+  z = 2.0 - ease_in(u / fall) * 1.55
+  drop = UVSphere(segments: 32, rings: 16, radius: 0.1).mesh
+    |> SetShadeSmooth()
+    |> TransformGeometry(translation: CombineXYZ(z: z))
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(0.0))
+    |> SetMaterial(material: Painted)
+  // Each column: how long since the ripple reached it, 0 until it does
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  local = max(u - fall - d * lag, 0.0)
+  // A sudden kick that dies away, carrying a few crests, smaller far from the drop
+  ripple = impulse(local, stiffness)
+    * sin(local * crests * 6.283185)
+    * bump(d, center: 0.0, half_width: reach)
+  return columns(ripple * 0.5 + 0.5, height: 0.8) + Switch[GEOMETRY](switch: u < fall, true_: drop)
+}
+</script></bn-view>
+    <ol class="steps">
+      <li><strong>A loop.</strong> <code>SceneTime().seconds</code> is the time at the current frame. Divided by <code>period</code>, 2.5 s, its fractional part <code>u</code> runs from 0 to 1 and starts again: 60 frames at 24 frames a second. Everything after depends on <code>u</code> alone, so the animation loops.</li>
+      <li><strong>The fall.</strong> During the first quarter of the loop (<code>fall</code>, 0.25), <code>u / fall</code> goes from 0 to 1 and the drop goes down from 2 m by <code>ease_in(u / fall) * 1.55</code>: slow at first, faster and faster, as a falling thing does, until it reaches the water at 0.45 m. After that, <code>Switch</code> lets it through no longer: <code>u &lt; fall</code> is false.</li>
+      <li><strong>When the ripple arrives.</strong> <code>local</code> is the time since the ripple reached this column. The ripple leaves the centre when the drop lands, at <code>u = fall</code>, and takes <code>lag</code>, 0.15 of the loop, per metre. Before that, <code>max</code> holds <code>local</code> at 0.</li>
+      <li><strong>The ripple.</strong> Three factors: <code>impulse(local, stiffness)</code>, a kick that peaks 1/14 of the loop after the front and dies away; a sine of 10 crests per loop, the water going up and down; and <code>bump(d, center: 0.0, half_width: reach)</code>, 1 at the centre and down to 0 at 3 m, so the ripple weakens as it spreads. Each column then oscillates around the water level: <code>ripple * 0.5 + 0.5</code>, with a <code>height</code> of 0.8, is 0.45 m when still.</li>
+    </ol>
+    <p>
+      The ripple reaches a column one metre further out 0.15 of a loop later, and in that time the water there goes up and down 1.5 times: the crests are 1 / (10 × 0.15), about 0.67 m, apart. The loop also has to join up: by the last frame, the ripples have died down to about 4 mm, which <code>render.py</code> checks, and the first frame is flat water again.
+      Named inputs in a call, as <code>bump(d, center: 0.0, half_width: reach)</code>, set an input by its name; an input with a space, <code>"half width"</code>, is named with an underscore.
+    </p>
+    <figure>
+      <img src="../images/tutorials/shaping-motion-step5.png" width="800" height="560" loading="lazy" alt="The square of columns, flat at the edges, with rings of ripples around its centre">
+      <figcaption>Step 5, halfway through the loop: the first rings are already fading at the centre while the front runs out.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> play the timeline. Then set <code>lag</code> to 0.3: slower ripples, closer together. Set <code>crests</code> to 4: long, lazy swells.</p>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The drop and its ripples, in one file. Drag the card onto empty space in Blender's 3D Viewport and keep <em>Instantiate the Example</em>, then play the timeline. A click on the card downloads the file.
+    </p>
+    <bn-file><script type="text/bn">
+// @module shaping_motion_step5
+// @title Shaping motion, step 5: a drop and its ripples
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (ease_in, impulse, bump, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    period: Float = 2.5 in 0.1..,
+    fall: Float = 0.25 in 0.01..0.9,
+    lag: Float = 0.15 in 0.0..,
+    stiffness: Float = 14.0,
+    crests: Float = 10.0,
+    reach: Float = 3.0 in 0.0001..
+) -> Geometry {
+  "A drop falls on the columns once every period seconds; its ripples run out and die away"
+  // u: the time in the loop, from 0 to 1 once every period
+  u = fract(SceneTime().seconds / period)
+  // The drop falls from 2 m to the water, 0.45 m, faster and faster, during the first fall of the loop
+  z = 2.0 - ease_in(u / fall) * 1.55
+  drop = UVSphere(segments: 32, rings: 16, radius: 0.1).mesh
+    |> SetShadeSmooth()
+    |> TransformGeometry(translation: CombineXYZ(z: z))
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(0.0))
+    |> SetMaterial(material: Painted)
+  // Each column: how long since the ripple reached it, 0 until it does
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  local = max(u - fall - d * lag, 0.0)
+  // A sudden kick that dies away, carrying a few crests, smaller far from the drop
+  ripple = impulse(local, stiffness)
+    * sin(local * crests * 6.283185)
+    * bump(d, center: 0.0, half_width: reach)
+  return columns(ripple * 0.5 + 0.5, height: 0.8) + Switch[GEOMETRY](switch: u < fall, true_: drop)
+}
+</script></bn-file>
+    <p>The steps before it, to start again from any of them:</p>
+    <div class="cards">
+      <bn-file><script type="text/bn">
+// @module shaping_motion_step1
+// @title Shaping motion, step 1: a grid lifted by a wave
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(rings: Float = 1.0) -> Geometry {
+  "Columns lifted by a wave that runs out from the centre: rings crests per metre"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  return columns(sine01(d * rings))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module shaping_motion_step2
+// @title Shaping motion, step 2: the same wave, reshaped
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, bias, gain, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    rings: Float = 1.0,
+    force: Float = 0.3 in 0.001..0.999,
+    contrast: Float = 0.25 in 0.001..0.999
+) -> Geometry {
+  "The wave of step 1, its crests narrowed by bias, then squared off by gain"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  wave = sine01(d * rings)
+  return columns(gain(bias(wave, force), contrast))
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module shaping_motion_step3
+// @title Shaping motion, step 3: in steps
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, steps, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    rings: Float = 1.0,
+    levels: Int = 4 in 1..,
+    rise: Float = 0.25 in 0.0001..1.0
+) -> Geometry {
+  "The wave of step 1 cut into terraces: levels steps from 0 to 1, each rising over the last rise of its width"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  wave = sine01(d * rings)
+  return columns(steps(wave * levels, rise) / levels)
+}
+</script></bn-file>
+      <bn-file><script type="text/bn">
+// @module shaping_motion_step4
+// @title Shaping motion, step 4: ten curves side by side
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (
+  sine01,
+  triangle,
+  square,
+  parabola,
+  bump,
+  impulse,
+  ease_in_out,
+  bounce,
+  recoil,
+  elastic,
+  palette,
+)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph t() -> Float {
+  "Where a column stands along its row: 0 at the left end, x = -2 m, and 1 at the right end, x = 2 m"
+  return Position().x / 4.0 + 0.5
+}
+
+geometry graph row(value: Float, name: String, index: Int, height: Float = 0.4) -> Geometry {
+  "One curve: 40 columns along X, each value × height high, and its name on the floor at the left"
+  y = (index - 4.5) * 0.7
+  bars = MeshLine(
+      count: 40,
+      start_location: CombineXYZ(x: -2.0, y: y),
+      offset: (0.1025641, 0.0, 0.0))
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+  label = StringToCurves(
+      string: name,
+      size: 0.24,
+      align_x: "Right",
+      align_y: "Middle").curve_instances
+    |> RealizeInstances()
+    |> FillCurve()
+    |> TransformGeometry(translation: CombineXYZ(x: -2.15, y: y))
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: (0.8, 0.8, 0.8, 1.0))
+  return bars + label
+}
+
+geometry graph shaping_motion() -> Geometry {
+  "Ten curves of the module math, one per row, from the front: t from 0 at the left to 1 at the right"
+  x = t()
+  return JoinGeometry(
+      row(sine01(x), "sine01", 0),
+      row(triangle(x), "triangle", 1),
+      row(square(x), "square", 2),
+      row(parabola(x), "parabola", 3),
+      row(bump(x), "bump", 4),
+      row(impulse(x), "impulse", 5),
+      row(ease_in_out(x), "ease in out", 6),
+      row(bounce(x), "bounce", 7),
+      row(recoil(x), "recoil", 8),
+      row(elastic(x), "elastic", 9))
+    |> SetMaterial(material: Painted)
+}
+</script></bn-file>
+    </div>
+    <p class="muted">
+      The files, with the scripts that render this page's pictures and draw its plots, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/shaping_motion"><code>examples/tutorials/shaping_motion/</code></a>.
+    </p>
+
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later) · Hosted and sponsored by <a href="https://ludopant.com/">Ludopant Creative Studio</a>
+    </footer>
+  </div>
+</body>
+</html>

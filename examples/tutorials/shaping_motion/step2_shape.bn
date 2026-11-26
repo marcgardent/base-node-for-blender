@@ -1,0 +1,51 @@
+// @module shaping_motion_step2
+// @title Shaping motion, step 2: the same wave, reshaped
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example shaping_motion
+
+use math (sine01, bias, gain, palette)
+
+shader(material: true) graph Painted() -> (surface: Shader) {
+  "Satin paint of the colour the geometry stores in its attribute color"
+  return (
+    surface: PrincipledBSDF(
+      base_color: Attribute[attribute_name: "color"]().color,
+      roughness: 0.45))
+}
+
+geometry graph shade(value: Float) -> Color {
+  "A colour for a value from 0 to 1: azure at 0, green at 0.5, orange at 1"
+  return palette(value, c: (0.5, 0.5, 0.5), d: (0.5, 0.75, 0.0))
+}
+
+geometry graph column() -> Geometry {
+  "A column 8 cm wide and 1 m high, standing on the origin"
+  return Cube(size: (0.08, 0.08, 1.0))
+    |> TransformGeometry(translation: (0.0, 0.0, 0.5))
+}
+
+geometry graph columns(value: Float, height: Float = 0.6, count: Int = 40 in 2..) -> Geometry {
+  "A square of count × count columns, 4 m wide: each is value × height high, and coloured by value"
+  return Grid(size_x: 4.0, size_y: 4.0, vertices_x: count, vertices_y: count)
+    |> MeshToPoints()
+    |> StoreNamedAttribute[FLOAT_COLOR](name: "color", value: shade(value))
+    |> InstanceOnPoints(
+      instance: column(),
+      scale: CombineXYZ(x: 1.0, y: 1.0, z: value * height + 0.05))
+    |> RealizeInstances()
+    |> SetMaterial(material: Painted)
+}
+
+geometry graph shaping_motion(
+    rings: Float = 1.0,
+    force: Float = 0.3 in 0.001..0.999,
+    contrast: Float = 0.25 in 0.001..0.999
+) -> Geometry {
+  "The wave of step 1, its crests narrowed by bias, then squared off by gain"
+  p = Position()
+  d = length(CombineXYZ(x: p.x, y: p.y))
+  wave = sine01(d * rings)
+  return columns(gain(bias(wave, force), contrast))
+}
