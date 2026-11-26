@@ -11,7 +11,7 @@ rendered at PHASE. The page shows these files' text: a step that does not build 
 The hero, sci-fi-hud.webp, is the last step over FRAMES frames of its phase, from 0 to 1, a loop
 encoded by examples/encode_webp.py with the system Python (Blender's has no Pillow). Then the groups
 and the material of the last step go through the regression tests' round trip
-(tests/test_libraries.py): all read back but the two of KNOWN, which must fail as it says.
+(tests/test_libraries.py): every one reads back.
 """
 
 import subprocess
@@ -41,12 +41,6 @@ HERO_SIZE = 480
 # again as `sdf circle (Shader)`: Tree -> Text writes that group out in the text, under that name,
 # but its calls still say `sdf_circle(…)`, which the text built again does not know. The files
 # themselves build: only the trees written back to text fail.
-KNOWN = {
-    "dial": "unknown node 'sdf_circle' in a shader tree",
-    "material:Hud": "unknown node 'sdf_circle' in a shader tree",
-}
-
-
 def args():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     return argv[argv.index("--only") + 1] if "--only" in argv else None
@@ -141,10 +135,6 @@ def check_round_trip(path):
     records.pop("sci_fi_hud")
     for name, record in sorted(records.items()):
         print(f"round trip {name}: {record['status']}")
-        if name in KNOWN and record["status"] != "ok":
-            assert KNOWN[name] in record.get("error", ""), (name, record)
-            print(f"  known: {record['error']}")
-            continue
         assert record["status"] == "ok", (name, record)
     assert records
 
