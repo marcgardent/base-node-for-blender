@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sci-fi HUD — base-node tutorials</title>
+  <meta name="description" content="Build an animated sci-fi HUD in Blender, step by step, with the free standard library alone: 2D distance fields in a material, cells and curves measured from geometry, easing from math, in .bn.">
+  <link rel="stylesheet" href="tutorials.css">
+  <script type="module" src="../view/bn-view.js"></script>
+  <script type="module" src="../view/bn-file.js"></script>
+</head>
+<body>
+  <!-- Written by examples/tutorials/page.py from examples/tutorials/sci_fi_hud/page.html: edit those, not this file. -->
+  <div class="wrap">
+    <header>
+      <a class="home" href="../index.html">base-node (.bn)</a>
+      <nav>
+        <a href="index.html">Tutorials</a>
+        <a href="../reference/index.html">Reference</a>
+        <a href="https://github.com/marcgardent/base-node-for-blender">GitHub</a>
+      </nav>
+    </header>
+
+    <h1>Sci-fi HUD</h1>
+    <p class="lead">
+      A radar dial on a flat screen: a cut bezel that ticks round, a scale, a grid of cells lit by a sweep, a gauge and an oscilloscope trace, all glowing.
+      Every line of it is a distance, drawn by one material. The tutorial uses the language and four free modules of the standard library, nothing else: <code>sdf2d</code>, <code>patterns2d</code>, <code>curves2d</code> and <code>math</code>.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud.webp" width="480" height="480" alt="A glowing cyan radar dial with an orange gauge and wave: the sweep turns, the bezel ticks round, the gauge swings, in a loop">
+      <figcaption>Where we are going. Seven steps; the last one loops in two seconds.</figcaption>
+    </figure>
+
+    <h2 id="before">Before you start</h2>
+    <p>
+      You need Blender 5 and the <a href="../index.html#blender">Base Node add-on</a>: its standard library holds the four modules, free. A <code>use</code> line at the top of each file brings the graphs it calls.
+    </p>
+    <p>
+      Every block below is a complete <code>.bn</code> file, its code beside the nodes it builds. Two ways to try a step:
+    </p>
+    <ul>
+      <li><strong>Drag it.</strong> Drag the file icon of its block, or its title, onto empty space in Blender's 3D Viewport, and keep <em>Instantiate the Example</em>: a new object carries <code>sci_fi_hud</code> at the 3D cursor, with its material <code>Hud</code>. A click on the file icon downloads the file instead.</li>
+      <li><strong>Paste it.</strong> Press the copy button of its block, open a Geometry Node editor, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> and pick <em>Add as Modifier</em>, on any mesh object: the graph makes its own screen.</li>
+    </ul>
+    <p>
+      The screen lies flat, facing up: look at it from the top view (<kbd>Numpad 7</kbd>), in <em>Rendered</em> or <em>Material Preview</em> shading. The pictures are rendered from these exact files by <a href="https://github.com/marcgardent/base-node-for-blender/blob/main/examples/tutorials/sci_fi_hud/render.py"><code>render.py</code></a>: EEVEE, an orthographic camera straight above that frames the 3.6 m screen in 800 × 800 pixels, a black world, and the view transform <em>Standard</em>, which keeps the colours the material gives. Blender's default, <em>AgX</em>, would wash the cyan out to a pale blue.
+    </p>
+
+    <h2 id="idea">Lines from distances</h2>
+    <p>
+      A HUD is lines: thin, sharp, at any size. Drawing them as meshes means modelling every tick and every gap. Here, every shape is a <strong>signed distance</strong>: a number at each point of the screen, how far that point is from the shape's contour, negative inside, positive outside. A distance gives a line where it is near zero, a halo where it is small, and two shapes combine with a <code>min</code> or a <code>max</code>.
+    </p>
+    <p>
+      The distances come from two places:
+    </p>
+    <ul>
+      <li><strong>Computed in the material</strong>, at every pixel. The graphs of <code>sdf2d</code> and <code>math</code> are made of math nodes only, and a module's graph can be called from a shader graph: it is built again for the shader tree, as <code>sdf ring 2d (Shader)</code>. Steps 1 to 3.</li>
+      <li><strong>Measured from geometry</strong>, at every vertex of the screen. <code>patterns2d</code> and <code>curves2d</code> make meshes and curves, which no material can build. <code>GeometryProximity</code> measures how far each vertex lies from them, and the material reads the result. Steps 4 and 5.</li>
+    </ul>
+    <p>
+      One small graph turns either kind into light.
+    </p>
+
+    <h2 id="step-1"><span class="n">1.</span> A ring is a distance</h2>
+    <p>
+      The screen is a <code>Grid</code> of 3.6 m, a single square: in this step the material does all the work. <code>TextureCoordinate().object</code> gives each point of it its position, in metres, the centre of the screen at 0.
+    </p>
+    {{code step1_ring.bn Hud ink sci_fi_hud}}
+    <ul>
+      <li><strong>The circle.</strong> <code>sdf_circle</code>, from <code>math</code>, is the distance to a circle of radius 1.2: the distance to the centre, minus the radius. Negative inside the disc, zero on the circle, positive outside.</li>
+      <li><strong>The ring.</strong> <code>sdf_ring_2d</code>, from <code>sdf2d</code>, takes a distance and gives the distance to a band of <code>thickness</code> centred on its contour: <code>abs(distance) − thickness / 2</code>. Negative within 2 cm of the circle, on both sides.</li>
+      <li><strong>The ink.</strong> <code>ink</code> turns a distance into light: 1 inside, 0 outside, and a ramp across the contour, 6 mm wide. A pixel here is 4.5 mm: the ramp smooths the edge over about one pixel, and the line has no stairs.</li>
+    </ul>
+    <p>
+      A distance is defined everywhere, not only on the shape. <code>sdf_isolines</code> draws its contour lines, every 10 cm, faint: circles inside and outside the ring, all centred on it. Every later step relies on this: a distance far from the shape is still meaningful, to cut, to join or to glow.
+    </p>
+    <p>
+      The module graphs take their point <code>p</code> as an input, with <code>Position()</code> as its default: in Geometry Nodes, an unconnected <code>p</code> reads the position of each point. A shader tree has no such default, so the call passes <code>p</code>, the texture coordinate.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step1.png" width="800" height="800" loading="lazy" alt="A cyan ring on black, with faint concentric circles every 10 cm filling the screen">
+      <figcaption>Step 1. The ring, and the contour lines of its distance: the field is there all over the screen.</figcaption>
+    </figure>
+
+    <h2 id="step-2"><span class="n">2.</span> Cut and join</h2>
+    <p>
+      The dial gets its pieces. Each one is a distance; the booleans that combine them are one node each.
+    </p>
+    {{code step2_cuts.bn dial Hud}}
+    <ul>
+      <li><strong>Union</strong>, <code>min(a, b)</code>: a point takes the distance to the nearest piece, so it is inside if it is inside either. <code>dial</code> joins its five pieces this way.</li>
+      <li><strong>Subtraction</strong>, <code>max(a, −b)</code>: inside <code>a</code> and outside <code>b</code>. The bezel, a ring of radius 1.55, loses the arms of a cross and keeps four arcs. The arms of <code>sdf_cross_2d</code> are 18 cm wide: its <code>thickness</code>, 0.09, is half the width of an arm, and its <code>length</code> half the span. <code>sdf_chamfer_subtraction</code> does the same with a bevel of 3 cm where the cut meets the ring: look at the ends of the four arcs, cut at an angle.</li>
+      <li><strong>A mirror is a change of point.</strong> <code>sdf_arc_2d</code> draws an arc centred on the top, <code>aperture</code> radians (0.6, about 34°) each side. Read at <code>(x, −y)</code>, the same arc appears at the bottom: changing the point you ask about moves the shape, and costs no new shape.</li>
+      <li><strong>The reticle</strong> is the outline of a hexagon, its distance passed through <code>sdf_ring_2d</code> as the circle's was. <code>sdf_hexagon_2d</code> has a flat top; swapping x and y stands it on a corner.</li>
+    </ul>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step2.png" width="800" height="800" loading="lazy" alt="The dial's pieces: an outer ring cut in four arcs with bevelled ends, two thin brackets top and bottom, an inner ring and a small hexagon in the middle">
+      <figcaption>Step 2. Five pieces, one distance. The four gaps of the bezel have bevelled ends.</figcaption>
+    </figure>
+
+    <h2 id="step-3"><span class="n">3.</span> Ticks and range rings</h2>
+    <p>
+      Sixty ticks round the dial would be sixty segments, sixty distances and sixty <code>min</code>. Instead, the point is folded.
+    </p>
+    {{code step3_ticks.bn dial}}
+    <ul>
+      <li><strong>Polar repetition.</strong> <code>sdf_polar_repeat_2d</code> cuts the plane into <code>sectors</code> slices round the centre and brings every point into the one around the +X axis, turning it back by a whole number of slices. One segment drawn there, from 1.3 to 1.4 m, shows in every slice: 60 ticks for the price of one.</li>
+      <li><strong>Major ticks.</strong> The same with 12 sectors, a longer and thicker segment, from 1.26 to 1.44 m: every fifth tick of the 60 is now a major one.</li>
+      <li><strong>Range rings.</strong> The distance to the centre is <code>r</code>; its contour lines every 25 cm, from <code>sdf_isolines</code>, are circles. <code>max</code> with <code>r − 1.1</code> is an intersection: the rings stop at 1.1 m.</li>
+      <li><strong>The crosshair</strong>: two <code>sdf_segment_2d</code>, kept outside 24 cm with another intersection, <code>max(hair, 0.24 − r)</code>, so they leave the reticle clear.</li>
+    </ul>
+    <p>
+      The scale comes out of <code>dial</code> as a second distance, <code>faint</code>: the material draws it at 35 % of the bright pieces.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step3.png" width="800" height="800" loading="lazy" alt="The dial with 60 ticks inside the bezel, 12 of them longer, faint range rings and a crosshair inside the inner ring">
+      <figcaption>Step 3. 60 ticks from one segment, range rings from the contour lines of one distance.</figcaption>
+    </figure>
+
+    <h2 id="step-4"><span class="n">4.</span> A grid of cells, measured</h2>
+    <p>
+      <code>patterns2d</code> makes tilings as geometry: <code>hexagonal_grid_2d</code> gives a mesh of hexagons. A material cannot call it: a shader tree has no mesh. So the geometry measures it, and hands the measure to the material.
+    </p>
+    {{code step4_cells.bn cells sci_fi_hud Hud}}
+    <ol class="steps">
+      <li><strong>The cells.</strong> 13 columns and 15 rows of hexagons 10 cm in radius, each shrunk by 12 %, its <code>margin</code>: two cells side by side show two outlines with a gap between. Of them, <code>DeleteGeometry</code> keeps those whose centre lies within 1.05 m. The test is a distance again, <code>sdf_circle</code> of <code>math</code>, called in Geometry Nodes this time, where its <code>p</code> is the position of each face.</li>
+      <li><strong>A screen of vertices.</strong> The <code>Grid</code> now has <code>resolution</code> squares a side, 720 by default: 721 × 721 vertices, 5 mm apart.</li>
+      <li><strong>The measure.</strong> On each vertex, <code>GeometryProximity[EDGES]</code> finds the nearest edge of the cells and gives its distance. <code>StoreNamedAttribute</code> keeps it on the vertex as <code>cells</code>.</li>
+      <li><strong>The material</strong> reads it with <code>Attribute</code>, which blends the values of the vertices across each face. A distance changes smoothly, so the blend is close to the true distance between vertices: <code>ink</code> draws the outlines as it draws the ring, 3 mm taken off so the line is 6 mm wide. A line thinner than the vertices are apart would break up: <code>resolution</code> trades sharpness for time.</li>
+    </ol>
+    <p>
+      The cells fade from the middle to nothing at 1.1 m, by <code>1.1 − length(p)</code>: they stay a background.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step4.png" width="800" height="800" loading="lazy" alt="The dial with a faint hexagonal grid inside the inner ring, brighter at the centre">
+      <figcaption>Step 4. The cells, measured on 519,841 vertices and drawn by the same <code>ink</code> as the dial.</figcaption>
+    </figure>
+
+    <h2 id="step-5"><span class="n">5.</span> A gauge and a trace</h2>
+    <p>
+      <code>curves2d</code> works on curves: it bends them, offsets them and gives them a width. Two of its graphs make the dial's moving parts, measured on the screen like the cells, into a second attribute, <code>trace</code>, drawn in amber.
+    </p>
+    {{code step5_curves.bn gauge trace sci_fi_hud Hud}}
+    <ul>
+      <li><strong>The gauge</strong> is an arc with an arrow head. <code>CurveCircle</code> starts on +X and runs anticlockwise; <code>TrimCurve</code> keeps the first <code>reading</code> of it, 0.4 of a turn. A mirror (<code>scale</code> −1 on X) and a quarter turn make it start at the top and run clockwise, as a gauge does.</li>
+      <li><strong>Measure before you shape.</strong> <code>arrow_2d</code> takes its <code>head_length</code> as a fraction of the curve, not in metres: on a long arc the head would grow with it. <code>CurveLength</code> measures the arc, and 0.12 m divided by that length gives the fraction for a head 12 cm long, whatever the reading.</li>
+      <li><strong>The trace.</strong> <code>wave_curve_2d</code> moves a curve along its normal by a sine wave: 24 periods round a circle of 0.875 m, 3.5 cm each side of it. It resamples the curve first, to 768 points: the circle's 64 would give less than three points per wave, a jagged line; 768 give 32.</li>
+      <li><strong>Two kinds of distance.</strong> The arrow is a mesh of faces: <code>GeometryProximity[FACES]</code> gives 0 inside it. The trace is a curve: <code>CurveToMesh</code> without a profile makes it a chain of edges, measured with <code>EDGES</code>. The smaller of the two goes into <code>trace</code>.</li>
+    </ul>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step5.png" width="800" height="800" loading="lazy" alt="The dial with an orange arrow round the inner ring from the top to the lower right, and an orange wavy circle inside">
+      <figcaption>Step 5. The gauge at 0.4 of a turn and the oscilloscope trace, in amber.</figcaption>
+    </figure>
+
+    <h2 id="step-6"><span class="n">6.</span> Set it moving</h2>
+    <p>
+      <code>sci_fi_hud</code> gets a <code>phase</code> input, from 0 to 1: one loop. Keyframe it from 0 at the first frame to 1 at the last, with linear interpolation, and the HUD loops. Every motion is a function of <code>phase</code> that ends where it starts.
+    </p>
+    <p>
+      A material has no modifier input. The geometry stores <code>phase</code> on every vertex, as the attribute <code>phase</code>, and the material reads it with <code>Attribute</code> as it reads <code>cells</code>.
+    </p>
+    {{code step6_motion.bn sci_fi_hud dial Hud turn}}
+    <ul>
+      <li><strong>The bezel ticks round</strong> with <code>steps</code>: its value climbs by 1 at each whole number of its input, rising smoothly over the last <code>rise</code> of each step and still the rest of the time. Over <code>phase × 8</code>, with a rise of 0.3, it gives eight jumps of 45°, a clockwork hand. Only the gaps turn: <code>turn</code> rotates the point the cross is read at, so the cross turns the other way, and the bezel, a ring, does not show it. Eight jumps make a full turn: the loop closes.</li>
+      <li><strong>The gauge swings</strong> with <code>triangle</code> and <code>gain</code>. <code>triangle(phase)</code> goes from 0 to 1 and back once a loop; <code>gain</code> with a contrast of 0.2 turns that straight line into an S: the gauge lingers at each end and crosses the middle fast. The reading goes from 0.15 to 0.75 of a turn.</li>
+      <li><strong>The trace runs.</strong> <code>wave_curve_2d</code>'s <code>phase</code> shifts the wave along the curve, in periods. At <code>phase × 4</code> it moves four of its 24 periods in a loop, a sixth of a turn, and ends on a wave that looks exactly like the first one.</li>
+      <li><strong>The sweep.</strong> The beam turns clockwise from the top, once a loop. <code>behind</code> is how far a point lies behind it, from 0 on the beam to 1 a turn later. <code>bias</code> with a force of 0.85 pushes that towards 1, so <code>1 − bias</code> falls fast behind the beam and fades slowly: the afterglow of a radar screen. It fills the disc inside the range rings, and lights the cells it passes over.</li>
+    </ul>
+    <p>
+      <code>steps</code> and <code>bias</code> run in the material, <code>gain</code> and <code>triangle</code> in the geometry: the module <code>math</code> is built for both trees from the same text.
+    </p>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step6.png" width="800" height="800" loading="lazy" alt="The dial at phase 0.4: the bezel gaps on the diagonals, the gauge most of the way round, a radar sweep pointing to the lower right with a fading wedge behind it">
+      <figcaption>Step 6, at phase 0.4: the bezel has jumped three times (135°), the gauge reads 0.71, the sweep points to the lower right.</figcaption>
+    </figure>
+    <p class="try"><strong>Try:</strong> set <code>contrast</code> of <code>gain</code> to 0.5, where it has no effect: the gauge swings at an even speed and turns back sharply. Set <code>rise</code> of <code>steps</code> to 1.0: the bezel turns without stopping.</p>
+
+    <h2 id="step-7"><span class="n">7.</span> Glow</h2>
+    <p>
+      The last step is light, with plain shader nodes. Since every line is a distance, a halo costs one node more per line, with no compositor and no blur.
+    </p>
+    {{code step7_glow.bn Hud glow}}
+    <ul>
+      <li><strong>The halo.</strong> <code>glow</code> is <code>exp(−d / reach)</code> outside a shape, 1 inside: the light falls to 37 % at <code>reach</code> from the contour, 4 cm for the dial, 3 cm for the amber curves, and keeps falling smoothly. It is added to the line, at 30 % and 35 %.</li>
+      <li><strong>White-hot cores.</strong> The middle of a bright neon tube looks white. <code>ink</code> of the distance plus 6 mm is a line thinner than the dial's, in its middle, drawn in white on top of the cyan; the curves get the same with 4 mm.</li>
+      <li><strong>Scanlines.</strong> <code>sine01</code> of <code>p.y × 40</code> is a wave between 0 and 1, 40 a metre. <code>0.75 + 0.25 × sine01</code> dims the light by up to a quarter, in bands: the screen looks like a screen.</li>
+      <li><strong>Three lights, one surface.</strong> Two <code>Emission</code>, cyan and amber, each of its own strength, and the white cores, are summed by two <code>AddShader</code>. A black pixel emits nothing: the screen needs no other shader.</li>
+    </ul>
+    <figure class="square">
+      <img src="../images/tutorials/sci-fi-hud-step7.png" width="800" height="800" loading="lazy" alt="The finished HUD at phase 0.4: glowing cyan lines with white cores and soft halos, the amber gauge and wave glowing orange, faint horizontal scanlines">
+      <figcaption>Step 7, at phase 0.4. The animation at the top of the page is this step, 48 frames of its phase.</figcaption>
+    </figure>
+
+    <h2 id="files">Take it to Blender</h2>
+    <p>
+      The finished HUD, in one file. Drag the card onto empty space in Blender's 3D Viewport and keep <em>Instantiate the Example</em>: a new object carries <code>sci_fi_hud</code>. A click on the card downloads the file.
+    </p>
+    {{file step7_glow.bn}}
+    <p>The steps before it, to start again from any of them:</p>
+    <div class="cards">
+      {{file step1_ring.bn}}
+      {{file step2_cuts.bn}}
+      {{file step3_ticks.bn}}
+      {{file step4_cells.bn}}
+      {{file step5_curves.bn}}
+      {{file step6_motion.bn}}
+    </div>
+    <p class="muted">
+      The files, with the script that renders this page's pictures, are in <a href="https://github.com/marcgardent/base-node-for-blender/tree/main/examples/tutorials/sci_fi_hud"><code>examples/tutorials/sci_fi_hud/</code></a>.
+    </p>
+
+    <footer>
+      Base Node Language — MIT OR Apache-2.0 (Blender host binding: GPL-3.0-or-later) · Hosted and sponsored by <a href="https://ludopant.com/">Ludopant Creative Studio</a>
+    </footer>
+  </div>
+</body>
+</html>

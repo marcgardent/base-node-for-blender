@@ -1,0 +1,150 @@
+// @module sci_fi_hud_step6
+// @title Sci-fi HUD, step 6: set it moving
+// @author Base Node tutorials
+// @license MIT OR Apache-2.0
+// @offer groups, example
+// @example sci_fi_hud
+
+use curves2d (arrow_2d, wave_curve_2d)
+use math (bias, gain, sdf_circle, steps, triangle)
+use patterns2d (hexagonal_grid_2d)
+use sdf2d (
+  sdf_arc_2d,
+  sdf_chamfer_subtraction,
+  sdf_cross_2d,
+  sdf_hexagon_2d,
+  sdf_isolines,
+  sdf_polar_repeat_2d,
+  sdf_ring_2d,
+  sdf_segment_2d,
+)
+
+shader graph ink(d: Float, width: Float = 0.006 in 0.0..) -> Float {
+  "1 inside a shape, 0 outside, blended over width across its contour: a line drawn from a distance"
+  return Clamp(value: 0.5 - d / width)
+}
+
+shader graph turn(p: Vector, angle: Float) -> Vector {
+  "p turned by angle round the centre: a shape read at the turned point turns the other way"
+  c = cos(angle)
+  s = sin(angle)
+  return CombineXYZ(x: p.x * c - p.y * s, y: p.x * s + p.y * c)
+}
+
+shader graph dial(p: Vector, phase: Float) -> (distance: Float, faint: Float) {
+  "The distance to the pieces of the dial, and to its faint scale: ticks, range rings, crosshair"
+  // The bezel: a ring with four gaps, a cross taken out of it with bevelled corners.
+  // It ticks round in eight jumps of 45°, each over the last 30 % of its eighth of the loop
+  bezel = sdf_ring_2d(sdf_circle(p, radius: 1.55), thickness: 0.06)
+  gaps = sdf_cross_2d(
+    turn(p, steps(phase * 8.0, rise: 0.3) * 0.785398),
+    length: 2.0,
+    thickness: 0.09)
+  cut = sdf_chamfer_subtraction(bezel, gaps, chamfer: 0.03)
+  // Two brackets outside it, top and bottom: one arc, and the same arc seen in a mirror
+  top = sdf_arc_2d(p, aperture: 0.6, radius: 1.68, thickness: 0.035)
+  bottom = sdf_arc_2d(CombineXYZ(x: p.x, y: -p.y), aperture: 0.6, radius: 1.68, thickness: 0.035)
+  inner = sdf_ring_2d(sdf_circle(p, radius: 1.2), thickness: 0.02)
+  // The reticle: a hexagon outline, x and y swapped to stand it on a corner
+  reticle = sdf_ring_2d(sdf_hexagon_2d(CombineXYZ(x: p.y, y: p.x), radius: 0.16), thickness: 0.015)
+  // 60 ticks: one segment, drawn in the sector each point folds into
+  minor = sdf_segment_2d(
+    sdf_polar_repeat_2d(p, sectors: 60),
+    a: (1.3, 0.0, 0.0),
+    b: (1.4, 0.0, 0.0),
+    thickness: 0.008)
+  // Every fifth one longer and thicker: 12 sectors of their own
+  major = sdf_segment_2d(
+    sdf_polar_repeat_2d(p, sectors: 12),
+    a: (1.26, 0.0, 0.0),
+    b: (1.44, 0.0, 0.0),
+    thickness: 0.018)
+  // Range rings every 0.25 m: the contour lines of the distance to the centre, kept inside 1.1 m
+  r = length(CombineXYZ(x: p.x, y: p.y))
+  rings = max(sdf_isolines(r, step: 0.25, width: 0.005), r - 1.1)
+  // A crosshair: two segments, kept outside the reticle
+  hair = min(
+    sdf_segment_2d(p, a: (-1.1, 0.0, 0.0), b: (1.1, 0.0, 0.0), thickness: 0.004),
+    sdf_segment_2d(p, a: (0.0, -1.1, 0.0), b: (0.0, 1.1, 0.0), thickness: 0.004))
+  scale = min(rings, max(hair, 0.24 - r))
+  // A union is the smallest distance: the nearest piece wins
+  pieces = min(min(cut, min(top, bottom)), min(inner, reticle))
+  return (distance: min(pieces, min(minor, major)), faint: scale)
+}
+
+shader(material: true) graph Hud() -> (surface: Shader) {
+  "The dial in cyan light, a radar sweep lighting the cells, the curves of the geometry in amber"
+  p = TextureCoordinate().object
+  // The geometry's phase, the same on every vertex
+  phase = Attribute[attribute_name: "phase"]().factor
+  d = dial(p, phase)
+  // The distance to the cells' edges, measured on the screen's vertices by the geometry
+  cells = Attribute[attribute_name: "cells"]().factor
+  // Brightest in the middle, gone at 1.1 m
+  fade = Clamp(value: 1.1 - length(p))
+  // The sweep turns clockwise from the top, once a loop. behind: 0 on its beam, to 1 a turn later
+  beam = 1.570796 - phase * 6.283185
+  behind = fract((atan2(p.y, p.x) - beam) / 6.283185)
+  trail = 1.0 - bias(behind, force: 0.85)
+  sweep = trail * Clamp(value: (1.0 - length(p)) / 0.01)
+  light = ink(d: d.distance)
+    + ink(d: d.faint) * 0.35
+    + ink(d: cells - 0.003) * (0.15 + trail * 0.85) * fade
+    + sweep * 0.12
+  trace = ink(d: Attribute[attribute_name: "trace"]().factor - 0.003)
+  color = (0.25, 0.85, 1.0) * light + (1.0, 0.55, 0.1) * trace
+  return (surface: Emission(color: color, strength: 1.2))
+}
+
+geometry graph cells(radius: Float = 1.05 in 0.0..) -> Geometry {
+  "Hexagonal cells, those whose centre lies within radius of the middle of the screen"
+  return hexagonal_grid_2d(columns: 13, rows: 15, radius: 0.1, margin: 0.12).mesh
+    |> DeleteGeometry[FACE](selection: sdf_circle(Position(), radius: radius) > 0.0)
+}
+
+geometry graph gauge(reading: Float = 0.4 in 0.0..1.0, radius: Float = 1.1 in 0.0..) -> Geometry {
+  "An arrow along the circle of radius, clockwise from the top, over reading of a turn"
+  arc = CurveCircle(resolution: 256, radius: radius)
+    |> TrimCurve(end: reading)
+    |> TransformGeometry(rotation: (0.0, 0.0, -1.570796), scale: (-1.0, 1.0, 1.0))
+  // The head's length is a fraction of the curve: measure the arc to keep it 0.12 m
+  head = min(0.12 / CurveLength(arc), 0.95)
+  return arrow_2d(arc, body_width: 0.02, head_width: 0.1, head_length: head)
+}
+
+geometry graph trace(radius: Float = 0.875 in 0.0.., phase: Float) -> Geometry {
+  "An oscilloscope trace: the circle of radius, waving 24 times round, as edges"
+  wave = wave_curve_2d(
+    CurveCircle(resolution: 64, radius: radius),
+    amplitude: 0.035,
+    periods: 24.0,
+    phase: phase,
+    resolution: 768)
+  return CurveToMesh(wave)
+}
+
+geometry graph sci_fi_hud(
+    size: Float = 3.6 in 0.0..,
+    resolution: Int = 720 in 1..4096,
+    phase: Float = 0.0 in 0.0..1.0
+) -> Geometry {
+  "A screen of resolution × resolution squares, each vertex holding its distance to the geometry"
+  screen = Grid(
+    size_x: size,
+    size_y: size,
+    vertices_x: resolution + 1,
+    vertices_y: resolution + 1).mesh
+  p = Position()
+  near = GeometryProximity[EDGES](cells(), sample_position: p).distance
+  // The gauge swings up and back once a loop, lingering at each end
+  reading = 0.15 + gain(triangle(phase), contrast: 0.2) * 0.6
+  // The arrow is faces, 0 inside; the trace is edges, its wave shifted four periods a loop
+  curves = min(
+    GeometryProximity[FACES](gauge(reading), sample_position: p).distance,
+    GeometryProximity[EDGES](trace(phase: phase * 4.0), sample_position: p).distance)
+  return screen
+    |> StoreNamedAttribute(name: "cells", value: near)
+    |> StoreNamedAttribute(name: "trace", value: curves)
+    |> StoreNamedAttribute(name: "phase", value: phase)
+    |> SetMaterial(material: Hud)
+}
