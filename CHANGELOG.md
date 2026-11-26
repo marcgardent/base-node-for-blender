@@ -17,6 +17,19 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
   keeps the light's colour. A light tunes its own style with the custom properties `toon_threshold`,
   `toon_intensity` and `toon_rim`, read by the Attribute node in Light mode; a light without them
   takes the values the graph is given.
+- Fixed: module `fillet2d`. `fillet polygon` draws each corner as an arc of `segments` segments, on
+  a poly curve as on a Bézier one; it ran FilletCurve in its Bézier mode, which ignores the count and
+  cuts the corners of a poly curve straight. `chamfer polygon` cuts straight on a Bézier curve too,
+  and its cut starts `distance` from the corner along each side; `distance` was the radius of a
+  fillet (0.346 from the corner of a triangle for 0.2). `fillet bezier handles` rounds only the points
+  where the curve turns by more than `threshold_angle`, which it did not read.
+- Fixed: module `planar2d`. `planar faces` welds open curves end to end within `tolerance` before it
+  fills them: three lines meeting end to end are a triangle, not nothing. `planar split intersections`
+  puts a point where two segments cross or touch and cuts the curves there; it only subdivided them,
+  and `subdivisions` now subdivides the pieces. `shape builder pick` picks the even-odd regions, the
+  faces joined by an edge; it picked mesh islands, so regions that touch at a point went together.
+  `contour outer boundary` returns the outline of the shapes as closed curves, without their holes,
+  moved `offset` outwards in the plane; it returned their faces, raised by `offset`.
 
 ### Site
 

@@ -38,12 +38,20 @@ geometry graph "fillet polygon"(
     segments: Int = 4 in 1..64
 ) -> Geometry {
   "Rounds sharp corners of a 2D polygonal curve with constant or attribute-driven fillet radius"
-  return FilletCurve(polygon, radius: radius, count: segments)
+  // Each corner becomes an arc of segments straight segments, a poly curve's as a Bézier curve's
+  return FilletCurve(polygon, radius: radius, mode: "Poly", count: segments)
 }
 
 geometry graph "chamfer polygon"(polygon: Geometry, distance: Float = 0.1 in 0.0..) -> Geometry {
   "Cuts sharp corners of a 2D polygon with straight chamfers"
-  return FilletCurve(polygon, radius: distance, count: 1)
+  // A cut from distance before each corner to distance after it: the fillet of one segment whose
+  // radius puts its ends there, distance × tan(angle / 2) at a corner of that angle
+  p = Position()
+  prev = EvaluateAtIndex[FLOAT_VECTOR](value: p, index: OffsetPointInCurve(offset: -1).point_index)
+  next = EvaluateAtIndex[FLOAT_VECTOR](value: p, index: OffsetPointInCurve(offset: 1).point_index)
+  cos_angle = Clamp(value: normalize(prev - p) ⋅ normalize(next - p), min: -1.0, max: 1.0)
+  half_angle = Clamp(value: acos(cos_angle) * 0.5, min: 0.0, max: 1.570796)
+  return FilletCurve(polygon, radius: distance * tan(half_angle), mode: "Poly", count: 1)
 }
 
 geometry graph "fillet bezier handles"(
@@ -51,6 +59,13 @@ geometry graph "fillet bezier handles"(
     radius: Float = 0.1 in 0.0..,
     threshold_angle: Float = 0.5 in 0.0..3.14159
 ) -> Geometry {
-  "Smooths sharp kink angles along a 2D curve by introducing parametric rounding arcs"
-  return FilletCurve(curve, radius: radius, count: 4)
+  "Smooths the kinks of a 2D curve sharper than threshold_angle with Bézier rounding arcs; a poly curve, which has no handles, is cut straight there"
+  // A kink is a point where the curve turns by more than threshold_angle: it becomes two points
+  // whose Bézier handles draw the arc; a point where the curve turns less is left as it is
+  p = Position()
+  prev = EvaluateAtIndex[FLOAT_VECTOR](value: p, index: OffsetPointInCurve(offset: -1).point_index)
+  next = EvaluateAtIndex[FLOAT_VECTOR](value: p, index: OffsetPointInCurve(offset: 1).point_index)
+  cos_turn = Clamp(value: normalize(p - prev) ⋅ normalize(next - p), min: -1.0, max: 1.0)
+  kink = acos(cos_turn) > threshold_angle
+  return FilletCurve(curve, radius: kink ? radius : 0.0, mode: "Bézier")
 }
