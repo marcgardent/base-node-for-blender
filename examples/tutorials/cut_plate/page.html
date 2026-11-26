@@ -53,7 +53,7 @@
     {{code step1_outline.bn cut_plate outline layer}}
     <ul>
       <li><strong>The outline.</strong> <code>CurveCircle</code> with a <code>resolution</code> of 6 is a hexagon: six points on a circle of radius 1, the first on the x axis. <code>TransformGeometry</code> stretches it: the tips go to x = ±2.2, half the <code>length</code>. The four other points are at 60°, where y is sin 60° = 0.866 = 1.732 / 2, so dividing <code>width</code> by 1.732 puts the long edges at y = ±0.65, half the <code>width</code>.</li>
-      <li><strong>Its face.</strong> <code>planar_faces</code> of <code>planar2d</code> fills closed lines with <code>FillCurve</code>. One closed line, one face: here a hexagon cut into triangles. Its description speaks of welding the ends of separate lines into loops first, with <code>MergeByDistance</code>; that node leaves the points of curves as they are, so three lines meeting end to end make no triangle. Give it lines that are closed already, as every shape of this plate is.</li>
+      <li><strong>Its face.</strong> <code>planar_faces</code> of <code>planar2d</code> fills closed lines with <code>FillCurve</code>. One closed line, one face: here a hexagon cut into triangles. It first welds lines that meet end to end, within its <code>tolerance</code>, so three separate lines meeting at their ends fill as a triangle. Every shape of this plate is a closed line already.</li>
       <li><strong>A thickness.</strong> <code>layer</code> lifts the face to <code>bottom</code>, then <code>ExtrudeMesh</code> pushes it up to <code>top</code>: the face becomes the top, and walls join it to where it was. Extruding leaves nothing underneath, so <code>cut_plate</code> adds the face again, turned over by <code>FlipFaces</code> so that it faces down: the underside.</li>
     </ul>
     <p>
@@ -71,17 +71,16 @@
     {{code step2_corners.bn rounded corner_radius cut_plate}}
     <ul>
       <li><strong>A radius per corner.</strong> The radius is a field: it is read at each point of the curve. <code>corner_radius</code> gives 0.3 to the two tips, the points on the x axis, and 0.1 to the four others. Large arcs make the ends soft, small ones keep the long edges straight.</li>
-      <li><strong>A Bézier curve first.</strong> <code>fillet_polygon</code> runs <code>FilletCurve</code> in its Bézier mode: each corner becomes two points whose handles draw the arc. The hexagon of <code>CurveCircle</code> is a poly curve, which has no handles, and the same call would cut each corner straight. <code>SetSplineType[BEZIER]</code> gives the outline handles first.</li>
-      <li><strong>Its points.</strong> An arc is drawn with the curve's resolution, 12 segments. <code>fillet_polygon</code> also has a <code>segments</code> input, but in the Bézier mode it changes nothing: to draw finer arcs, raise the resolution with <code>SetSplineResolution</code>.</li>
+      <li><strong>Its points.</strong> <code>fillet_polygon</code> draws each arc as <code>segments</code> straight segments, here 12: the outline stays a poly curve, its corners replaced by points along the arcs. Fewer segments show facets on the round tips; more make the arcs smoother and the mesh heavier.</li>
     </ul>
     <p>
-      The tips are corners of 61.2°. The centre of an arc of radius 0.3 tangent to both sides is 0.59 in from the tip, at x = 1.61, so the rounded tip now ends at x = 1.91 instead of 2.2. <code>planar_faces</code> fills the Bézier curve as it filled the poly one: it reads its evaluated points.
+      The tips are corners of 61.2°. The centre of an arc of radius 0.3 tangent to both sides is 0.59 in from the tip, at x = 1.61, so the rounded tip now ends at x = 1.91 instead of 2.2.
     </p>
     <figure>
       <img src="../images/tutorials/cut-plate-step2.png" width="1000" height="500" loading="lazy" alt="The same grey plate, its pointed ends now rounded and its four other corners slightly rounded">
       <figcaption>Step 2. Round tips of radius 0.3, small corners of 0.1.</figcaption>
     </figure>
-    <p class="try"><strong>Try:</strong> take <code>SetSplineType[BEZIER]()</code> out of <code>rounded</code>: every corner is cut straight, the poly curve's fillet. Step 5 uses exactly that.</p>
+    <p class="try"><strong>Try:</strong> set <code>segments</code> to 1 in <code>rounded</code>: every corner is cut by one straight segment, a chamfer. Step 5 cuts its panel's corners with <code>chamfer_polygon</code>, made for that.</p>
 
     <h2 id="step-3"><span class="n">3.</span> Two screw holes, centred on the round tips</h2>
     <p>
@@ -121,7 +120,7 @@
       </figure>
     </div>
     <p>
-      <code>planar2d</code>'s <code>shape_builder_pick</code> makes the cut real. It fills the lines as <code>planar_faces</code> does, numbers the pieces that are not connected (<code>MeshIsland</code>), and keeps only the pieces where a seed point falls, or the nearest one within <code>pick_radius</code>. One seed at (0, 0.6), just inside the top edge at 0.65, keeps the plate; every piece that would fall out of a real stencil goes. <code>render.py</code> counts them: 5, two in the B and one in each of A, O and D.
+      <code>planar2d</code>'s <code>shape_builder_pick</code> makes the cut real. It fills the lines as <code>planar_faces</code> does, groups its faces into even-odd regions, faces joined by an edge, and keeps only the regions where a seed point falls, or the nearest one within <code>pick_radius</code>. One seed at (0, 0.6), just inside the top edge at 0.65, keeps the plate; every piece that would fall out of a real stencil goes. <code>render.py</code> counts them: 5, two in the B and one in each of A, O and D.
     </p>
     <p>
       This is why stencil letters have bridges, gaps that tie the counters to the plate. Here we take the other way out: stop cutting through.
@@ -133,7 +132,7 @@
     </p>
     {{code step5_engraved.bn panel cut_plate}}
     <p>
-      <code>panel</code> is a rectangle 2.6 by 0.62 with its corners cut, by <code>chamfer_polygon</code> on the poly curve of <code>Quadrilateral</code>: there, the fillet cuts straight, as step 2's <em>Try</em> showed, and a cut corner is what is wanted. Its <code>distance</code> is the radius of the fillet under it: on these right angles each cut starts 0.1 from the corner; on a sharper corner it would start further, at <code>distance / tan(angle / 2)</code>.
+      <code>panel</code> is a rectangle 2.6 by 0.62 with its corners cut, by <code>chamfer_polygon</code> on the curve of <code>Quadrilateral</code>. Its <code>distance</code> is how far from the corner the cut starts, along each side: 0.1 here, whatever the corner's angle.
     </p>
     <table>
       <tr><th>Where</th><th>Lines around it</th><th>Count</th><th>On the plate</th></tr>

@@ -31,10 +31,9 @@ geometry graph rounded(
     tip: Float = 0.3 in 0.0..,
     side: Float = 0.1 in 0.0..
 ) -> Geometry {
-  "The polygon, its corners rounded into arcs: a Bézier curve, which the fillet gives handles"
+  "The polygon, its corners rounded into arcs of 12 segments"
   return polygon
-    |> SetSplineType[BEZIER]()
-    |> fillet_polygon(radius: corner_radius(tip: tip, side: side))
+    |> fillet_polygon(radius: corner_radius(tip: tip, side: side), segments: 12)
 }
 
 geometry graph corner_centres(polygon: Geometry, radius: Float = 0.3 in 0.0..) -> Geometry {
