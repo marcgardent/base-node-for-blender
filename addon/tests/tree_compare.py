@@ -1050,14 +1050,43 @@ class Comparator:
 def implicit(node, socket):
     """Whether an input is fed, when unlinked, by an implicit field: of the group's interface
     (`Normal: Vector = Normal()`), or of the node itself (ExtrudeMesh's offset, the normal), which
-    Blender infers the unlinked socket a field of: its own value is then not read."""
+    Blender infers the unlinked socket a field of: its own value is then not read. In a shader or a
+    compositor tree, a node's input is so when the same node infers it a field in a geometry tree (a
+    texture's vector); a shader node a geometry tree does not have, when it hides its value (a
+    BSDF's normal, an Image Texture's vector)."""
     tree = getattr(node, "node_tree", None)
+    tree_type = node.id_data.bl_idname
     if tree is None:
-        return node.id_data.bl_idname == "GeometryNodeTree" and socket.hide_value \
-            and getattr(socket, "inferred_structure_type", None) == "FIELD"
+        if not socket.hide_value:
+            return False
+        if tree_type == "GeometryNodeTree":
+            return getattr(socket, "inferred_structure_type", None) == "FIELD"
+        field = geometry_field(node.bl_idname, socket.identifier)
+        return tree_type == "ShaderNodeTree" if field is None else field
     item = next((i for i in tree.interface.items_tree if i.item_type == "SOCKET" and i.in_out == "INPUT"
                  and i.identifier == socket.identifier), None)
-    return item is not None and getattr(item, "default_input", "VALUE") != "VALUE"
+    return tree_type == "GeometryNodeTree" and item is not None \
+        and getattr(item, "default_input", "VALUE") != "VALUE"
+
+
+_geometry_fields = {}
+
+
+def geometry_field(bl_idname, identifier):
+    """Whether that input of a new node of that type in a geometry tree is a field while unlinked;
+    None when a geometry tree has no such node or input."""
+    k = (bl_idname, identifier)
+    if k not in _geometry_fields:
+        t = bpy.data.node_groups.new(".tree_compare field", "GeometryNodeTree")
+        try:
+            n = t.nodes.new(bl_idname)
+            s = next((s for s in n.inputs if s.identifier == identifier), None)
+            _geometry_fields[k] = None if s is None else getattr(s, "inferred_structure_type", None) == "FIELD"
+        except RuntimeError:
+            _geometry_fields[k] = None
+        finally:
+            bpy.data.node_groups.remove(t)
+    return _geometry_fields[k]
 
 
 def unavailable(socket):

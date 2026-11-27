@@ -20,6 +20,15 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
   the literal, in place. Tree → Text no longer writes the value such an input holds unlinked, which
   Blender does not read (`offset: (0.0, 0.0, 1.0)` on three groups of Tessera, whose baseline and
   corpus texts change so).
+- Fixed: so is a literal given to an input that a shader or a compositor tree takes from the context
+  while nothing is linked to it: `NoiseTexture(vector: (5.0, 3.0, 1.0))` is the noise at that point,
+  no longer at the texture coordinates (in a material) or the image's (in the compositor), and so
+  are the vector of the other textures and a BSDF's `normal` or `tangent`. Such an input is told by
+  the structure the same node infers for it in a geometry tree, a field (a texture's vector, not a
+  Vector Rotate's); a node a geometry tree does not have takes from the context every input whose
+  value it hides in a shader tree (a BSDF's normal, an Image Texture's vector), none in a compositor
+  tree, which reads the color of an unlinked image. The literal feeds it from an input node of its
+  own, which Tree → Text reads back as the literal, in place.
 - Fixed: a graph named like a graph of a module that a used module uses no longer replaces it, nor
   crashes the build (`'Geometry' is not in list`): with `use planar2d`, which uses `math`, a graph
   `square` of the text is the text's own, and math's `square` is built into the group

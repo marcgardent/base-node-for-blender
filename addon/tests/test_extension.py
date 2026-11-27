@@ -1431,6 +1431,101 @@ geometry graph moved_up() -> Geometry {
     print("   ✓ a literal into an implicit field is the value used, and reads back in place")
 
 
+def test_literal_into_an_implicit_input_of_a_shader_or_compositor():
+    """A literal given to an input a shader or a compositor tree takes from the context while nothing
+    is linked to it (a texture's vector: the texture coordinates, or the image's; a BSDF's normal: the
+    shading normal) is the value used: it comes from a node of its own, as in a geometry tree, and
+    reads back in place. An input whose hidden value Blender reads (a Gamma's color, a compositor
+    Blur's image, a Vector Rotate's vector) keeps the literal as its value."""
+    print("-> Test: a literal into an implicit input of a shader or a compositor tree...")
+    import numpy as np
+    from base_node.host import build_source, export_tree
+    from base_node.host.builder import LITERAL
+
+    shader = """shader graph still_noise() -> Shader {
+  return Emission(color: NoiseTexture(vector: (5.0, 3.0, 1.0)).color)
+}
+
+shader graph tilted() -> Shader {
+  return DiffuseBSDF(color: Gamma(color: (1.0, 0.5, 0.0, 1.0)), normal: (0.0, 1.0, 0.0))
+}
+"""
+    compositor = """compositor graph still_texture() -> Color {
+  return NoiseTexture(vector: (5.0, 3.0, 1.0)).color
+}
+
+compositor graph blurred() -> Color {
+  return Blur(image: (1.0, 0.0, 0.0, 1.0)).image
+}
+
+compositor graph rotated() -> Vector {
+  return VectorRotate(vector: (1.0, 0.0, 0.0)).vector
+}
+
+compositor graph passed(image: Color) -> Color {
+  return image
+}
+"""
+
+    def fed(tree, bl_idname, ident):
+        """The input node that feeds that input of the one node of that type, else None."""
+        (node,) = [n for n in tree.nodes if n.bl_idname == bl_idname]
+        links = node.inputs[ident].links
+        return links[0].from_node if links else None
+
+    before = set(bpy.data.node_groups)
+    materials = set(bpy.data.materials)
+    effects = scene_compositors(bpy.context.scene)
+    bench = CompositorBench("implicit", 8, 8)
+    try:
+        trees = {t.name: t for source in (shader, compositor) for t in build_source(source, "implicit.bn")}
+        for name, tree in trees.items():
+            text, warnings = export_tree(tree)
+            assert not warnings, (name, warnings)
+            (rebuilt,) = [t for t in build_source(text, "implicit.bn") if t.name == name]
+            again, _ = export_tree(rebuilt)
+            assert again == text, f"{name} does not read back the same:\n{text}\n{again}"
+        assert export_tree(trees["still_noise"])[0] in shader and export_tree(trees["tilted"])[0] in shader, \
+            export_tree(trees["tilted"])[0]
+        assert export_tree(trees["still_texture"])[0] in compositor, export_tree(trees["still_texture"])[0]
+        # Each literal into an implicit input from a node of its own, the others in place
+        for tree, bl_idname, ident in ((trees["still_noise"], "ShaderNodeTexNoise", "Vector"),
+                                       (trees["tilted"], "ShaderNodeBsdfDiffuse", "Normal"),
+                                       (trees["still_texture"], "ShaderNodeTexNoise", "Vector")):
+            literal = fed(tree, bl_idname, ident)
+            assert literal is not None and literal.get(LITERAL), f"{tree.name}: {bl_idname}'s {ident} is not fed"
+        for tree, bl_idname, ident in ((trees["tilted"], "ShaderNodeGamma", "Color"),
+                                       (trees["blurred"], "CompositorNodeBlur", "Image"),
+                                       (trees["rotated"], "ShaderNodeVectorRotate", "Vector")):
+            assert fed(tree, bl_idname, ident) is None, f"{tree.name}: {bl_idname}'s {ident}, read, is fed"
+        # The value of an unlinked implicit input, which Blender ignores, is not written
+        tree = trees["still_noise"]
+        tree.nodes.remove(fed(tree, "ShaderNodeTexNoise", "Vector"))
+        text = export_tree(tree)[0]
+        assert "vector:" not in text, f"the value Blender ignores is written:\n{text}"
+        build_source(shader, "implicit.bn")
+
+        # Rendered: the noise at one point is one color over the whole image
+        image = bench.render("still_texture", {})
+        assert np.ptp(image[..., :3], axis=(0, 1)).max() < 1e-5, "the compositor's noise is not at (5, 3, 1)"
+        plane = bpy.data.objects.new(".base_node implicit", bpy.data.meshes.new(".base_node implicit"))
+        plane.data.from_pydata([(-2, -2, -2), (2, -2, -2), (2, 2, -2), (-2, 2, -2)], [], [(0, 1, 2, 3)])
+        plane.data.materials.append(bpy.data.materials["still_noise"])
+        bench.scene.collection.objects.link(plane)
+        bench.objects.append(plane)
+        bench.camera.data.type, bench.camera.data.ortho_scale = "ORTHO", 1.0
+        bench.scene.cycles.use_denoising = False  # which blurs a sample a pixel into blotches
+        image = bench.render("passed", {"image": "Image"})
+        assert image[..., 3].min() > 0.99, "the plane does not fill the render"
+        assert np.ptp(image[..., :3], axis=(0, 1)).max() < 1e-4, "the material's noise is not at (5, 3, 1)"
+    finally:
+        bench.close()
+        remove_scene_compositors(bpy.context.scene, keep=effects)
+        bpy.data.batch_remove([m for m in bpy.data.materials if m not in materials])
+        bpy.data.batch_remove([g for g in bpy.data.node_groups if g not in before])
+    print("   ✓ a literal into an implicit input of a shader or compositor tree is the value used, read back in place")
+
+
 def test_a_graph_named_like_one_a_module_uses():
     """A text's graph named like a graph of a module that a module it uses uses (planar2d uses math,
     which has `square`) is its own group: math's square is another one, which the text does not see."""
@@ -4640,6 +4735,7 @@ def main():
         test_planar2d_shape_builder_pick,
         test_fillet2d,
         test_literal_into_an_implicit_field,
+        test_literal_into_an_implicit_input_of_a_shader_or_compositor,
         test_a_graph_named_like_one_a_module_uses,
         test_a_module_graph_called_by_its_quoted_name,
         test_planar2d,

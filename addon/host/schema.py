@@ -154,19 +154,51 @@ def socket_info(sock):
 
 
 def implicit_field(node, sock):
-    """Whether an input of a geometry tree's node takes a field from the context while nothing is
-    linked to it (ExtrudeMesh's offset, the normal; SetPosition's position; a group's
-    `p: Vector = Position()`): Blender then ignores its value, which it hides. Python is told so by
-    the structure Blender infers for the unlinked socket, a field, where the input of a value it
-    hides but reads (a Selection) is a single value."""
-    if node.id_data.bl_idname != "GeometryNodeTree" or sock.is_output or not sock.hide_value:
+    """Whether an input takes its value from the context while nothing is linked to it: a field in a
+    geometry tree (ExtrudeMesh's offset, the normal; SetPosition's position; a group's
+    `p: Vector = Position()`), the texture coordinates of a texture's vector or the shading normal of
+    a BSDF in a shader tree, the image coordinates of a texture's vector in a compositor tree.
+    Blender then ignores its value, which it hides. Python is told so in a geometry tree by the
+    structure Blender infers for the unlinked socket, a field, where the input of a value it hides
+    but reads (a Selection) is a single value; in another tree, by the structure the same node
+    infers in a geometry tree (_geometry_field); a node a geometry tree does not have takes from the
+    context every input whose value it hides in a shader tree (a BSDF's normal, an Image Texture's
+    vector), none in a compositor tree (it reads the color of an unlinked image)."""
+    tree_type = node.id_data.bl_idname
+    if sock.is_output or not sock.hide_value or tree_type not in TREE_TYPES.values():
         return False
     tree = getattr(node, "node_tree", None)
     if tree is not None:
+        # A shader or compositor group reads the value of its inputs
         item = next((i for i in tree.interface.items_tree if i.item_type == "SOCKET" and i.in_out == "INPUT"
                      and i.identifier == sock.identifier), None)
-        return item is not None and getattr(item, "default_input", "VALUE") != "VALUE"
-    return getattr(sock, "inferred_structure_type", None) == "FIELD"
+        return tree_type == "GeometryNodeTree" and item is not None \
+            and getattr(item, "default_input", "VALUE") != "VALUE"
+    if tree_type == "GeometryNodeTree":
+        return getattr(sock, "inferred_structure_type", None) == "FIELD"
+    field = _geometry_field(node.bl_idname, sock.identifier)
+    return tree_type == "ShaderNodeTree" if field is None else field
+
+
+_geometry_fields = {}
+
+
+def _geometry_field(bl_idname, identifier):
+    """Whether the input `identifier` of a new `bl_idname` node in a geometry tree is a field while
+    unlinked; None when a geometry tree has no such node or input."""
+    k = (bl_idname, identifier)
+    if k not in _geometry_fields:
+        tree = bpy.data.node_groups.new(".base_node_fresh", "GeometryNodeTree")
+        try:
+            node = tree.nodes.new(bl_idname)
+        except RuntimeError:
+            node = None  # not in a geometry tree
+        try:
+            sock = next((s for s in node.inputs if s.identifier == identifier), None) if node else None
+            _geometry_fields[k] = None if sock is None else getattr(sock, "inferred_structure_type", None) == "FIELD"
+        finally:
+            bpy.data.node_groups.remove(tree)
+    return _geometry_fields[k]
 
 
 def available(sockets):
