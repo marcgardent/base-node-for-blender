@@ -408,6 +408,7 @@ class Builder:
         nodes = {}
         self.made[g.name] = (nodes, frames)
         menu_values = []  # (n, node, item) of the Menu nodes, set once linked
+        uncounted = []  # (node, prop, datablock) Blender set without a user (add_users)
         for n in g.nodes:
             idname = n.bl_idname
             if material and n.id == ir.GROUP_INPUT:
@@ -444,12 +445,16 @@ class Builder:
                     value = found
                 if isinstance(value, tuple) and getattr(node.bl_rna.properties.get(prop), "is_enum_flag", False):
                     value = set(value)  # a set of enum values
+                users = value.users if isinstance(value, bpy.types.ID) else None
                 try:
                     setattr(node, prop, value)
                 except (TypeError, ValueError, AttributeError) as e:
                     self.fail(n, f"{prop}: {e}")
+                if users is not None and value.users == users:
+                    uncounted.append((node, prop, value))
             for prop, value in n.data.items():
                 self.data(n, getattr(node, prop), value)
+        add_users(uncounted)
 
         # Zones: pair each input with its output, then give the output its items (the input follows)
         for n in g.nodes:
@@ -716,6 +721,39 @@ def set_changed(item, prop, value):
         same = type(current) is type(value) and current == value
     if not same:
         setattr(item, prop, value)
+
+
+def add_users(refs):
+    """Give each datablock of `refs` ((node, prop, datablock)) the user its node holds and Blender
+    did not count.
+
+    The Object and Collection nodes set their datablock without a user, yet removing the node takes
+    one: a scene's object would fall to no user, an orphan, Blender saying "ID user decrement error".
+    Python cannot add a user, but a copy of a tree counts those of its nodes: a scratch tree holding
+    the same datablocks, copied, then both emptied (emptying such a node takes no user) and removed,
+    leaves each datablock one user more.
+    """
+    if not refs:
+        return
+    by_kind = {}
+    for node, prop, value in refs:
+        by_kind.setdefault(node.id_data.bl_idname, []).append((node.bl_idname, prop, value))
+    scratch = []
+    try:
+        for kind, held in by_kind.items():
+            tree = bpy.data.node_groups.new(".base_node_users", kind)
+            scratch.append(tree)
+            props = []
+            for idname, prop, value in held:
+                setattr(tree.nodes.new(idname), prop, value)
+                props.append(prop)
+            copy = tree.copy()
+            scratch.append(copy)
+            for t in (tree, copy):
+                for node, prop in zip(t.nodes, props):
+                    setattr(node, prop, None)
+    finally:
+        bpy.data.batch_remove(scratch)
 
 
 def fill_items(items, wanted):
