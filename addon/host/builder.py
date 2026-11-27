@@ -20,7 +20,8 @@ from ..blender.typecheck import REPEAT_ITEMS
 from . import comments, modules, outputs
 from .arrange import arrange_nodes
 from .schema import (ALIASES, BUILTIN_FONT, BUILTIN_PATH, DEPRECATION, PANEL_OPTIONS, TREE_FLAGS, TREE_TYPES,
-                     BlenderSchema, builtin_font, fresh_item, fresh_options, datablocks, id_type, item_option_names,
+                     BlenderSchema, builtin_font, fresh_item, fresh_options, datablocks, id_type, implicit_field,
+                     item_option_names,
                      new_item, root_panel, same_option, socket_keys, socket_types, text_name, ui_name)
 
 DATABLOCKS = {"OBJECT": "objects", "COLLECTION": "collections", "MATERIAL": "materials",
@@ -39,6 +40,17 @@ LATE_OPTIONS = {"auto_remove"}
 
 # Source line of each node, for the text and node editors to follow each other
 LINE = "base_node_line"
+
+# Marks the input node made for a literal given to an input an implicit field feeds: Tree → Text
+# writes it back as the literal, in place
+LITERAL = "base_node_literal"
+# The input nodes that hold a literal of a socket's type, tried in order: (bl_idname, the property
+# holding the value, or None when the node's output holds it)
+LITERAL_NODES = {"VALUE": (("ShaderNodeValue", None),), "INT": (("FunctionNodeInputInt", "integer"),),
+                 "BOOLEAN": (("FunctionNodeInputBool", "boolean"),),
+                 "VECTOR": (("FunctionNodeInputVector", "vector"),),
+                 "RGBA": (("FunctionNodeInputColor", "value"), ("ShaderNodeRGB", None), ("CompositorNodeRGB", None)),
+                 "STRING": (("FunctionNodeInputString", "string"),)}
 
 # Set rather than left to Blender, which translates new names when asked to
 FIXED_NAMES = {ir.GROUP_INPUT: "Group Input", ir.GROUP_OUTPUT: "Group Output"}
@@ -471,7 +483,9 @@ class Builder:
                     menus.append((n, ident, sock, value))
                     continue
                 try:
-                    sock.default_value = self.coerce(n, sock, value)
+                    value = self.coerce(n, sock, value)
+                    if not (implicit_field(node, sock) and self.literal_node(tree, n, node, sock, value)):
+                        sock.default_value = value
                 except (TypeError, ValueError) as e:
                     self.fail(n, f"{ident}: {e}")
             for ident, value in n.out_values.items():
@@ -653,6 +667,34 @@ class Builder:
         if sock is None:
             self.fail(n, f"socket '{ident}' not found in Blender")
         return sock
+
+    def literal_node(self, tree, n, node, sock, value):
+        """Feed a literal to an input an implicit field feeds (schema.implicit_field) from a node of
+        its own; False when no node holds it. Unlinked, such an input takes a field from the context
+        (ExtrudeMesh's offset is the normal, SetPosition's position the position, a group's
+        `p: Vector = Position()` too) and Blender ignores its value: the literal would be lost."""
+        if n.id in (ir.GROUP_INPUT, ir.GROUP_OUTPUT) or n.bl_idname in ZONE_WORDS:
+            return False
+        for idname, prop in LITERAL_NODES.get(sock.type, ()):
+            try:
+                made = tree.nodes.new(idname)
+            except RuntimeError:
+                continue  # not in this kind of tree
+            try:
+                if prop is None:
+                    made.outputs[0].default_value = value
+                else:
+                    setattr(made, prop, value)
+            except (TypeError, ValueError):
+                tree.nodes.remove(made)
+                return False
+            made[LITERAL] = True
+            made[LINE] = n.line
+            made.parent = node.parent
+            made.location_absolute = (node.location_absolute.x - 200.0, node.location_absolute.y)
+            tree.links.new(made.outputs[0], sock)
+            return True
+        return False
 
     def coerce(self, n, sock, value):
         if sock.type in DATABLOCKS and isinstance(value, str):

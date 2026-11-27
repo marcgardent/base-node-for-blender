@@ -10,6 +10,25 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ## [Unreleased]
 
+### Blender add-on
+
+- Fixed: a literal given to an input whose default is a field taken from the context is the value
+  used: `ExtrudeMesh(offset: (0.0, 0.0, 0.1))` extrudes by 0.1 up, no longer by 1 along the normals,
+  and so do SetPosition's `position`, Random Value's `id` and a group's
+  `p: Vector = Position()`. Blender ignores the value of such an input, which it hides; the literal now
+  feeds it from an input node of its own (Value, Vector, Integer…), which Tree → Text reads back as
+  the literal, in place. Tree → Text no longer writes the value such an input holds unlinked, which
+  Blender does not read (`offset: (0.0, 0.0, 1.0)` on three groups of Tessera, whose baseline and
+  corpus texts change so).
+- Fixed: a graph named like a graph of a module that a used module uses no longer replaces it, nor
+  crashes the build (`'Geometry' is not in list`): with `use planar2d`, which uses `math`, a graph
+  `square` of the text is the text's own, and math's `square` is built into the group
+  `square (math)`. Two modules that each use a graph of the same name each call their own, and a
+  graph called by its module's name only (`base::sq` beside `use base (un)`) is built too.
+- Fixed: a module's graph is called by its name quoted after the module, as the language says:
+  `fillet2d::"fillet polygon"(…)` calls the graph `fillet polygon`, as `fillet2d::fillet_polygon(…)`
+  does; it was an unknown node.
+
 ### Standard library
 
 - Added: module `toon` (Blender 5.3, EEVEE), toon shading lit light by light with the lighting
@@ -33,6 +52,8 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ### Site
 
+- Fixed: the tutorial Cut plate extrudes its layers by a vector literal, `offset: (0.0, 0.0, 1.0)`
+  scaled by `top - bottom`, and no longer says that such a literal is not taken.
 - Added: the tutorial Toon lights (`examples/tutorials/toon_lights/`, `site/tutorials/toon-lights.html`),
   five steps from one band per light to the module `toon`, rendered by its `render.py` with EEVEE in
   Blender 5.3, which checks that step 5 renders step 4 to the pixel.

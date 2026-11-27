@@ -90,11 +90,7 @@ geometry graph "Tessera · Bed"(
     |> SetSplineCyclic(cyclic: true)
     |> FillCurve(mode: "N-gons")
     |> MergeByDistance(distance: 1e-05)
-  extrude_mesh = ExtrudeMesh(
-    merge_by_distance,
-    offset: (0.0, 0.0, 1.0),
-    offset_scale: math_3,
-    individual: false)
+  extrude_mesh = ExtrudeMesh(merge_by_distance, offset_scale: math_3, individual: false)
   set_position = SetPosition(Holes, offset: (0.0, 0.0, -0.001))
   delete_geometry = Surface
     |> SetPosition(offset: Normal().normal * math_3)
@@ -123,11 +119,7 @@ geometry graph "Tessera · Bed"(
           |> MeshBoolean[DIFFERENCE, EXACT](
             MergeByDistance(
               FlipFaces(set_position)
-                + ExtrudeMesh(
-                  set_position,
-                  offset: (0.0, 0.0, 1.0),
-                  offset_scale: math_3 + 0.002,
-                  individual: false).mesh,
+                + ExtrudeMesh(set_position, offset_scale: math_3 + 0.002, individual: false).mesh,
               distance: 1e-07)).mesh)
       : extrude_mesh.mesh,
     delete_geometry,
@@ -1054,11 +1046,7 @@ geometry graph "Tessera · Solidify"(
             * FaceNeighbors().vertex_count,
           1e-09)
       < (math + Bevel + chip_rim) * 1.15 + 1e-05)
-  extrude_mesh = ExtrudeMesh(
-    delete_geometry,
-    offset: (0.0, 0.0, 1.0),
-    offset_scale: 0.0,
-    individual: false)
+  extrude_mesh = ExtrudeMesh(delete_geometry, offset_scale: 0.0, individual: false)
   compare = EvaluateOnDomain(
       value: EvaluateOnDomain[FACE](
         value: NamedAttribute[BOOLEAN](name: "ts_strap").attribute ? 1.0 : 0.0))
@@ -1238,11 +1226,7 @@ geometry graph "Tessera · Solidify"(
                 |> MeshBoolean[DIFFERENCE, EXACT](
                   MergeByDistance(
                     FlipFaces(set_position_2)
-                      + ExtrudeMesh(
-                        set_position_2,
-                        offset: (0.0, 0.0, 1.0),
-                        offset_scale: 0.008,
-                        individual: false).mesh,
+                      + ExtrudeMesh(set_position_2, offset_scale: 0.008, individual: false).mesh,
                     distance: 1e-07)).mesh,
               set_position,
               hole_tolerant: true).mesh
@@ -1403,11 +1387,7 @@ geometry graph "Tessera · Solidify"(
   named_attribute_4 = NamedAttribute[FLOAT_VECTOR](name: "ts_qc")
   set_position_4 = SetPosition(set_position_3, offset: (0.0, 0.0, -0.004))
   remove_named_attribute = FlipFaces(set_position_4)
-      + ExtrudeMesh(
-        set_position_4,
-        offset: (0.0, 0.0, 1.0),
-        offset_scale: 0.008,
-        individual: false).mesh
+      + ExtrudeMesh(set_position_4, offset_scale: 0.008, individual: false).mesh
     |> MergeByDistance(distance: 1e-07)
     |> RemoveNamedAttribute(name: "ts_qc")
     |> RemoveNamedAttribute(name: "ts_qr")
@@ -1417,11 +1397,7 @@ geometry graph "Tessera · Solidify"(
       position: named_attribute_4.attribute + (Position() - named_attribute_4.attribute) * 0.55)
     |> SetPosition(offset: (0.0, 0.0, -0.004))
   remove_named_attribute_2 = FlipFaces(set_position_5)
-      + ExtrudeMesh(
-        set_position_5,
-        offset: (0.0, 0.0, 1.0),
-        offset_scale: 0.008,
-        individual: false).mesh
+      + ExtrudeMesh(set_position_5, offset_scale: 0.008, individual: false).mesh
     |> MergeByDistance(distance: 1e-07)
     |> RemoveNamedAttribute(name: "ts_qc")
     |> RemoveNamedAttribute(name: "ts_qr")
@@ -1460,7 +1436,6 @@ geometry graph "Tessera · Solidify"(
           + separate_geometry_2.inverted,
         offset: CombineXYZ(z: NamedAttribute(name: "ts_zmid").attribute))
       : switch,
-    offset: (0.0, 0.0, 1.0),
     offset_scale: NamedAttribute[BOOLEAN](name: "ts_strap").attribute
       ? max(Thickness + strap_height, 1e-05)
       : max(
@@ -1484,7 +1459,6 @@ geometry graph "Tessera · Solidify"(
     extrude_mesh_3 = ExtrudeMesh(
       Geometry,
       selection: NamedAttribute[BOOLEAN](name: "ts_top").attribute,
-      offset: (0.0, 0.0, 1.0),
       offset_scale: switch_3 * (sin(math_25) - sin(math_24)),
       individual: false)
     return extrude_mesh_3.mesh
@@ -1507,7 +1481,6 @@ geometry graph "Tessera · Solidify"(
     |> StoreNamedAttribute(name: "ts_ed")
     |> ExtrudeMesh(
       selection: NamedAttribute[BOOLEAN](name: "ts_top").attribute,
-      offset: (0.0, 0.0, 1.0),
       offset_scale: 0.0,
       individual: false)
   switch_5 = compare_6
@@ -1532,7 +1505,6 @@ geometry graph "Tessera · Solidify"(
         : 0.0)
     |> ExtrudeMesh(
       selection: NamedAttribute[BOOLEAN](name: "ts_top").attribute,
-      offset: (0.0, 0.0, 1.0),
       offset_scale: 0.0,
       individual: false)
   switch_6 = math_26 - chip_rim > 1e-05
@@ -1600,7 +1572,6 @@ geometry graph "Tessera · Solidify"(
             |> RemoveNamedAttribute(name: "ts_qb1")
             |> SetPosition(offset: CombineXYZ(z: NamedAttribute(name: "ts_zlo").attribute))
             |> ExtrudeMesh(
-              offset: (0.0, 0.0, 1.0),
               offset_scale: NamedAttribute(name: "ts_zmid").attribute
                 - NamedAttribute(name: "ts_zlo").attribute).mesh
             |> StoreNamedAttribute[FACE](name: "ts_bevel", value: 1.0)
@@ -1615,9 +1586,7 @@ geometry graph "Tessera · Solidify"(
             |> RemoveNamedAttribute(name: "ts_frac2"))
           + (separate_geometry_2.selection
             |> DeleteGeometry[FACE](selection: NamedAttribute(name: "ts_zlo").attribute < 1e-06)
-            |> ExtrudeMesh(
-              offset: (0.0, 0.0, 1.0),
-              offset_scale: NamedAttribute(name: "ts_zlo").attribute).mesh
+            |> ExtrudeMesh(offset_scale: NamedAttribute(name: "ts_zlo").attribute).mesh
             |> StoreNamedAttribute[FACE](name: "ts_bevel", value: 1.0)
             |> StoreNamedAttribute[BOOLEAN, FACE](name: "ts_top")
             |> StoreNamedAttribute(name: "ts_ed", value: 1.0)

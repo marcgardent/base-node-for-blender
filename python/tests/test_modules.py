@@ -220,6 +220,66 @@ def test_a_use_brings_no_material(schema):
     assert errors(src, schema, loader({("maths", None): lib}))[0] == "'clay' is a material: a use brings node groups only"
 
 
+BASE = "geometry graph sq(x: Float) -> Float {\n  return x * x\n}\n"
+MID = "use base\n\ngeometry graph deux(x: Float) -> Float {\n  return sq(x) + 1.0\n}\n"
+
+
+def calls(g):
+    return [n.group for n in g.nodes if n.group]
+
+
+def test_a_graph_named_like_one_a_used_module_uses_is_its_own(schema):
+    """mid uses base, which has sq; the text uses mid alone and has a sq of its own: base's sq is not
+    one of its names, so both are built, as two groups, each called where it is meant."""
+    src = "use mid\n\ngeometry graph sq() -> Float {\n  return deux(2.0)\n}\n"
+    graphs = compile_source(src, schema, "t.bn", loader({("base", None): BASE, ("mid", None): MID}))
+    by_name = {g.name: g for g in graphs}
+    assert len(by_name) == len(graphs) == 3, [g.name for g in graphs]
+    own = by_name["sq"]
+    assert own.module is None and calls(own) == ["deux"]
+    (base_sq,) = [g for g in graphs if g.module == ("base", None)]
+    assert base_sq.name != "sq" and base_sq.called_as == "sq"
+    assert calls(by_name["deux"]) == [base_sq.name]
+
+
+def test_a_text_s_graph_and_a_namespaced_one_of_one_name(schema):
+    """`use base (…)` does not bring sq, but `base::sq` still calls it: the text's sq is another group."""
+    other = BASE + "\ngeometry graph un() -> Float {\n  return 1.0\n}\n"
+    src = ("use base (un)\n\ngeometry graph sq() -> Float {\n  return base::sq(3.0)\n}\n\n"
+           "geometry graph g() -> Float {\n  return sq() + un()\n}\n")
+    graphs = compile_source(src, schema, "t.bn", loader({("base", None): other}))
+    by_name = {g.name: g for g in graphs}
+    assert len(by_name) == len(graphs) == 4, [g.name for g in graphs]
+    (base_sq,) = [g for g in graphs if g.module and g.called_as == "sq"]
+    assert calls(by_name["sq"]) == [base_sq.name] and calls(by_name["g"]) == ["sq", "un"]
+
+
+def test_two_modules_with_a_graph_of_one_name(schema):
+    """Two modules that each use one with a graph of the same name (helper): each calls its own."""
+    a = "geometry graph helper() -> Float {\n  return 1.0\n}\n"
+    b = "geometry graph helper() -> Float {\n  return 2.0\n}\n"
+    ua = "use a\n\ngeometry graph fa() -> Float {\n  return helper()\n}\n"
+    ub = "use b\n\ngeometry graph fb() -> Float {\n  return helper()\n}\n"
+    src = "use ua\nuse ub\n\ngeometry graph g() -> Float {\n  return fa() + fb()\n}\n"
+    load = loader({("a", None): a, ("b", None): b, ("ua", None): ua, ("ub", None): ub})
+    graphs = compile_source(src, schema, "t.bn", load)
+    by_name = {g.name: g for g in graphs}
+    assert len(by_name) == len(graphs) == 5, [g.name for g in graphs]
+    (ha,) = calls(by_name["fa"])
+    (hb,) = calls(by_name["fb"])
+    assert ha != hb and by_name[ha].module[0] == "a" and by_name[hb].module[0] == "b"
+
+
+def test_a_module_graph_is_called_by_its_quoted_name_or_its_key(schema):
+    """`m::"Big Double"(…)`, the graph's name quoted after the module as the spec writes it
+    (`c2::"parallel contour 2d"`), and `m::big_double(…)`, its key, call the same graph."""
+    lib = 'geometry graph "Big Double"(x: Float) -> Float {\n  return x * 2.0\n}\n'
+    src = ('use maths as m\n\ngeometry graph g(v: Float) -> Float {\n'
+           '  return m::"Big Double"(v) + m::big_double(v) + maths::"Big Double"(v)\n}\n')
+    graphs = compile_source(src, schema, "t.bn", loader({("maths", None): lib}))
+    assert calls(graphs[-1]) == ["Big Double"] * 3
+
+
 def test_no_example_takes_the_name_of_a_module():
     """`use name` finds the text name.bn of the .blend, then name.bn next to the imported file, before
     the stdlib: an example named like a module would stand for it, in its folder and once opened in

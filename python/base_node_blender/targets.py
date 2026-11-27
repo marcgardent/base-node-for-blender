@@ -647,7 +647,8 @@ def _callees(graph, file, find=_module):
         for g in m.graphs:
             k = key(g.name)
             names = u.names if u.names is not None else [k]
-            if (k in names and k in called) or f"{prefix}::{k}" in called:
+            # After the module, a graph by its key or by its name: `c2::"parallel contour 2d"`
+            if (k in names and k in called) or {f"{prefix}::{k}", f"{prefix}::{g.name}"} & called:
                 yield g, m
 
 
@@ -1364,7 +1365,7 @@ def _graphs_of(file, find=_module):
         prefix = u.alias or u.name
         for g in m.graphs:
             k = key(g.name)
-            found[f"{prefix}::{k}"] = (g, m)
+            found[f"{prefix}::{k}"] = found[f"{prefix}::{g.name}"] = (g, m)
             if u.names is None or k in u.names:
                 found.setdefault(k, (g, m))
     return found
@@ -1599,7 +1600,7 @@ def _bridge(target, name):
     """(graph, its module) of the bridge `module::graph` of `target`; None when the target has no such graph."""
     module, _, k = name.partition("::")
     m = _bridges(target).get(module)
-    g = next((g for g in m.graphs if key(g.name) == k), None) if m is not None else None
+    g = next((g for g in m.graphs if k in (key(g.name), g.name)), None) if m is not None else None
     return (g, m) if g is not None else None
 
 

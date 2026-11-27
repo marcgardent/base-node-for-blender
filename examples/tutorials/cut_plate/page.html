@@ -54,11 +54,8 @@
     <ul>
       <li><strong>The outline.</strong> <code>CurveCircle</code> with a <code>resolution</code> of 6 is a hexagon: six points on a circle of radius 1, the first on the x axis. <code>TransformGeometry</code> stretches it: the tips go to x = ±2.2, half the <code>length</code>. The four other points are at 60°, where y is sin 60° = 0.866 = 1.732 / 2, so dividing <code>width</code> by 1.732 puts the long edges at y = ±0.65, half the <code>width</code>.</li>
       <li><strong>Its face.</strong> <code>planar_faces</code> of <code>planar2d</code> fills closed lines with <code>FillCurve</code>. One closed line, one face: here a hexagon cut into triangles. It first welds lines that meet end to end, within its <code>tolerance</code>, so three separate lines meeting at their ends fill as a triangle. Every shape of this plate is a closed line already.</li>
-      <li><strong>A thickness.</strong> <code>layer</code> lifts the face to <code>bottom</code>, then <code>ExtrudeMesh</code> pushes it up to <code>top</code>: the face becomes the top, and walls join it to where it was. Extruding leaves nothing underneath, so <code>cut_plate</code> adds the face again, turned over by <code>FlipFaces</code> so that it faces down: the underside.</li>
+      <li><strong>A thickness.</strong> <code>layer</code> lifts the face to <code>bottom</code>, then <code>ExtrudeMesh</code> pushes it up to <code>top</code>: its <code>offset</code> is the direction, straight up, <code>(0.0, 0.0, 1.0)</code>, and its <code>offset_scale</code> the distance, <code>top - bottom</code>; without an offset, each face would go along its normal. The face becomes the top, and walls join it to where it was. Extruding leaves nothing underneath, so <code>cut_plate</code> adds the face again, turned over by <code>FlipFaces</code> so that it faces down: the underside.</li>
     </ul>
-    <p>
-      The extrusion's offset is written <code>CombineXYZ(z: …)</code>, not as a vector literal: with this version of the add-on, a literal given to <code>ExtrudeMesh</code>'s <code>offset</code> is not taken, and the faces go up by 1 along their normals instead.
-    </p>
     <figure>
       <img src="../images/tutorials/cut-plate-step1.png" width="1000" height="500" loading="lazy" alt="A flat grey plate shaped as a long hexagon, pointed at both ends, on a dark table">
       <figcaption>Step 1. A hexagon 4.4 long and 1.3 wide, 0.08 thick.</figcaption>

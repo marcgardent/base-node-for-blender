@@ -1367,6 +1367,115 @@ geometry graph bh_hexagon() -> Geometry {
     print("   ✓ fillet2d: arcs of `segments`, chamfers of `distance`, kinks over threshold_angle only")
 
 
+def test_literal_into_an_implicit_field():
+    """A literal given to an input whose default is a field taken from the context (ExtrudeMesh's
+    offset, the normal; SetPosition's position; RandomValue's id, the index) is the value used: Blender
+    hides the value of such an input and ignores it, so the literal comes from a node of its own. Read
+    back, it is the literal again, in place."""
+    print("-> Test: a literal into an implicit field...")
+    import numpy as np
+    from base_node.host import build_source, export_tree
+
+    src = """geometry graph extruded() -> Geometry {
+  return Grid(size_x: 1.0, size_y: 1.0, vertices_x: 2, vertices_y: 2).mesh
+    |> ExtrudeMesh(offset: (0.0, 0.0, 0.1), individual: false).mesh
+}
+
+geometry graph placed() -> Geometry {
+  return Grid(size_x: 1.0, size_y: 1.0, vertices_x: 2, vertices_y: 2).mesh |> SetPosition(position: (0.0, 0.0, 0.5))
+}
+
+geometry graph one_seed() -> Geometry {
+  return Grid(size_x: 1.0, size_y: 1.0, vertices_x: 3, vertices_y: 3).mesh
+    |> SetPosition(offset: CombineXYZ(z: RandomValue[FLOAT](min: 0.0, max: 1.0, id: 3).value))
+}
+
+geometry graph moved(geometry: Geometry, to: Vector = Position()) -> Geometry {
+  return SetPosition(geometry, position: to)
+}
+
+geometry graph moved_up() -> Geometry {
+  return moved(Grid(size_x: 1.0, size_y: 1.0, vertices_x: 2, vertices_y: 2).mesh, to: (0.0, 0.0, 0.25))
+}
+"""
+    got = evaluate_graphs(src, "implicit_literal.bn")
+    z = sorted({round(float(v), 4) for v in got["extruded"][0][:, 2]})
+    assert z == [0.0, 0.1], f"ExtrudeMesh(offset: (0.0, 0.0, 0.1)) puts the faces at z = {z}, not 0 and 0.1"
+    z = {round(float(v), 4) for v in got["placed"][0][:, 2]}
+    assert z == {0.5}, f"SetPosition(position: (0.0, 0.0, 0.5)) puts the points at z = {z}, not 0.5"
+    z = {round(float(v), 4) for v in got["one_seed"][0][:, 2]}
+    assert len(z) == 1, f"RandomValue(id: 3) gives each point its own value: {sorted(z)}"
+    z = {round(float(v), 4) for v in got["moved_up"][0][:, 2]}
+    assert z == {0.25}, f"a group's `to: Vector = Position()` given (0.0, 0.0, 0.25) puts the points at z = {z}"
+
+    before = set(bpy.data.node_groups)
+    try:
+        trees = build_source(src, "implicit_literal.bn")
+        for tree in trees:
+            text, _ = export_tree(tree)
+            (rebuilt,) = [t for t in build_source(text, "implicit_literal.bn") if t.name == tree.name]
+            again, _ = export_tree(rebuilt)
+            assert again == text, f"{tree.name} does not read back the same:\n{text}\n{again}"
+        text = export_tree(trees[0])[0]
+        assert "offset: (0.0, 0.0, 0.1)" in text, f"the literal does not read back in place:\n{text}"
+        # The value an unlinked implicit input holds is not read, by Blender nor by the text
+        tree = trees[0]
+        (literal,) = [n for n in tree.nodes if n.bl_idname == "FunctionNodeInputVector"]
+        (extrude,) = [n for n in tree.nodes if n.bl_idname == "GeometryNodeExtrudeMesh"]
+        tree.nodes.remove(literal)
+        extrude.inputs["Offset"].default_value = (0.0, 0.0, 0.7)
+        text = export_tree(tree)[0]
+        assert "offset:" not in text, f"the value Blender ignores is written:\n{text}"
+    finally:
+        bpy.data.batch_remove([g for g in bpy.data.node_groups if g not in before])
+    print("   ✓ a literal into an implicit field is the value used, and reads back in place")
+
+
+def test_a_graph_named_like_one_a_module_uses():
+    """A text's graph named like a graph of a module that a module it uses uses (planar2d uses math,
+    which has `square`) is its own group: math's square is another one, which the text does not see."""
+    print("-> Test: a graph named like one a used module uses...")
+    src = """use planar2d
+
+geometry graph square() -> Geometry {
+  return planar_faces(Quadrilateral(width: 2.0, height: 2.0))
+}
+"""
+    got = evaluate_graphs(src, "square_clash.bn")
+    assert list(got) == ["square"], f"the text's square is not built: {list(got)}"
+    assert got["square"][1] > 0, "the text's square has no face"
+    from base_node.host import build_source, export_tree
+
+    before = set(bpy.data.node_groups)
+    try:
+        (tree,) = build_source(src, "square_clash.bn")
+        assert bpy.data.node_groups.get("square (math)") is not None, sorted(g.name for g in bpy.data.node_groups)
+        text, _ = export_tree(tree)
+        assert text.startswith("use planar2d (planar_faces)\n") and text.count("graph ") == 1, text
+    finally:
+        bpy.data.batch_remove([g for g in bpy.data.node_groups if g not in before])
+    print("   ✓ the text's square and math's square are two groups")
+
+
+def test_a_module_graph_called_by_its_quoted_name():
+    """`fillet2d::"fillet polygon"(…)`, the graph's name quoted after the module as the language
+    says, calls the same graph as its key, `fillet2d::fillet_polygon(…)`."""
+    print("-> Test: a module's graph called by its quoted name...")
+    src = """use fillet2d (chamfer_polygon)
+
+geometry graph by_name() -> Geometry {
+  return fillet2d::"fillet polygon"(Quadrilateral(width: 2.0, height: 2.0), radius: 0.2, segments: 4)
+}
+geometry graph by_key() -> Geometry {
+  return fillet2d::fillet_polygon(Quadrilateral(width: 2.0, height: 2.0), radius: 0.2, segments: 4)
+}
+"""
+    got = evaluate_graphs(src, "quoted_member.bn")
+    (a,), (b,) = got["by_name"][2], got["by_key"][2]
+    assert len(a) == 20 and len(b) == 20, f"{len(a)} and {len(b)} points, not 20 for both"
+    print("   ✓ fillet2d::\"fillet polygon\" is fillet2d::fillet_polygon")
+
+
 def test_planar2d():
     """planar2d does what its graphs say: planar faces welds open lines end to end; planar split
     intersections puts a point where two segments cross and cuts the curves there; shape builder pick
@@ -4530,6 +4639,9 @@ def main():
         test_multi_input_order,
         test_planar2d_shape_builder_pick,
         test_fillet2d,
+        test_literal_into_an_implicit_field,
+        test_a_graph_named_like_one_a_module_uses,
+        test_a_module_graph_called_by_its_quoted_name,
         test_planar2d,
         test_shader_and_compositor,
         test_module_graphs_in_other_trees,
