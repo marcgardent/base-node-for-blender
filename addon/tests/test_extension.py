@@ -214,6 +214,38 @@ geometry graph datablocks(geometry: Geometry, font: Font = "Bfont Regular", soun
     print("   ✓ Font and Sound inputs round trip")
 
 
+def test_datablock_nodes_count_their_users():
+    """An Object or Collection node holds a user of its datablock: Blender sets it without one and
+    takes one when the node goes, which left a scene's object with no user ("ID user decrement error")."""
+    print("-> Test: Object and Collection nodes count their users...")
+    from base_node.host import build_source
+
+    obj = bpy.data.objects.new("BnCountedObject", None)
+    col = bpy.data.collections.new("BnCountedCollection")
+    bpy.context.scene.collection.objects.link(obj)
+    bpy.context.scene.collection.children.link(col)
+    assert (obj.users, col.users) == (1, 1), (obj.users, col.users)
+    src = '''
+geometry graph counted(geometry: Geometry) -> Geometry {
+  a = ObjectInfo(object: Object[object: "BnCountedObject"]())
+  b = ObjectInfo(object: Object[object: "BnCountedObject"]())
+  c = CollectionInfo(collection: Collection[collection: "BnCountedCollection"]())
+  return geometry
+}
+'''
+    groups = len(bpy.data.node_groups)
+    tree = build_source(src, filename="counted.bn")[0]
+    assert (obj.users, col.users) == (3, 2), (obj.users, col.users)
+    tree = build_source(src, filename="counted.bn")[0]
+    assert (obj.users, col.users) == (3, 2), f"rebuild: {(obj.users, col.users)}"
+    assert len(bpy.data.node_groups) == groups + 1, [g.name for g in bpy.data.node_groups]
+    bpy.data.node_groups.remove(tree)
+    assert (obj.users, col.users) == (1, 1), f"removed: {(obj.users, col.users)}"
+    bpy.data.objects.remove(obj)
+    bpy.data.collections.remove(col)
+    print("   ✓ users counted through build, rebuild and removal")
+
+
 def test_named_constants():
     """A literal bound to a name is a node of its own: the tree keeps `size = 10`."""
     print("-> Test: named constants survive Text -> Tree -> Text...")
@@ -454,12 +486,11 @@ def test_constant_nodes_by_hand():
     each tree kind that has them, linked or not, holding one or none."""
     print("-> Test: constant nodes made by hand...")
     from base_node.host import build_source, export_tree
+    from base_node.host.builder import add_users
 
     stuff = {"material": bpy.data.materials.new("Clay"), "image": bpy.data.images.new("Tex", 4, 4),
              "object": bpy.data.objects.new("Thing", None), "collection": bpy.data.collections.new("Stuff"),
              "font": bundled_font()}
-    for value in stuff.values():
-        value.use_fake_user = True  # a node does not count as a user of an object: Blender would warn
     cases = [  # (tree kind, bl_idname, its value's property, value, output socket type, a line of the text)
         ("GeometryNodeTree", "FunctionNodeInputRotation", "rotation_euler", (0.5, 0.25, 0.125), "NodeSocketRotation",
          "Rotation[rotation_euler: (0.5, 0.25, 0.125)]()"),
@@ -484,6 +515,8 @@ def test_constant_nodes_by_hand():
         if prop == "vector" and len(value) != 3:
             node.vector_dimensions = len(value)
         setattr(node, prop, value)
+        if prop in ("object", "collection"):
+            add_users([(node, prop, value)])  # Blender sets these without a user, and takes one with the node
         tree.links.new(node.outputs[0], tree.nodes.new("NodeGroupOutput").inputs[0])
         exported, warnings = export_tree(tree)
         assert line in exported and not warnings, f"{idname}: '{line}' not in\n{exported}{warnings}"
@@ -504,6 +537,8 @@ def test_constant_nodes_by_hand():
             lone, empty = tree.nodes.new(idname), tree.nodes.new(idname)
             lone.name = "lone"
             setattr(lone, prop, stuff[prop])
+            if prop in ("object", "collection"):
+                add_users([(lone, prop, stuff[prop])])
             setattr(empty, prop, None)
             tree.links.new(empty.outputs[0], tree.nodes.new("NodeGroupOutput").inputs[0])
             exported, warnings = export_tree(tree)
@@ -4716,6 +4751,7 @@ def main():
         test_stdlib_keeps_its_targets,
         test_build_and_round_trip,
         test_datablock_inputs,
+        test_datablock_nodes_count_their_users,
         test_named_constants,
         test_builtin_font_by_any_name,
         test_font_everywhere,
