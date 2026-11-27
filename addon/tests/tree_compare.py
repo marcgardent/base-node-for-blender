@@ -1048,11 +1048,13 @@ class Comparator:
 
 
 def implicit(node, socket):
-    """Whether an input of a group node is fed, when unlinked, by an implicit field of the group's
-    interface (`Normal: Vector = Normal()`): its own value is then not read."""
+    """Whether an input is fed, when unlinked, by an implicit field: of the group's interface
+    (`Normal: Vector = Normal()`), or of the node itself (ExtrudeMesh's offset, the normal), which
+    Blender infers the unlinked socket a field of: its own value is then not read."""
     tree = getattr(node, "node_tree", None)
     if tree is None:
-        return False
+        return node.id_data.bl_idname == "GeometryNodeTree" and socket.hide_value \
+            and getattr(socket, "inferred_structure_type", None) == "FIELD"
     item = next((i for i in tree.interface.items_tree if i.item_type == "SOCKET" and i.in_out == "INPUT"
                  and i.identifier == socket.identifier), None)
     return item is not None and getattr(item, "default_input", "VALUE") != "VALUE"

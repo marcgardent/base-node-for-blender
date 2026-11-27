@@ -90,11 +90,7 @@ geometry(is_modifier: false) graph "Tessera · Bed"(
     |> SetSplineCyclic(cyclic: true)
     |> FillCurve(mode: "N-gons")
     |> MergeByDistance(distance: 1e-05)
-  extrude_mesh = ExtrudeMesh(
-    merge_by_distance,
-    offset: (0.0, 0.0, 1.0),
-    offset_scale: math_3,
-    individual: false)
+  extrude_mesh = ExtrudeMesh(merge_by_distance, offset_scale: math_3, individual: false)
   set_position = SetPosition(Holes, offset: (0.0, 0.0, -0.001))
   delete_geometry = Surface
     |> SetPosition(offset: Normal().normal * math_3)
@@ -123,11 +119,7 @@ geometry(is_modifier: false) graph "Tessera · Bed"(
           |> MeshBoolean[DIFFERENCE, EXACT](
             MergeByDistance(
               FlipFaces(set_position)
-                + ExtrudeMesh(
-                  set_position,
-                  offset: (0.0, 0.0, 1.0),
-                  offset_scale: math_3 + 0.002,
-                  individual: false).mesh,
+                + ExtrudeMesh(set_position, offset_scale: math_3 + 0.002, individual: false).mesh,
               distance: 1e-07)).mesh)
       : extrude_mesh.mesh,
     delete_geometry,

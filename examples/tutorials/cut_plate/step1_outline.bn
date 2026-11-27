@@ -17,7 +17,7 @@ geometry graph layer(faces: Geometry, bottom: Float, top: Float = 0.1) -> Geomet
   "Flat faces lifted to bottom and pushed up to top: a top, its walls, open underneath"
   return faces
     |> SetPosition(offset: CombineXYZ(z: bottom))
-    |> ExtrudeMesh(offset: CombineXYZ(z: top - bottom), individual: false).mesh
+    |> ExtrudeMesh(offset: (0.0, 0.0, 1.0), offset_scale: top - bottom, individual: false).mesh
 }
 
 geometry graph cut_plate(thickness: Float = 0.08 in 0.0..) -> Geometry {

@@ -27,7 +27,8 @@ from ..blender.schema import (CLOSURE_TO_LIST, COMBINE_BUNDLE, DATABLOCKS, EVALU
                            SIGNATURE_NODES, TYPES, by_position, enum_settings, input_key, key, snake)
 from . import comments, modules, outputs as material_outputs
 from .modules import graph_name, module_of, template_of
-from .schema import (DEPRECATION, PANEL_OPTIONS, SOCKET_TYPES, TREE_FLAGS, TREE_TYPES, BlenderSchema,
+from .builder import LITERAL
+from .schema import (DEPRECATION, PANEL_OPTIONS, SOCKET_TYPES, TREE_FLAGS, TREE_TYPES, BlenderSchema, implicit_field,
                      data_value, fresh_item, fresh_item_options, fresh_item_value, fresh_options,
                      item_option_names, option_names, root_panel, prop_value, same_option, snapshot,
                      socket_keys, text_name, ui_name)
@@ -346,8 +347,11 @@ class GraphReader:
             # Inline, a join in a join would melt into it: `a + b + c` is one node
             nested = used_by is not None and self.joins(n) and self.joins(used_by)
             # A node shown otherwise than a new one carries its look on a statement
+            # A constant the builder made for a literal given to an input an implicit field feeds is
+            # that literal again, in place (Builder.literal_node)
+            in_place = n.get(LITERAL) and uses.get(n.name, 0) == 1
             if uses.get(n.name, 0) > 1 or self.hand_named(n) or framed_apart or nested or n in self.roots \
-                    or self.look(n) or self.constant(n) is not None or comments.KEY in n:
+                    or self.look(n) or self.constant(n) is not None and not in_place or comments.KEY in n:
                 self.bound[n.name] = unique(self.binding_name(n), taken)
         self.outer = self.outer_names(reached)
 
@@ -1625,6 +1629,8 @@ class GraphReader:
     def literal(self, node, sock, defaults, output=False):
         if not hasattr(sock, "default_value") or node.bl_idname == "NodeGroupOutput" and not output:
             return None
+        if not output and implicit_field(node, sock):
+            return None  # an implicit field feeds it: Blender does not read its value, nor does the text
         value = snapshot(sock)
         if sock.identifier in defaults and same(value, defaults[sock.identifier]):
             return None

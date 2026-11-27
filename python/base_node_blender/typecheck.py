@@ -196,9 +196,16 @@ def deprecations(file, filename="<text>", find=None):
             if u.names is None or k in u.names:
                 callable_[k] = g
             for prefix in {u.alias or u.name, u.name}:
-                callable_[f"{prefix}::{k}"] = g
+                for written in member_names(k, g):
+                    callable_[f"{prefix}::{written}"] = g
     callable_.update((key(g.name), g) for g in file.graphs)
     return deprecated_calls(file.graphs, callable_, filename)
+
+
+def member_names(k, g):
+    """The names a call after `module::` gives a module's graph by: its key, and its name as written
+    (`c2::parallel_contour_2d` and `c2::"parallel contour 2d"`), the one the printer writes."""
+    return dict.fromkeys((k, g.name))
 
 
 def float32(v):
@@ -388,9 +395,32 @@ class Modules:
         # (filename, "arg" or "pipe", line, col) -> the name of the input a value by position goes to,
         # where a name is written (GraphChecker.by_name): what names.name_inputs writes. None: not kept
         self.fixes = None
+        self.groups = {}  # id of an ast.Graph -> the node group it is built into, when not its name
+        self.group_names = set()  # every node group name given so far
+
+    def group_name(self, g):
+        """The node group a graph is built into: its name, unless another graph took it first."""
+        return self.groups.get(id(g), g.name)
+
+    def name_groups(self, file, ident):
+        """Give each graph of a file the node group it is built into. Blender names node groups once
+        for the whole file, but a module's own uses are not the names of the text that uses it: the
+        text's graphs keep their names, and a module's graph named like one already given (the text's
+        `square` and the `square` of math, which planar2d uses) is built into `square (math)`."""
+        for g in file.graphs:
+            name = g.name
+            if ident is not None and not is_material(g.settings):
+                n = 1
+                while name in self.group_names:
+                    n += 1
+                    name = f"{g.name} ({ident[0]})" if n == 2 else f"{g.name} ({ident[0]} {n - 1})"
+                if name != g.name:
+                    self.groups[id(g)] = name
+            self.group_names.add(name)
 
     def check(self, file, filename, ident=None, stack=()):
         diags = []
+        self.name_groups(file, ident)
         imported = self.imports(file, filename, stack, diags)
         by_name = {}
         # Graphs are called by their key: "Smooth by Angle" is called as smooth_by_angle(...)
@@ -405,7 +435,6 @@ class Modules:
                 diags.append(Diagnostic(filename, g.line, g.col, function_name(key(g.name))))
             by_name[key(g.name)] = g
         callable_ = {k: g for k, (g, _u) in imported.items()} | by_name
-        order = self.needed(file.uses, imported)
         # A module that failed would make every call to it an unknown node too
         unsure = any(id(u) not in self.units for u in file.uses)
         if ident is not None:
@@ -431,6 +460,7 @@ class Modules:
                                     key=lambda d: (d.line, d.col))
         for g in own:
             g.module = ident
+        order = self.needed(file.uses, own + variants)
         seen = set()
         return Unit(by_name, [g for g in order + variants + own if not (g.name in seen or seen.add(g.name))])
 
@@ -518,7 +548,8 @@ class Modules:
             if made is None or diags:
                 self.variants[at] = (None, diags or [Diagnostic(filename, callee.line, callee.col, "not built")])
             else:
-                made.name = instance_name(callee.name, types) if types else callee.name
+                group = self.group_name(callee)
+                made.name = instance_name(group, types) if types else group
                 if kind != callee.kind:
                     made.name = variant_name(made.name, kind)
                 made.called_as = callee.name
@@ -573,14 +604,15 @@ class Modules:
                 else:
                     imported[k] = (unit.graphs[k], u)
 
-            # Register namespaced calls: <alias>::<func> and <name>::<func>
-            prefix = getattr(u, "alias", None) or u.name
+            # Register namespaced calls: <alias>::<func> and <name>::<func>, the graph by its key or by
+            # its name, quoted when it is no identifier: `c2::parallel_contour_2d`, `c2::"parallel contour 2d"`
+            prefixes = [getattr(u, "alias", None) or u.name] + ([u.name] if getattr(u, "alias", None) else [])
             for k, g in unit.graphs.items():
                 if is_material(g.settings):
                     continue
-                imported[f"{prefix}::{k}"] = (g, u)
-                if getattr(u, "alias", None):
-                    imported[f"{u.name}::{k}"] = (g, u)
+                for prefix in prefixes:
+                    for written in member_names(k, g):
+                        imported[f"{prefix}::{written}"] = (g, u)
         return imported
 
     def unit(self, u, stack, error):
@@ -607,8 +639,10 @@ class Modules:
         self.done[ident] = unit
         return unit
 
-    def needed(self, uses, imported):
-        """The modules' graphs to build: a whole module, or the names listed and what they call."""
+    def needed(self, uses, callers):
+        """The modules' graphs to build: a whole module, or the names listed, the graphs `callers`
+        call by the module's name (`base::sq` beside `use base (un)`), and what they call."""
+        called = {n.group for g in callers for n in g.nodes if n.group}
         out = []
         for u in uses:
             unit = self.units.get(id(u))
@@ -620,7 +654,7 @@ class Modules:
                 continue
             by_ir = {g.name: g for g in unit.order}
             keep = set()
-            todo = [unit.graphs[k].name for k in u.names if k in unit.graphs]
+            todo = [self.group_name(unit.graphs[k]) for k in u.names if k in unit.graphs] + sorted(called & set(by_ir))
             while todo:
                 name = todo.pop()
                 if name in keep or name not in by_ir:
@@ -692,6 +726,10 @@ class GraphChecker:
     def error(self, at, message):
         self.diags.append(Diagnostic(self.filename, at.line, at.col, message))
 
+    def group_name(self, g):
+        """The node group a graph of the text or of a module is built into: see Modules.name_groups."""
+        return self.modules.group_name(g) if self.modules is not None else g.name
+
     def unknown(self, at, name):
         """A name bound to nothing, with the names of this graph it looks like: a typo, most often."""
         close = difflib.get_close_matches(name, list(self.env), 3)
@@ -740,8 +778,11 @@ class GraphChecker:
             # A graph that returns nothing has no Group Output node (unreturned_warnings)
             self.nodes.remove(gout)
 
-        graph = ir.Graph(g.kind, g.name, [(p.name, p.type) for p in g.params],
+        group = self.group_name(g)
+        graph = ir.Graph(g.kind, group, [(p.name, p.type) for p in g.params],
                          [(o.name, o.type) for o in g.outputs], self.nodes, g.line, g.col, self.frames, defaults)
+        if group != g.name:
+            graph.called_as = g.name  # a module's graph in a group of another name: see Modules.name_groups
         graph.options = self.options()
         graph.description = g.description
         graph.input_keys = [p.key for p in g.params]
@@ -2305,7 +2346,7 @@ class GraphChecker:
             return None, None
         if not types and callee.kind == self.g.kind:
             self.calls.add(c.name)
-            node.group = callee.name
+            node.group = self.group_name(callee)
             return ([Socket(p.name, p.key, p.type) for p in callee.params],
                     [Socket(o.name, o.key, o.type) for o in callee.outputs])
         # A module's graph is built again for this kind of tree, when its nodes are there too, and a

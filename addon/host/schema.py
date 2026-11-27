@@ -153,6 +153,22 @@ def socket_info(sock):
                   sock.is_multi_input, size, alias)
 
 
+def implicit_field(node, sock):
+    """Whether an input of a geometry tree's node takes a field from the context while nothing is
+    linked to it (ExtrudeMesh's offset, the normal; SetPosition's position; a group's
+    `p: Vector = Position()`): Blender then ignores its value, which it hides. Python is told so by
+    the structure Blender infers for the unlinked socket, a field, where the input of a value it
+    hides but reads (a Selection) is a single value."""
+    if node.id_data.bl_idname != "GeometryNodeTree" or sock.is_output or not sock.hide_value:
+        return False
+    tree = getattr(node, "node_tree", None)
+    if tree is not None:
+        item = next((i for i in tree.interface.items_tree if i.item_type == "SOCKET" and i.in_out == "INPUT"
+                     and i.identifier == sock.identifier), None)
+        return item is not None and getattr(item, "default_input", "VALUE") != "VALUE"
+    return getattr(sock, "inferred_structure_type", None) == "FIELD"
+
+
 def available(sockets):
     return [socket_info(s) for s in sockets if not s.is_unavailable and s.type != "CUSTOM"]
 
