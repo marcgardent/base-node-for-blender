@@ -61,6 +61,10 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
 
 ### Site
 
+- Fixed: `examples/tutorials/page.py` writes and checks the pages `site/tutorials/` has, no longer
+  those of the packs' tutorials, whose pages are in the private studio: `--check` passes on a clean
+  checkout and writing leaves it clean. Naming tutorials (`page.py toon_lights`) writes theirs alone,
+  a new one's first page too; `python/tests/test_tutorial_pages.py` fails when a page is not up to date.
 - Fixed: the tutorial Cut plate extrudes its layers by a vector literal, `offset: (0.0, 0.0, 1.0)`
   scaled by `top - bottom`, and no longer says that such a literal is not taken.
 - Added: the tutorial Toon lights (`examples/tutorials/toon_lights/`, `site/tutorials/toon-lights.html`),
