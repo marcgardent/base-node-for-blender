@@ -1,0 +1,50 @@
+# This is an Asset Catalog Definition file for Blender.
+
+VERSION 1
+
+08a728c0-98f3-574a-a784-da9f30c52b54:Base Node:Base Node
+88c47cde-7774-5451-8b6b-834633d73c0b:Base Node/curves2d:Base Node-curves2d
+1743e18c-0972-51d0-9258-47e64773854f:Base Node/curves2d/2D Curves and Contours:Base Node-curves2d-2D Curves and Contours
+96b2fc98-db76-51f9-b831-691087067f72:Base Node/fillet2d:Base Node-fillet2d
+349e1651-eccb-5316-b378-961dedf45b97:Base Node/fillet2d/2D Fillets, Chamfers & Bevels:Base Node-fillet2d-2D Fillets, Chamfers & Bevels
+38fa52bb-b270-53fe-b159-ad550c892a8d:Base Node/grade:Base Node-grade
+2dc38cc2-3e77-5073-889d-650adfc7a685:Base Node/grade/Channels:Base Node-grade-Channels
+96067f44-0662-5cc8-9ead-fe5be051225b:Base Node/grade/Cineon:Base Node-grade-Cineon
+5c354af8-e137-54f0-babd-cdd7ff3280ad:Base Node/grade/Colour correct:Base Node-grade-Colour correct
+a49a28e5-643a-591f-8e32-8c657ebb46f4:Base Node/grade/Grade:Base Node-grade-Grade
+7b63c533-0cd1-5e9b-9824-7fee7233986a:Base Node/grade/Range:Base Node-grade-Range
+7639b1fc-019a-5709-bb6c-dad3705bb5c7:Base Node/grade/Saturation and hue:Base Node-grade-Saturation and hue
+5af2bb5f-1613-5768-a559-19e7baadd1c0:Base Node/mask2d:Base Node-mask2d
+dfb5d609-6d0e-5546-81d5-702f16d6dbd6:Base Node/mask2d/Framing:Base Node-mask2d-Framing
+343c2ea2-1823-59af-8395-a79937b37b17:Base Node/mask2d/Shapes:Base Node-mask2d-Shapes
+c9426861-795b-554c-aa39-da3637a95e91:Base Node/mask2d/Space and edge:Base Node-mask2d-Space and edge
+834e54bc-8b09-5681-b707-f3b7f6d47efc:Base Node/math:Base Node-math
+62fb3aba-6f69-5b96-9d7d-3113a6b18e03:Base Node/math/Angles, in radians:Base Node-math-Angles, in radians
+2028394a-8872-5930-a434-ba6653622e3f:Base Node/math/Colors:Base Node-math-Colors
+9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8:Base Node/math/Curves - x from 0 to 1 produces 0 to 1:Base Node-math-Curves - x from 0 to 1 produces 0 to 1
+7147d2ad-cc0d-58b5-9b2a-d613db13b08c:Base Node/math/Noise:Base Node-math-Noise
+ef9fec8c-d4a1-530b-8001-057993ab294b:Base Node/math/Random:Base Node-math-Random
+0bad4366-1d67-51c1-8fc5-fe3dc6babb00:Base Node/math/Sampling:Base Node-math-Sampling
+bf8ac475-adf1-59dd-9cfc-49f23fc87427:Base Node/math/Signed Distance Fields - negative inside, zero on surface:Base Node-math-Signed Distance Fields - negative inside, zero on surface
+0254b8aa-e0f5-5132-a232-79ba514c8778:Base Node/math/Vectors:Base Node-math-Vectors
+33f415d9-2486-517c-9e41-13a4621baa5d:Base Node/math/Waves of period 1:Base Node-math-Waves of period 1
+74210b1b-8611-54f0-83db-0403d75f56fc:Base Node/merge:Base Node-merge
+d0b9cbfd-ba50-5232-a611-523181ae51fe:Base Node/merge/Alpha:Base Node-merge-Alpha
+b5fea2af-9d63-510d-a714-7240b1bf8899:Base Node/merge/Arithmetic:Base Node-merge-Arithmetic
+96487fca-6879-553a-a1b7-6235bf5abff9:Base Node/merge/Combining:Base Node-merge-Combining
+af118f0d-a0f2-53c3-9de8-fde7551435db:Base Node/merge/Porter-Duff:Base Node-merge-Porter-Duff
+b9401a53-2a8b-54b8-970f-664aaa49e100:Base Node/patterns2d:Base Node-patterns2d
+6e98b653-3f36-5aae-b0d5-6a4a7626c93c:Base Node/planar2d:Base Node-planar2d
+c43781e6-e461-5f12-bfe7-ad44fb65bfbb:Base Node/planar2d/Planar Map, Regions & Boundary Operations:Base Node-planar2d-Planar Map, Regions & Boundary Operations
+50765f90-c866-5a65-992b-2b93b2789319:Base Node/qc:Base Node-qc
+e433f7c0-9941-5607-bfd3-6bf5833ab3e5:Base Node/qc/Checks:Base Node-qc-Checks
+39a75b62-4bd3-52b1-ac1b-8bccb2d487c5:Base Node/qc/Helpers:Base Node-qc-Helpers
+7b8609f6-2f2b-503b-982b-af5d0aebd631:Base Node/qc/Patterns:Base Node-qc-Patterns
+50e2e294-f45d-544d-b3b2-e2b6e3e85a0b:Base Node/sdf2d:Base Node-sdf2d
+da440acd-b486-5a29-b62b-5d5ba7b0a6f4:Base Node/sdf2d/2D Primitives:Base Node-sdf2d-2D Primitives
+37f432de-fc56-5eb1-8032-4f55846f5c63:Base Node/sdf2d/Domains and Repetition:Base Node-sdf2d-Domains and Repetition
+a4059915-3534-5d3f-bea6-32ad6b7b8ab3:Base Node/sdf2d/Operators:Base Node-sdf2d-Operators
+312db510-252c-5b2d-9438-6daee518a250:Base Node/stmap:Base Node-stmap
+24a6463f-59db-56f6-a81b-7222b65a7f55:Base Node/stmap/Reformat:Base Node-stmap-Reformat
+970d9860-51d0-5163-aa1a-b8d432d8a1e3:Base Node/stmap/STMaps:Base Node-stmap-STMaps
+f647a099-9c15-55fe-a931-44e4df71a201:Base Node/stmap/Tile and mirror:Base Node-stmap-Tile and mirror

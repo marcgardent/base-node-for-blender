@@ -1,0 +1,6418 @@
+{
+  "asset_count": 187,
+  "file_count": 1,
+  "assets": [
+    {
+      "name": "alpha check",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/alpha-check.webp",
+        "hash": "SHA256:7e67214f401e6aa5c83b499ac0023f7449d2a90ea25e003255ad4e10520a533f"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The image over a gray checker of size pixels, and its alpha alone as an opaque gray",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "alpha of",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/alpha-of.webp",
+        "hash": "SHA256:195baa269d18fb80960804ab87b0df240d90cbd20f36082fec2e80271f1b9675"
+      },
+      "meta": {
+        "catalog_id": "d0b9cbfd-ba50-5232-a611-523181ae51fe",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Alpha of the image",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "angle between",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/angle-between.webp",
+        "hash": "SHA256:2ae065efaef5e60bd2b89e7ba37e61be60435e092ad63e0d20a4da9d99b3afda"
+      },
+      "meta": {
+        "catalog_id": "62fb3aba-6f69-5b96-9d7d-3113a6b18e03",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Angle between two vectors, from 0 to \u03c0, accurate even for nearly parallel vectors",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "arrow 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/arrow-2d.webp",
+        "hash": "SHA256:7a9e67148f8cb6d3a594fa525f2f6b1b11d12a6d260fac8c496bd89e02d30b59"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Generates a flat 2D arrow along the curve with stem and triangular arrowhead",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "aspect of",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/aspect-of.webp",
+        "hash": "SHA256:5a6c30928b0c20afa582962f21a08de120beca5828e0edfbc120bc7e7251a446"
+      },
+      "meta": {
+        "catalog_id": "970d9860-51d0-5163-aa1a-b8d432d8a1e3",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The image's width over its height",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "atop",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/atop.webp",
+        "hash": "SHA256:dfc81519bb4e6153acd1aa7a9f59f0a4fede1fc9909d29aa4c6bec4af6702ac2"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Ab + B(1 - a): a over b, only where b is",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "average",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/average.webp",
+        "hash": "SHA256:190fa0a1330849141104b7e17442ce49af82b66bf0e25107b8b8f99d85c84220"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "(A + B) / 2",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "bend",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/bend.webp",
+        "hash": "SHA256:3b78b3e649f4d2188cab17d6f048da013660da6a7d0ec54912464a823ccc1f9e"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Bends space upward along X: strength radians per unit length",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "bias",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/bias.webp",
+        "hash": "SHA256:1583d11cae06b3078f866f3180fea1db2f7c8dfd058f444c5926a180689260a1"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Pushes values toward 0 (force < 0.5) or toward 1 (force > 0.5); 0.5 has no effect",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "bounce",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/bounce.webp",
+        "hash": "SHA256:c6e63ae9c999013cb255efa4559d7a21776ea3e5f23f66122d38cc0a4db1e8a7"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Falls and bounces three times before settling at 1: a ball",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "box mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/box-mask.webp",
+        "hash": "SHA256:f7d60db8e5da142a4d70be273381ead3fed5b1e24039bb7e4fb6b6705b219061"
+      },
+      "meta": {
+        "catalog_id": "343c2ea2-1823-59af-8395-a79937b37b17",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Rectangle of given half size, its corners rounded by roundness",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "bump",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/bump.webp",
+        "hash": "SHA256:e27f721ebefe8dc74ce4d11fd0bf58891a4c9cb1c1d0d8b2f3c6a919990785f5"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Smooth bump: 1 at center, 0 beyond half width",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "canvas",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/canvas.webp",
+        "hash": "SHA256:54ea72760d5ba77ecfa43063146dc2e2a50bb2d0bd9ff4dfb4d722ab8fd800e8"
+      },
+      "meta": {
+        "catalog_id": "970d9860-51d0-5163-aa1a-b8d432d8a1e3",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A canvas of this size, in pixels: the image stretched to it, its pixels made by Pixelate, as Scale alone only sets how the image is drawn, then cropped to the size, as Pixelate rounds an odd one up to even",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "chamfer polygon",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/chamfer-polygon.webp",
+        "hash": "SHA256:7aee30e4e9a1740d2209b031a1e7d04a6027e27e87402f876665f209c82f399f"
+      },
+      "meta": {
+        "catalog_id": "349e1651-eccb-5316-b378-961dedf45b97",
+        "tags": [
+          "Base Node",
+          "fillet2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Cuts sharp corners of a 2D polygon with straight chamfers",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "channel sqrt",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/channel-sqrt.webp",
+        "hash": "SHA256:816485d2762b8f2b4a6405620d304010be4cf0f703327277034919779aca6597"
+      },
+      "meta": {
+        "catalog_id": "96487fca-6879-553a-a1b7-6235bf5abff9",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Square root of each of the four channels, 0 below 0",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "checkerboard",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/checkerboard.webp",
+        "hash": "SHA256:f07b3e2948cb394637a22fe085d6262bb728187f1ce92790a225d5040d9139ee"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Squares of size pixels from the bottom-left pixel, color0 there and every other one, color1 between",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "cineon offset",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/cineon-offset.webp",
+        "hash": "SHA256:27619792842271f878fbfcb593cbc45f477569ae23bf1caa57d1576354d15174"
+      },
+      "meta": {
+        "catalog_id": "96067f44-0662-5cc8-9ead-fe5be051225b",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The linear value of the black of a Cineon log, before it is taken to 0",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "circle mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/circle-mask.webp",
+        "hash": "SHA256:d218b7f45db824891ff24033f5b9e1567cb78ba85918a5b5c26cf707dceb57a5"
+      },
+      "meta": {
+        "catalog_id": "343c2ea2-1823-59af-8395-a79937b37b17",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Disk of given radius",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "clamp channels",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/clamp-channels.webp",
+        "hash": "SHA256:f94b3e93d8c19931b7da7bcddaed863091e7a0547c1ae769ea369dfdd3049c2d"
+      },
+      "meta": {
+        "catalog_id": "7b63c533-0cd1-5e9b-9824-7fee7233986a",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colours kept between low and high, channel by channel",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "clamp01",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/clamp01.webp",
+        "hash": "SHA256:0280d17a327c69daed79ef9f58ccd5c0c8bea2b3f0a3eb8e36f4599a174e209a"
+      },
+      "meta": {
+        "catalog_id": "39a75b62-4bd3-52b1-ac1b-8bccb2d487c5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "x clamped between 0 and 1; 0 for NaN",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "clip check",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/clip-check.webp",
+        "hash": "SHA256:5ab262c606b68a47ebbf5079cf3c36c128d3628d89b834bb331a928c74cda9c2"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Where a channel of red, green, blue is above 1, over_color; else where one is below 0, under_color; the rest the image's luminance in gray",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "closest on segment",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/closest-on-segment.webp",
+        "hash": "SHA256:0981ace61a97a06bc771934791cc9d49a38d0bed499c6e604eb63750d251a0db"
+      },
+      "meta": {
+        "catalog_id": "0254b8aa-e0f5-5132-a232-79ba514c8778",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Closest point on segment [a, b] to p, its distance to p and factor (0 at a, 1 at b)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "color bars",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/color-bars.webp",
+        "hash": "SHA256:590734db635306a36475ede718a3e6df0c0f118c90d685a05c68945b45bbb01e"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "SMPTE's seven bars at 75 % (level): white, yellow, cyan, green, magenta, red, blue, from left to right, each a seventh of the width",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "color correct",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/color-correct.webp",
+        "hash": "SHA256:d62fe073e31c9d3fe512bdf55196bcc18c3427e4d19dbf07a888042883107ca1"
+      },
+      "meta": {
+        "catalog_id": "5c354af8-e137-54f0-babd-cdd7ff3280ad",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Nuke's ColorCorrect: saturation, contrast, gamma, gain and offset of the master times those of the shadows, midtones and highlights, mixed by the luma",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "color times",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/color-times.webp",
+        "hash": "SHA256:25142d52f75a25559b12b385e78e5bddbe83f5512d5c685781ae841e498064ac"
+      },
+      "meta": {
+        "catalog_id": "39a75b62-4bd3-52b1-ac1b-8bccb2d487c5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colour times k on the four channels: drawn where k is 1, transparent where it is 0",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "color wheel",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/color-wheel.webp",
+        "hash": "SHA256:95e8933d536660fff92b42e744ea1eb201eba138eafd716fc5acb95a767f78d2"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A disk filling the image's smaller side: its hue turns around the center, red to the right, then green and blue counterclockwise; its saturation grows outwards from white",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "conjoint over",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/conjoint-over.webp",
+        "hash": "SHA256:f6eb02465de4b29adb67b1f73a08ae3c89cdc869111f31f2f88d31864467475b"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A + B(1 - a)/b, A where a > b: over for a and b that share their edges",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "constant",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/constant.webp",
+        "hash": "SHA256:ad5150815d7ff9b87282f441084b320a0402827ed14e38696d1d64f192e8b09f"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colour on every pixel, of the image's size",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "contour noise 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/contour-noise-2d.webp",
+        "hash": "SHA256:fc72f22379d055ad9ba119ff6b45e1608f8666485bea6ffec7f08fdab3bab250"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Deforms a 2D contour along its normal using fractal noise",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "contour outer boundary",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/contour-outer-boundary.webp",
+        "hash": "SHA256:807def3fad9073ef51aa27c093f2e618ef83056a8bfe9c89d85d2669bcd3652a"
+      },
+      "meta": {
+        "catalog_id": "c43781e6-e461-5f12-bfe7-ad44fb65bfbb",
+        "tags": [
+          "Base Node",
+          "planar2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Extracts the outer boundary envelope from a collection of contiguous 2D shapes: closed curves, without the holes, moved offset outwards in the plane",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "copy",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/copy.webp",
+        "hash": "SHA256:7b615a7856c612e91a3d2e49590b5a3f60e2cab94c373d7f8f3e7c8f40ce97c9"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A: a in place of b",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "copy alpha",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/copy-alpha.webp",
+        "hash": "SHA256:3f40fa5b3a3855b2758156f1b29ac1b182b3c466518eeab08945ccc3be843992"
+      },
+      "meta": {
+        "catalog_id": "d0b9cbfd-ba50-5232-a611-523181ae51fe",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colors of the image with the alpha of another",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "correct channel",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/correct-channel.webp",
+        "hash": "SHA256:8395efafdd4f1f0d0e648ea46e64d3459cb182aeeda12a430feb8da2876c9771"
+      },
+      "meta": {
+        "catalog_id": "5c354af8-e137-54f0-babd-cdd7ff3280ad",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Saturation around the luma, contrast around 0.18, gamma, gain then offset: one range of a colour correct",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "correct range",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/correct-range.webp",
+        "hash": "SHA256:bf8fe6b5719d4901cd087b93b0ab6709d2bb2f4efefdf31bf113a00ca383f11a"
+      },
+      "meta": {
+        "catalog_id": "5c354af8-e137-54f0-babd-cdd7ff3280ad",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colours of a straight image through one range of a colour correct",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "diff view",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/diff-view.webp",
+        "hash": "SHA256:1da6ea72efbccfb57f0b9b465481a1bf6076496a4a94472c637bc01747c8e08b"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "|a - b| \u00d7 gain as heat: the largest difference of the four channels, black where the images are the same",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "difference",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/difference.webp",
+        "hash": "SHA256:16c29297c0f0e70a60b6ce880e674b7285a47587fe527164ce7fc9239229fe6a"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "|A - B|",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "disjoint over",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/disjoint-over.webp",
+        "hash": "SHA256:5cf0f1d95b5b2c651c735b02ec5af83ecbfb83f7b2628747f7296137223404a3"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A + B where a + b < 1, A + B(1 - a)/b elsewhere: over for a and b that do not overlap",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "divide",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/divide.webp",
+        "hash": "SHA256:7fc45b77180c689eb16627bb60b77f82b27b1957faf6e6124a5042d8469c38b2"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A / B, 0 where B is 0",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "ease in",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ease-in.webp",
+        "hash": "SHA256:e749bc63f4bba5a228ccc3ccfcf8029d9e6005b83eb38b39bba281412ad1b0cb"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Starts slowly: t raised to power",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ease in out",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ease-in-out.webp",
+        "hash": "SHA256:0143d9a2dae898b30dd2a4f6745129293fccc75d018024880ee84166cdd3c48c"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Starts and ends slowly, passes through 0.5 at midpoint",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ease out",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ease-out.webp",
+        "hash": "SHA256:d94b843c900763f57616ede38d77be330910436ff31b34460372ccf062e19c66"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Ends slowly: inverse of ease in",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "elastic",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/elastic.webp",
+        "hash": "SHA256:7238db71d675cac2da3537fd2dd38d68e519369e25bda50e26bd0c1a7e1054d8"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Overshoots 1 and oscillates back: a released spring",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "exclusive or",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/exclusive-or.webp",
+        "hash": "SHA256:faa38dd0b54afe6ad8f17e0ece0a32c6361de03ab9039f3621bc2b9bcf74f3f6"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A(1 - b) + B(1 - a): a and b where the other is not (xor)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "exposure stops",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/exposure-stops.webp",
+        "hash": "SHA256:6fe7c3a223d4e70a62213e3de59662a66d69f7923f0ee0fba1aadb7d992b4b96"
+      },
+      "meta": {
+        "catalog_id": "7b63c533-0cd1-5e9b-9824-7fee7233986a",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colours times 2 to the stops: one stop doubles them",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "false color",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/false-color.webp",
+        "hash": "SHA256:22fa3d1b54b6eb6491be662af455d8cb5626e89a55429a088c4608be95ec4e7c"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The exposure zones by stops of luminance from middle gray, 0.18, as a fixed palette: under -6 purple, to -4 blue, to -2 teal, to -\u00bd dark gray, \u00b1\u00bd green, to 1\u00bd pink, to 2\u00bd light gray, to 4 yellow, past red; 2\u00bd stops is a luminance of 1",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "fbm",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/fbm.webp",
+        "hash": "SHA256:dbb6902ee65debf2d22e468a24de35baded689c9f6120d125e4714e444d1899c"
+      },
+      "meta": {
+        "catalog_id": "7147d2ad-cc0d-58b5-9b2a-d613db13b08c",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Fractal noise: octave layers of increasing frequency and decreasing amplitude, roughly -1 to 1",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "fibonacci point",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/fibonacci-point.webp",
+        "hash": "SHA256:70767131d1fff782eeda462c08f46a4a3c3a3adbcd07bfd0d3dcbcf06acb7321"
+      },
+      "meta": {
+        "catalog_id": "0bad4366-1d67-51c1-8fc5-fe3dc6babb00",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Point at index from count points evenly distributed on the unit sphere",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "fillet bezier handles",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/fillet-bezier-handles.webp",
+        "hash": "SHA256:8d8cdfc114a2e2643ab978bf6801cc096b9d2ee95d82cc756bc1b3e2012bc31d"
+      },
+      "meta": {
+        "catalog_id": "349e1651-eccb-5316-b378-961dedf45b97",
+        "tags": [
+          "Base Node",
+          "fillet2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Smooths the kinks of a 2D curve sharper than threshold_angle with B\u00e9zier rounding arcs; a poly curve, which has no handles, is cut straight there",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "fillet corner",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/fillet-corner.webp",
+        "hash": "SHA256:1fd9a8a87cfbf5b4596a7aa461443743ef2b09b8510dc21be13454542b17f636"
+      },
+      "meta": {
+        "catalog_id": "349e1651-eccb-5316-b378-961dedf45b97",
+        "tags": [
+          "Base Node",
+          "fillet2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Analytically computes circular arc fillet tangent points (p1, p2) and circle center for a 2D corner",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "fillet polygon",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/fillet-polygon.webp",
+        "hash": "SHA256:579f3052520d0df902e0a50b5e4314c392973ed0fb833563286b22975b74ffb5"
+      },
+      "meta": {
+        "catalog_id": "349e1651-eccb-5316-b378-961dedf45b97",
+        "tags": [
+          "Base Node",
+          "fillet2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Rounds sharp corners of a 2D polygonal curve with constant or attribute-driven fillet radius",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "frame",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/frame.webp",
+        "hash": "SHA256:af3009e22d1b985e1c6ac0a7f2faf848998929ca97d76a002a347b5f9d25a42e"
+      },
+      "meta": {
+        "catalog_id": "39a75b62-4bd3-52b1-ac1b-8bccb2d487c5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "1 on every pixel of the image, whatever its values, NaN among them: a pattern takes its size from it",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "from",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/from.webp",
+        "hash": "SHA256:9251fe7c623d0b6ba9d8515dc22ab0d54bf59137020b1fda5b478cfb53191d93"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "B - A: a taken from b",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "gain",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/gain.webp",
+        "hash": "SHA256:caecf9252eee50605418e153dd448981fd6ec6c4425085f43dddd9906b1da90a"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "S-curve around 0.5 (contrast < 0.5) or its inverse (> 0.5); 0.5 has no effect",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "geometric",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/geometric.webp",
+        "hash": "SHA256:75b338a82c82c3f77975a3e98056e8a5852f10e86f1e9c3dd8a63fb2750a4019"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "2AB / (A + B), 0 where A + B is 0",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "grade",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/grade.webp",
+        "hash": "SHA256:879307aef2f8e0c3e4bf6918bb4ad653497c294d303a28bbacec2f4ed87ddda2"
+      },
+      "meta": {
+        "catalog_id": "a49a28e5-643a-591f-8e32-8c657ebb46f4",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Nuke's Grade: blackpoint to 0 and whitepoint to 1, then lift, gain, multiply, offset and gamma, per channel; reverse undoes it",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "grade channel",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/grade-channel.webp",
+        "hash": "SHA256:165fbd418d8008b5586161afbf7cb89260c957de3382f0521cb62d19808b2ed2"
+      },
+      "meta": {
+        "catalog_id": "a49a28e5-643a-591f-8e32-8c657ebb46f4",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "pow(A x + B, 1/gamma), A = multiply (gain - lift) / (whitepoint - blackpoint), B = offset + lift - A blackpoint; reverse undoes it",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "graded image",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/graded-image.webp",
+        "hash": "SHA256:427f442449523f9989b22bc62c56b104ae4aa873ebd6c08df17408feda04586f"
+      },
+      "meta": {
+        "catalog_id": "2dc38cc2-3e77-5073-889d-650adfc7a685",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The graded colours, straight, made premultiplied and faded back to the image by mix and mask",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "gray of",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/gray-of.webp",
+        "hash": "SHA256:f8046df51cd61d7bdae31cf7c5e8abcddb0ef257114d41f3ce0158715c4c4ed2"
+      },
+      "meta": {
+        "catalog_id": "2dc38cc2-3e77-5073-889d-650adfc7a685",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A gray of this value on the three channels, with this alpha",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "grid",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/grid.webp",
+        "hash": "SHA256:85867ac757be38063c86821430ef64b86b850accc0208bfbfc40140b2ba0fca5"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Lines of the colour, width pixels wide, every spacing pixels from the bottom-left pixel; transparent between them",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "half extent",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/half-extent.webp",
+        "hash": "SHA256:d5252ca13317b6aa43b527a510f582c40e6cc1a6f0e2f6d756b9df0f062f2de6"
+      },
+      "meta": {
+        "catalog_id": "39a75b62-4bd3-52b1-ac1b-8bccb2d487c5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Half the width and half the height of the image in its uniform coordinates: the larger one is 1",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "hatching 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/hatching-2d.webp",
+        "hash": "SHA256:49b7a6f9736ceeddd3ff1c850e161fc4a1788cac765744183c49d92cc802376b"
+      },
+      "meta": {
+        "catalog_id": "b9401a53-2a8b-54b8-970f-664aaa49e100",
+        "tags": [
+          "Base Node",
+          "patterns2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Regular array of parallel or crossed lines oriented by angle",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "heat",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/heat.webp",
+        "hash": "SHA256:d6019dc690cbf82b4415416c8439df40b2a528dbbeda38146f43fa9ca0a83a26"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "x from 0 to 1 as heat, opaque: black, red at \u2153, yellow at \u2154, white at 1",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "hexagonal grid 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/hexagonal-grid-2d.webp",
+        "hash": "SHA256:b1ed05b4b7591b453efcce7a6156b0868df20688f90a2a0369ba4ccd49554a15"
+      },
+      "meta": {
+        "catalog_id": "b9401a53-2a8b-54b8-970f-664aaa49e100",
+        "tags": [
+          "Base Node",
+          "patterns2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Regular staggered hexagonal tiling in the XY plane, with cell mesh and centers",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "hue shift",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/hue-shift.webp",
+        "hash": "SHA256:8a6a653d9e6b362e34156b64aa2006519d0ea0078c9376a64f5c9c0da8e719c9"
+      },
+      "meta": {
+        "catalog_id": "7639b1fc-019a-5709-bb6c-dad3705bb5c7",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colours turned by angle around the gray axis: red to green to blue for a positive angle",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "hypot",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/hypot.webp",
+        "hash": "SHA256:8a0eddad3dbafbc9ada7f0e847bac0100c0c55eda4864fe3d37c3d3727db0131"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "sqrt(A\u00b2 + B\u00b2): a sum of two images that keeps the brighter one",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "impulse",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/impulse.webp",
+        "hash": "SHA256:b42cd2c7815cf05db2173072945c3b0f2cdafca8d3bb5310a6a830d759e56a72"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Rises quickly to 1 at x = 1 / stiffness, then falls slowly: shock, bounce",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "in",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/in.webp",
+        "hash": "SHA256:c62dc6233270f209a3b316ac8465aae24a8f1e3b317d1d7d5a019e1a655d99de"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Ab: a where b is",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "is infinite",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/is-infinite.webp",
+        "hash": "SHA256:49930915c12bdb9947fa0b228001809fa77ac90898564a42d9a89fc032675aff"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "1 where x is past \u00b110\u00b3\u2070, infinities among them; 0 for NaN",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "is nan",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/is-nan.webp",
+        "hash": "SHA256:19d95c9cfc58922a03ba59b04833b993b73cf28298cd6157304597cd172515de"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "1 where x is NaN: min and max give their other operand then, so that max(x, -1) < min(x, 1), which no number gives",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "jitter points 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/jitter-points-2d.webp",
+        "hash": "SHA256:ceb32d913b0e4c8801dc696d2f24ac41c3211e9e7998940de92d882e1e0e3444"
+      },
+      "meta": {
+        "catalog_id": "b9401a53-2a8b-54b8-970f-664aaa49e100",
+        "tags": [
+          "Base Node",
+          "patterns2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "2D grid perturbed by stratified R2 sequence sampling for clump-free distribution",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "keymix",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/keymix.webp",
+        "hash": "SHA256:70dcaa59cc0685b83e88cc321651be2a6041f7c3b90b675f60daf7d213a2cdf8"
+      },
+      "meta": {
+        "catalog_id": "96487fca-6879-553a-a1b7-6235bf5abff9",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "a where the mask is 1, b where it is 0, on the four channels",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "letterbox",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/letterbox.webp",
+        "hash": "SHA256:c4cd6a2ca4ee9cb172bde89054d38af423b5b73ffddfa404557f82e99e494963"
+      },
+      "meta": {
+        "catalog_id": "dfb5d609-6d0e-5546-81d5-702f16d6dbd6",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Bars that frame the image to the given aspect: above and below, or at the sides when narrower",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "lin2log",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/lin2log.webp",
+        "hash": "SHA256:cc3f856512ecc8d2b4d31225c65b72373218a663c79d3f90c69fe63054f3c9e5"
+      },
+      "meta": {
+        "catalog_id": "96067f44-0662-5cc8-9ead-fe5be051225b",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Linear colours made Cineon log, codes over 1023: 0 to black, 1 to white",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "lin2log channel",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/lin2log-channel.webp",
+        "hash": "SHA256:e029c192d10051f08d5f4903242b5024f5704b546e24013df830f47eafe8789b"
+      },
+      "meta": {
+        "catalog_id": "96067f44-0662-5cc8-9ead-fe5be051225b",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "(white + log10(x (1 - offset) + offset) gamma / 0.002) / 1023: a linear value made a Cineon code over 1023",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "log2lin",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/log2lin.webp",
+        "hash": "SHA256:87bde48ad8d385e3db2492825bd0cbc6f070e44f3b172705c5737730f192083f"
+      },
+      "meta": {
+        "catalog_id": "96067f44-0662-5cc8-9ead-fe5be051225b",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Cineon log colours, codes over 1023, made linear: black to 0, white to 1",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "log2lin channel",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/log2lin-channel.webp",
+        "hash": "SHA256:5aa04223c5b81ffc3bd02afb92774fcef66f11330419ad903928d093c38ee827"
+      },
+      "meta": {
+        "catalog_id": "96067f44-0662-5cc8-9ead-fe5be051225b",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "(10^((1023 x - white) 0.002 / gamma) - offset) / (1 - offset): a Cineon code over 1023 made linear",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "luma gray",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/luma-gray.webp",
+        "hash": "SHA256:5ab262c606b68a47ebbf5079cf3c36c128d3628d89b834bb331a928c74cda9c2"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The Rec. 709 luminance of the image as an opaque gray, clamped between 0 and 1, 0 for NaN",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "luminance",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/luminance.webp",
+        "hash": "SHA256:a2de2d056a43005bb4fe1cc83f0667bc157a8637059dc1f11e32a2ce01f24226"
+      },
+      "meta": {
+        "catalog_id": "2028394a-8872-5930-a434-ba6653622e3f",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Color luminance (Rec. 709): perceived brightness",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/mask.webp",
+        "hash": "SHA256:587dd231178726933f7201e217e46561eb9f9480c36d0314bc5ef866dc613013"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Ba: b only where a is",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "matte",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/matte.webp",
+        "hash": "SHA256:fd23605a6235a70f587a6be491ec42c6971ac9d1054a5dd58d8595274a083da8"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Aa + B(1 - a): over, for a straight (unpremultiplied) a",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "max component",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/max-component.webp",
+        "hash": "SHA256:e09c5ddca9d614d7ecca823b75c4fc26b51672af674ceb200ded6456f82e4d64"
+      },
+      "meta": {
+        "catalog_id": "0254b8aa-e0f5-5132-a232-79ba514c8778",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Largest of the three vector components",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "maximum",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/maximum.webp",
+        "hash": "SHA256:42cc0893604e6fa01ff1019f4a022918d0d93994ce7cd29a6a77ce21496d53d5"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "max(A, B), channel by channel",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "min component",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/min-component.webp",
+        "hash": "SHA256:58a9641fd760ce891e32ccbc1ac466e3b7a801d1bc7e3c15a22b049054c9acc8"
+      },
+      "meta": {
+        "catalog_id": "0254b8aa-e0f5-5132-a232-79ba514c8778",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Smallest of the three vector components",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "minimum",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/minimum.webp",
+        "hash": "SHA256:254f23d80b819c041c89e7a4688fe029aba502a0982be182d2257426f2c25afc"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "min(A, B), channel by channel",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "minus",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/minus.webp",
+        "hash": "SHA256:0fc17099e04aaaf04861a1111c33e4e18fa185c8027cebcde5e395f97324fb86"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A - B",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "mirror",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/mirror.webp",
+        "hash": "SHA256:16eacc253dc0148d126c8eeffda60a76dfff35bcd86b9e9b02cac643999bc675"
+      },
+      "meta": {
+        "catalog_id": "f647a099-9c15-55fe-a931-44e4df71a201",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Nuke's Mirror: the image turned over left to right (horizontal), bottom to top (vertical)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "mirror stmap",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/mirror-stmap.webp",
+        "hash": "SHA256:4ce90df01d9a65b2aeddde3957c94c657e87067e4218a5d893c8463a28dc2b83"
+      },
+      "meta": {
+        "catalog_id": "f647a099-9c15-55fe-a931-44e4df71a201",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The STMap of the image turned over left to right (horizontal), bottom to top (vertical)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "morph curves 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/morph-curves-2d.webp",
+        "hash": "SHA256:b49429c94041e33399b96d6ecda0a2fe2703f4b9fa3ccf3286c2b2db33e3a3f5"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Interpolates positions between two curves resampled to matching point counts",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "multiply",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/multiply.webp",
+        "hash": "SHA256:1118bc3dbd6270f98d9ad3afa27fb24bca9892bd1b1fd4b58bdb8e38d61bdba9"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "AB",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "nan inf check",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/nan-inf-check.webp",
+        "hash": "SHA256:5ab262c606b68a47ebbf5079cf3c36c128d3628d89b834bb331a928c74cda9c2"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Where a channel of the four is NaN, nan_color; else where one is infinite (past \u00b110\u00b3\u2070), inf_color; the rest the image's luminance in gray",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "out",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/out.webp",
+        "hash": "SHA256:b5a486957c69d57dae77ce03b497554f343dfb673cb08a89b85faf988b58158e"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A(1 - b): a where b is not",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "outline mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/outline-mask.webp",
+        "hash": "SHA256:718b752ad4628f210e55b62f0d63924c3702be4434cbaebedcd1f54d59d15db8"
+      },
+      "meta": {
+        "catalog_id": "c9426861-795b-554c-aa39-da3637a95e91",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Mask of a line of given width along the edge of a shape, from its Distance",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "over",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/over.webp",
+        "hash": "SHA256:2cdad41b4354927733e025e00846b5161f1a2a9fcd43adca51468f719cea783a"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A + B(1 - a): a in front of b",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "palette",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/palette.webp",
+        "hash": "SHA256:55a23ea74c7de744cf92344996f7ee40c0ca60b1e662c95bf48f91f7193c0e41"
+      },
+      "meta": {
+        "catalog_id": "2028394a-8872-5930-a434-ba6653622e3f",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Inigo Quilez cosine palette: a + b \u00d7 cos(2\u03c0 (c \u00d7 t + d)), one color for each t",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "parabola",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/parabola.webp",
+        "hash": "SHA256:ee7f7905bf4a0ba0e8994670e09ace1a6fe903f5e0502a40fd8350808706d004"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "0 at edges, 1 at midpoint; sharpness 1 gives a parabola, higher sharpens it",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "parallel contour 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/parallel-contour-2d.webp",
+        "hash": "SHA256:f208514a4bbd8f42523d239cafa3c832eccb491cf64e44d501ef14b82ff6fc91"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Offsets each point along the 2D normal in the XY plane",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "perpendicular",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/perpendicular.webp",
+        "hash": "SHA256:03b0fe9c718c67412f037f374693af488a02d20b45b130e93427a5dde46fea93"
+      },
+      "meta": {
+        "catalog_id": "0254b8aa-e0f5-5132-a232-79ba514c8778",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Unit vector perpendicular to v",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "phyllotaxis spiral 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/phyllotaxis-spiral-2d.webp",
+        "hash": "SHA256:d67d580d9af7907682d354d282a35830fd9dcea7af92463b674a31f5fdfd5079"
+      },
+      "meta": {
+        "catalog_id": "b9401a53-2a8b-54b8-970f-664aaa49e100",
+        "tags": [
+          "Base Node",
+          "patterns2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Sunflower disk distribution using golden angle and radial factor",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "pixel of",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/pixel-of.webp",
+        "hash": "SHA256:c42bd69a4e7bf60cdace15b458e08c907d30efb6772c83cd0c43093d9001d046"
+      },
+      "meta": {
+        "catalog_id": "39a75b62-4bd3-52b1-ac1b-8bccb2d487c5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The column and row of each pixel, from 0 at the bottom-left, as Floats",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "pixel size",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/pixel-size.webp",
+        "hash": "SHA256:eb7e0fc3b2179986b7eb74d721b334252c5a1eea8196299a0a8a16d9206a2cee"
+      },
+      "meta": {
+        "catalog_id": "c9426861-795b-554c-aa39-da3637a95e91",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Size of one pixel of the image in its uniform coordinates: 2 over its larger side",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "planar faces",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/planar-faces.webp",
+        "hash": "SHA256:f6f91f7a1723262c5423be1286d46df9a8572840ba9431427b9aaf7a0399cd0a"
+      },
+      "meta": {
+        "catalog_id": "c43781e6-e461-5f12-bfe7-ad44fb65bfbb",
+        "tags": [
+          "Base Node",
+          "planar2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Extracts closed polygonal faces from planar curve networks by welding endpoints and filling closed loops",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "planar split intersections",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/planar-split-intersections.webp",
+        "hash": "SHA256:1827c672b5882077f335ee084fb7bf600c546c90c4d0fc88ebee9b4f889f96b2"
+      },
+      "meta": {
+        "catalog_id": "c43781e6-e461-5f12-bfe7-ad44fb65bfbb",
+        "tags": [
+          "Base Node",
+          "planar2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Inserts vertices at segment crossings and splits edges within a planar curve network",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "plus",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/plus.webp",
+        "hash": "SHA256:1b59b57a2086e1355ee5291f8693bdb820481ac70829cb72f4351a247fa9cd15"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A + B",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "point in disk",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/point-in-disk.webp",
+        "hash": "SHA256:6913858935dff16d49cb2593eaabd650061a24475c0a74a2180eb4fb7eef31fd"
+      },
+      "meta": {
+        "catalog_id": "ef9fec8c-d4a1-530b-8001-057993ab294b",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Uniform random point inside the XY unit disk",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "polygon mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/polygon-mask.webp",
+        "hash": "SHA256:24afafcfe243b394bb9846b1772c00dd9ba76152be22c1d67d670458ab061aad"
+      },
+      "meta": {
+        "catalog_id": "343c2ea2-1823-59af-8395-a79937b37b17",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Regular polygon of given number of sides",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "premult",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/premult.webp",
+        "hash": "SHA256:04711994ad18b9e45d9c39bea7bf69c2055d638d0618325d5e3b6d06aa98b6a2"
+      },
+      "meta": {
+        "catalog_id": "d0b9cbfd-ba50-5232-a611-523181ae51fe",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Colors multiplied by the alpha: a straight image made premultiplied",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "project on plane",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/project-on-plane.webp",
+        "hash": "SHA256:e0d87c215f0dff04b0723ec187704570702e939d26cde424c302e1b8fbdc955b"
+      },
+      "meta": {
+        "catalog_id": "0254b8aa-e0f5-5132-a232-79ba514c8778",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Projection of v onto the plane perpendicular to normal",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "r2 sequence",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/r2-sequence.webp",
+        "hash": "SHA256:dbdf0635cadbe78d4a6b15aff219e3acff214a1b422075cb88ad42927512a121"
+      },
+      "meta": {
+        "catalog_id": "0bad4366-1d67-51c1-8fc5-fe3dc6babb00",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Point at index in the 2D R2 low-discrepancy sequence in [0, 1]\u00b2",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "radial",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/radial.webp",
+        "hash": "SHA256:2f8e71e23c680bde9ed71d3f18e5e49236e9c7682727f8587ac7355d31b1f42d"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "White in a disk of the uniform coordinates, transparent outside: it falls off from radius \u00d7 (1 - softness) to the radius by a smoothstep",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "ramp",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ramp.webp",
+        "hash": "SHA256:498532e5c2c9f1a9b6eb583c2909a5c5cf078477519219996506f1b8b9f523a4"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "From one colour to the other across the whole image, along angle: 0 from left to right, 90\u00b0 from bottom to top; at 45\u00b0 from corner to corner",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "random direction",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/random-direction.webp",
+        "hash": "SHA256:3f594a7f652e8f7859344664997607ba4c045abe63ba45f4103acf99913a0df9"
+      },
+      "meta": {
+        "catalog_id": "ef9fec8c-d4a1-530b-8001-057993ab294b",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Uniform random direction on the unit sphere",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "rec709 luma",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/rec709-luma.webp",
+        "hash": "SHA256:4dd76ec0fa365a7a2333ab8be57dfdfab8ba118a4e291ab1753df8421746c518"
+      },
+      "meta": {
+        "catalog_id": "2dc38cc2-3e77-5073-889d-650adfc7a685",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Luminance of the colours by the weights of Rec. 709",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "recoil",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/recoil.webp",
+        "hash": "SHA256:8998067b42477ccfc1e3a5aaeba8c72094cff431efde02d7479a114f3e0fb3b5"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Pulls back before advancing: force 1.70158 recoils by 10%",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "rectangle",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/rectangle.webp",
+        "hash": "SHA256:0503dfa3c4287b6ffc02d97fa68db3ad7a688b1ddb8241050e03310f78d7898f"
+      },
+      "meta": {
+        "catalog_id": "7b8609f6-2f2b-503b-982b-af5d0aebd631",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "White in a rectangle of this size in the uniform coordinates, transparent outside: each side falls off inwards over softness by a smoothstep",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "reformat",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/reformat.webp",
+        "hash": "SHA256:30afc963a63d9cb4f627de31e0b23f71adfc6c41e12b0de2e64a0e4cad1befa2"
+      },
+      "meta": {
+        "catalog_id": "24a6463f-59db-56f6-a81b-7222b65a7f55",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Nuke's Reformat: the image on a canvas of this size, whole and centred (Fit), filling it and cut (Fill), or stretched to it (Distort)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "reformat stmap",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/reformat-stmap.webp",
+        "hash": "SHA256:1e7d1eb9cb277a766cd490d0d5d26dd8f4e7f375c9ccce79c6e9a629e269e7ae"
+      },
+      "meta": {
+        "catalog_id": "24a6463f-59db-56f6-a81b-7222b65a7f55",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The STMap of the image put on a canvas of this size: whole and centred (Fit), filling it and cut (Fill), or stretched to it (Distort)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "repeat axis",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/repeat-axis.webp",
+        "hash": "SHA256:e8cda0c290ae4e51fe3c2bacfa73a6a1526fc34818383b05143547a0c2244c2f"
+      },
+      "meta": {
+        "catalog_id": "f647a099-9c15-55fe-a931-44e4df71a201",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The part of t past its floor; in every other tile turned back when mirror is set",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "repetition",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/repetition.webp",
+        "hash": "SHA256:fa8eb148c59ee23a4133b5adf7475cfa5d79225e6e289c02dd2db5c89e3e62e8"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Repeats space: wraps p into its origin-centered cell",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ribbon 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ribbon-2d.webp",
+        "hash": "SHA256:5ac39815d687b75faddb5146283904664a3aa4be37906dfe4f88e1faa4634345"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Generates a flat 2D ribbon along the curve with optional end tapering",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "ridge fbm",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ridge-fbm.webp",
+        "hash": "SHA256:fb0cd0deaa912fa2d6b4b57f723cbfb6d1219bae246e1a5cee9089c83fb25527"
+      },
+      "meta": {
+        "catalog_id": "7147d2ad-cc0d-58b5-9b2a-d613db13b08c",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Ridged fractal noise: sharp mountain ridges, roughly 0 to 1",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "ring 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/ring-2d.webp",
+        "hash": "SHA256:d10c7b4110373fc6e46aef509cb1035b97147e279cd8a59c12015ac9af8fe21a"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Generates a flat 2D ring bounded by two radii",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "saturation",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/saturation.webp",
+        "hash": "SHA256:4cc96d9426e654ba04f0647b0001daf2a6bf22a9162608e7fbe6d25c2528a972"
+      },
+      "meta": {
+        "catalog_id": "7639b1fc-019a-5709-bb6c-dad3705bb5c7",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colours pushed away from their luma by s, 0 for a gray; the luma by the weights of Rec. 709, Rec. 2020 or ACEScg",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "screen",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/screen.webp",
+        "hash": "SHA256:8ddde263676db959269d26c031503c1541f5ade86f3e4bd8899a2d79d177a8cb"
+      },
+      "meta": {
+        "catalog_id": "b5fea2af-9d63-510d-a714-7240b1bf8899",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A + B - AB: lightens, as two projectors on one screen",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf arc 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-arc-2d.webp",
+        "hash": "SHA256:e81ca3d0266131a7c0b741142b67794bdaf89756dbc2dcf37a9db767bbd3d8e1"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane circular arc centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf box",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-box.webp",
+        "hash": "SHA256:9db2541ffe4f5e8ea72c118c29440d6082cc77985e640eabcd069f2d0ffd6bd9"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Box centered at origin of given half-extents",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf capsule",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-capsule.webp",
+        "hash": "SHA256:8d98971a542f44bb4797782b2affae7b005a207666b4dde668e8715669b62e14"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Capsule: line segment from a to b thickened by radius",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf chamfer subtraction",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-chamfer-subtraction.webp",
+        "hash": "SHA256:b7e4d1bf4c0c00bf60ad54dca1cab90b4d2b4d79540d838962d9883abbb9b63b"
+      },
+      "meta": {
+        "catalog_id": "a4059915-3534-5d3f-bea6-32ad6b7b8ab3",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Subtraction of b from a with a beveled chamfer join",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf chamfer union",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-chamfer-union.webp",
+        "hash": "SHA256:cd45355ea67a26746db3406b04180a2a4715c4a37c84a56114f937cec7de843f"
+      },
+      "meta": {
+        "catalog_id": "a4059915-3534-5d3f-bea6-32ad6b7b8ab3",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Union of two shapes with a beveled chamfer join",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf circle",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-circle.webp",
+        "hash": "SHA256:27c22390d8a27d2994f259d1460bc4c59fcf015d8e6ec371903c987a15a24faa"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Circle in the XY plane (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf circle (Compositor)",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-circle-compositor.webp",
+        "hash": "SHA256:85d934f5e44bf0ae260494facdc2e21986797c7e2b6ecbc7235f33aa5588dd71"
+      },
+      "meta": {
+        "catalog_id": "834e54bc-8b09-5681-b707-f3b7f6d47efc",
+        "tags": [
+          "Base Node",
+          "math",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Circle in the XY plane (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf cone",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-cone.webp",
+        "hash": "SHA256:d1b155e7214c57ca959c040011709d56d61d8087c04eca33f248e7bed25d64e3"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Cone frustum along Z of height 2 \u00d7 half height; top radius 0 gives a sharp cone",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf cross 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-cross-2d.webp",
+        "hash": "SHA256:775c38c2b459d46c6020cecc0d38e0cf47d4d5965ada40550c900ba077391582"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane cross with arms of given length and thickness (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf cylinder",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-cylinder.webp",
+        "hash": "SHA256:27c22390d8a27d2994f259d1460bc4c59fcf015d8e6ec371903c987a15a24faa"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Capped cylinder along Z of height 2 \u00d7 half height",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf ellipsoid",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-ellipsoid.webp",
+        "hash": "SHA256:067141f8946148e11ed6645bf6733cafe6ea0443ec3f92ba799b0dd0b436fc62"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Ellipsoid of given semi-axes; approximate distance, exact on surface",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf equilateral triangle 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-equilateral-triangle-2d.webp",
+        "hash": "SHA256:b6ab091f0cbf88fa0bce583e4708b8905e7ebf9de9454b1e2c9b0138b8cd7c70"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane equilateral triangle centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf hexagon 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-hexagon-2d.webp",
+        "hash": "SHA256:ac38175b9ed341a8d52d7745a64f2aa3e5a47964357c860089c0fd0337912cab"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane regular hexagon centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf isolines",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-isolines.webp",
+        "hash": "SHA256:3cfa6d3ec3e39933176a1d134b7d7dd2da6ad9cbc77557c73e707fcb015e1086"
+      },
+      "meta": {
+        "catalog_id": "37f432de-fc56-5eb1-8032-4f55846f5c63",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Distance field to contour lines (isolines) spaced by step",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf limited repeat 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-limited-repeat-2d.webp",
+        "hash": "SHA256:c6c1fa4564bab1f1c7dfdc080541ac3e8658dff08264158e9244bab2a47de295"
+      },
+      "meta": {
+        "catalog_id": "37f432de-fc56-5eb1-8032-4f55846f5c63",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Repeats the XY plane in a finite origin-centered grid without distance discontinuities",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-mask.webp",
+        "hash": "SHA256:fd3d914f270fe576a00d9237ee51c1ccacc336ea9cb57cfe44a0455a883c0834"
+      },
+      "meta": {
+        "catalog_id": "c9426861-795b-554c-aa39-da3637a95e91",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Mask of a signed distance: 1 inside, 0 outside, its edge smoothed over one pixel plus feather",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf normal",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-normal.webp",
+        "hash": "SHA256:d0b9cf8867379e58c47035a602269bd76cf8e15af31e5b4af4a1754ac7e4d476"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "SDF normal via finite differences: value at p, then at slightly offset x, y, and z",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf octahedron",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-octahedron.webp",
+        "hash": "SHA256:0c77eebfe2270b24191c08f6f0aa2676d120e9385df9d638c6058130b844aafc"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Octahedron with vertices at distance size; approximate distance",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf polar repeat 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-polar-repeat-2d.webp",
+        "hash": "SHA256:1168c0c3277cccf8ecd7c5ae745db9e03716ac09467f9bd7fbddd19bf051947a"
+      },
+      "meta": {
+        "catalog_id": "37f432de-fc56-5eb1-8032-4f55846f5c63",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Repeats the XY plane with radial symmetry across N angular sectors",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf rectangle",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-rectangle.webp",
+        "hash": "SHA256:397ca1c8c414a9cefed059aa61778ef16f1ae6f1842a5ddbe17335de8a3ca0a6"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Rectangle in the XY plane of given half-extents (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf rectangle (Compositor)",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-rectangle-compositor.webp",
+        "hash": "SHA256:b1c0abd64ed7427d70dffe501caa9508cd5ceec5a7cb8a9b0095b1ede4a683d9"
+      },
+      "meta": {
+        "catalog_id": "834e54bc-8b09-5681-b707-f3b7f6d47efc",
+        "tags": [
+          "Base Node",
+          "math",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Rectangle in the XY plane of given half-extents (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf regular polygon 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-regular-polygon-2d.webp",
+        "hash": "SHA256:34e4bf4d024fdfce79f7c6810e18564b79006d20a9d7467f3484cff49ec1f547"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane regular N-sided polygon centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf regular polygon 2d (Compositor)",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-regular-polygon-2d-compositor.webp",
+        "hash": "SHA256:96041c53f1b549ceb0c524e817036bd1633eca7552d565cad03199702458a3c0"
+      },
+      "meta": {
+        "catalog_id": "50e2e294-f45d-544d-b3b2-e2b6e3e85a0b",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane regular N-sided polygon centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf repeat 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-repeat-2d.webp",
+        "hash": "SHA256:fdefbc07a6c34f9601fffe298c383a994f190b11ca06da2615be4ed5c138e260"
+      },
+      "meta": {
+        "catalog_id": "37f432de-fc56-5eb1-8032-4f55846f5c63",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Repeats the XY plane in an infinite grid: wraps p into its origin-centered cell",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf rhombus 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-rhombus-2d.webp",
+        "hash": "SHA256:67a1f76cfcfb332fbe08d93b565591f41e794bf9aaa4d7e29862eb4d97ab8925"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane rhombus centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf ring 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-ring-2d.webp",
+        "hash": "SHA256:a9bb3987fe7b8e2cd803f21586e2c8a2b81361b8164b895046b9bbeb75dce2a3"
+      },
+      "meta": {
+        "catalog_id": "a4059915-3534-5d3f-bea6-32ad6b7b8ab3",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "2D shell or band of given thickness centered on an SDF contour",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf rounded box 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-rounded-box-2d.webp",
+        "hash": "SHA256:16392ff3ff8da5e4543be6c92b729bb48d3aa4d33cfcaaf25d1a02532befe2e7"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane rectangle with rounded corners of given half-size (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf rounded box 2d (Compositor)",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-rounded-box-2d-compositor.webp",
+        "hash": "SHA256:3136a997aaaaf395ed302201982595264e94b0809777bf7b251164a48c56d920"
+      },
+      "meta": {
+        "catalog_id": "50e2e294-f45d-544d-b3b2-e2b6e3e85a0b",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane rectangle with rounded corners of given half-size (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf sector 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-sector-2d.webp",
+        "hash": "SHA256:220f95d5421a398d24fa8da205e723b60de63b37f8f5c117172a61fb5a7f9f55"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane angular sector centered at origin (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf segment 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-segment-2d.webp",
+        "hash": "SHA256:748c0fe5a6239e2d64d7e21bef3eac4fc70fef75fe24ca02ac1874047e652df9"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Signed distance to an XY-plane line segment thickened by thickness (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf sphere",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-sphere.webp",
+        "hash": "SHA256:27c22390d8a27d2994f259d1460bc4c59fcf015d8e6ec371903c987a15a24faa"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Sphere centered at origin",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf star 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-star-2d.webp",
+        "hash": "SHA256:ac950facf22696889928d6331ec1c148c8028382976fc1ac6423bf2cb4840cff"
+      },
+      "meta": {
+        "catalog_id": "da440acd-b486-5a29-b62b-5d5ba7b0a6f4",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane regular N-pointed star (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf star 2d (Compositor)",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-star-2d-compositor.webp",
+        "hash": "SHA256:992900d63728e8ec4feef6ad42e14e10311a622d49bb1577ea5ba2b86a19c8db"
+      },
+      "meta": {
+        "catalog_id": "50e2e294-f45d-544d-b3b2-e2b6e3e85a0b",
+        "tags": [
+          "Base Node",
+          "sdf2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "XY-plane regular N-pointed star (2D: z ignored)",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sdf torus",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sdf-torus.webp",
+        "hash": "SHA256:9e0e8fe8ac95db3667920dbe66489d3a97dc484f94256de62cb47a4620a8a963"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Flat torus centered around the Z axis",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "shape builder pick",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/shape-builder-pick.webp",
+        "hash": "SHA256:e3062db89008c4e3fa82b6e14165829af5af1d1805e52b633e10150f1ca23d6f"
+      },
+      "meta": {
+        "catalog_id": "c43781e6-e461-5f12-bfe7-ad44fb65bfbb",
+        "tags": [
+          "Base Node",
+          "planar2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Selects and generates planar face regions containing or nearest to the provided seed points",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "shape space",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/shape-space.webp",
+        "hash": "SHA256:e84b82d7b935fa3ea83e475390049de829e4e92c690b78d237382ba9870f646d"
+      },
+      "meta": {
+        "catalog_id": "c9426861-795b-554c-aa39-da3637a95e91",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Uniform coordinates of the image, moved to center and turned by angle: where a shape is drawn",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "shell",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/shell.webp",
+        "hash": "SHA256:4c87aabb62f16c63c8902d5ea263e79b3afe1c83532f52b1a8a0144e77e303fa"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Shell of given thickness centered on surface",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "shell (Compositor)",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/shell-compositor.webp",
+        "hash": "SHA256:e9dcbaadfca99e545d221fac3baf79617111d3527c6a7f6602e615de1572d04b"
+      },
+      "meta": {
+        "catalog_id": "834e54bc-8b09-5681-b707-f3b7f6d47efc",
+        "tags": [
+          "Base Node",
+          "math",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Shell of given thickness centered on surface",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "signed angle",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/signed-angle.webp",
+        "hash": "SHA256:32d140f48865a1075bc7abf37b743316493961ebd1c2572e605667306af31605"
+      },
+      "meta": {
+        "catalog_id": "62fb3aba-6f69-5b96-9d7d-3113a6b18e03",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Signed rotation angle from u to v around axis, from -\u03c0 to \u03c0",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "signed pow",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/signed-pow.webp",
+        "hash": "SHA256:729ea7f3bc97cc40710ab67aa0fc5038801902aba45c8310d52c05161ef92b11"
+      },
+      "meta": {
+        "catalog_id": "2dc38cc2-3e77-5073-889d-650adfc7a685",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "x to the exponent where it is positive, x itself where it is not",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "sine01",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/sine01.webp",
+        "hash": "SHA256:9ff786a54a47480376b2defb201ff34367e63c91908479cc22fbead9a14dffb0"
+      },
+      "meta": {
+        "catalog_id": "33f415d9-2486-517c-9e41-13a4621baa5d",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Sine between 0 and 1: 0.5 at integers, 1 at quarter-period",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "smooth subtraction",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/smooth-subtraction.webp",
+        "hash": "SHA256:3e3a492aff0a831cbefb3601ef024044524cd61d44dd97163e1f9f210104f0a8"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Carves b out of a with rounded blend of given smoothness",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "soft clip",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/soft-clip.webp",
+        "hash": "SHA256:bc5a2304fe2512a96e16e9abfe4edd2d37bf20e9f55dc4e15092c9de4f8fe0e3"
+      },
+      "meta": {
+        "catalog_id": "7b63c533-0cd1-5e9b-9824-7fee7233986a",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Colours above start bent smoothly toward limit, never past it, channel by channel",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "soft clip channel",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/soft-clip-channel.webp",
+        "hash": "SHA256:5dcda4d209096984e17d04338bb7e37205b288eb020f22ea2281726f9e257215"
+      },
+      "meta": {
+        "catalog_id": "7b63c533-0cd1-5e9b-9824-7fee7233986a",
+        "tags": [
+          "Base Node",
+          "grade",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "x below start; above, limit - k exp(-(x - start) / k), k = limit - start: nearing limit, never reaching it",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "soft edge",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/soft-edge.webp",
+        "hash": "SHA256:6465ba9dfba7e6b55c1c0de9f7377b220f09fbcabac93c0005de316d8aae9bdd"
+      },
+      "meta": {
+        "catalog_id": "39a75b62-4bd3-52b1-ac1b-8bccb2d487c5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "1 where d is below edge - softness, 0 past edge, a smoothstep between them",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "square",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/square.webp",
+        "hash": "SHA256:7a63180799d2687aba6080dde64af7b14e2157bf88cda4b2d0e3687fea8e7ec1"
+      },
+      "meta": {
+        "catalog_id": "33f415d9-2486-517c-9e41-13a4621baa5d",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Square wave: 1 during duty cycle fraction of each period, 0 otherwise",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "star mask",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/star-mask.webp",
+        "hash": "SHA256:1efc61b14f50ebbfaf50d1eb5d4cda9b42c32240888cd0f11e2f7dc316ff79fb"
+      },
+      "meta": {
+        "catalog_id": "343c2ea2-1823-59af-8395-a79937b37b17",
+        "tags": [
+          "Base Node",
+          "mask2d",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Regular star of given number of points, indent its inner radius over its outer one",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "stencil",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/stencil.webp",
+        "hash": "SHA256:e84e49ba85786e65d724a0716cd78d84a9923ceeea275c7d746363ee5963f99b"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "B(1 - a): b with a cut out of it",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "steps",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/steps.webp",
+        "hash": "SHA256:7daccebef08ed302697b0fb3ab7bdfc8622ebe7ada75786cb4a706f067c82def"
+      },
+      "meta": {
+        "catalog_id": "9ac8ec3d-459b-5b88-b5c5-27ea38cb6dc8",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Stair steps: each step rises smoothly over its final fraction 'rise'",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "stmap apply",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/stmap-apply.webp",
+        "hash": "SHA256:000d46c504fc3c02381be949035e116163184a3ce9937bbaf5357bda290a0439"
+      },
+      "meta": {
+        "catalog_id": "970d9860-51d0-5163-aa1a-b8d432d8a1e3",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The image remapped by the STMap: each pixel the image's colour where the STMap's red and green say, times its alpha; transparent off the image",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "stmap of",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/stmap-of.webp",
+        "hash": "SHA256:1e1d52946c9516802cbb0aadeaff3bae87f20cc61192faacbe45bb42c479c237"
+      },
+      "meta": {
+        "catalog_id": "970d9860-51d0-5163-aa1a-b8d432d8a1e3",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "An STMap's pixel: u in red, v in green, the coverage in alpha",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "tile",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/tile.webp",
+        "hash": "SHA256:54dd9cc7eeaee9fc59ecc95101162e3c36245842d13964f5433ea339f1fdb408"
+      },
+      "meta": {
+        "catalog_id": "f647a099-9c15-55fe-a931-44e4df71a201",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Nuke's Tile: the image repeated in rows and columns at its own size; with mirror, every other tile turned over",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "tile stmap",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/tile-stmap.webp",
+        "hash": "SHA256:ff199710751dc74a8f3530046bdd8a905d3eed0238fe4b28942548b1323cb2a6"
+      },
+      "meta": {
+        "catalog_id": "f647a099-9c15-55fe-a931-44e4df71a201",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The STMap of the image repeated in rows and columns, each tile the whole image; with mirror, every other tile turned over",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "triangle",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/triangle.webp",
+        "hash": "SHA256:f97ca74d7520a55998f943cc98701292111d4a292ff98d059becaf6e6b5d4072"
+      },
+      "meta": {
+        "catalog_id": "33f415d9-2486-517c-9e41-13a4621baa5d",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Triangle wave: 0 at integers, 1 at midpoints",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "triangular grid 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/triangular-grid-2d.webp",
+        "hash": "SHA256:5cda1e4e294cdd6d0456ee704cb2b1e8cf4dbeb3761a199310d19466f896a30e"
+      },
+      "meta": {
+        "catalog_id": "b9401a53-2a8b-54b8-970f-664aaa49e100",
+        "tags": [
+          "Base Node",
+          "patterns2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Regular equilateral triangle tiling in the XY plane",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "twist",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/twist.webp",
+        "hash": "SHA256:624219c48f9ec725f30261f6272edde3db7e8ce568dac277dc2916e397a97b9e"
+      },
+      "meta": {
+        "catalog_id": "bf8ac475-adf1-59dd-9cfc-49f23fc87427",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Twists space around Z: strength radians per unit height",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "under",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/under.webp",
+        "hash": "SHA256:9d07bfeb1abc7b2e483defd5ea9d1ca56a1ad9841825795b8237335c37873a86"
+      },
+      "meta": {
+        "catalog_id": "af118f0d-a0f2-53c3-9de8-fde7551435db",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "A(1 - b) + B: a behind b",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "unpremult",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/unpremult.webp",
+        "hash": "SHA256:9cfb6786d489867c90bd7f157becc875df680d91851dec96b63432c338499bf8"
+      },
+      "meta": {
+        "catalog_id": "d0b9cbfd-ba50-5232-a611-523181ae51fe",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Colors divided by the alpha, 0 where it is 0: a premultiplied image made straight",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "uv ramp",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/uv-ramp.webp",
+        "hash": "SHA256:50091d17887c5a2bec0d508f5e4b38c8526bb8f88109fc98de1d9e60842931f0"
+      },
+      "meta": {
+        "catalog_id": "970d9860-51d0-5163-aa1a-b8d432d8a1e3",
+        "tags": [
+          "Base Node",
+          "stmap",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The identity STMap of the image's size: red is u, green is v, at the centre of each pixel; remapped by it, an image stays as it is",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "wave curve 2d",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/wave-curve-2d.webp",
+        "hash": "SHA256:7b75582e47e41aab664a96967e034430c1a752ec589f61ef7f76cbc83658350d"
+      },
+      "meta": {
+        "catalog_id": "1743e18c-0972-51d0-9258-47e64773854f",
+        "tags": [
+          "Base Node",
+          "curves2d",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Displaces a 2D curve sinusoidally along its normal",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 64
+          }
+        ]
+      }
+    },
+    {
+      "name": "weighted sum",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/weighted-sum.webp",
+        "hash": "SHA256:1b59b57a2086e1355ee5291f8693bdb820481ac70829cb72f4351a247fa9cd15"
+      },
+      "meta": {
+        "catalog_id": "96487fca-6879-553a-a1b7-6235bf5abff9",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "a times wa plus b times wb, on the four channels",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "with alpha",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/with-alpha.webp",
+        "hash": "SHA256:3f40fa5b3a3855b2758156f1b29ac1b182b3c466518eeab08945ccc3be843992"
+      },
+      "meta": {
+        "catalog_id": "d0b9cbfd-ba50-5232-a611-523181ae51fe",
+        "tags": [
+          "Base Node",
+          "merge",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "The colors of the image with this alpha, unchanged",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "wrap angle",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/wrap-angle.webp",
+        "hash": "SHA256:76a3b1a6ea5ea405687d28cf76bf99703db4c535e08401672fb7044127531ca1"
+      },
+      "meta": {
+        "catalog_id": "62fb3aba-6f69-5b96-9d7d-3113a6b18e03",
+        "tags": [
+          "Base Node",
+          "math",
+          "Geometry"
+        ],
+        "author": "Base Node",
+        "description": "Wraps an angle into [-\u03c0, \u03c0]",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 3
+          },
+          {
+            "name": "geometry_node_asset_traits_flag",
+            "type": "IDP_INT",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "zebra",
+      "id_type": "NODETREE",
+      "files": [
+        "base-node-stdlib.blend"
+      ],
+      "bl_versions": {
+        "min": "5.2"
+      },
+      "thumbnail": {
+        "url": "base-node-stdlib_thumbnails/Nodetree/zebra.webp",
+        "hash": "SHA256:2a6a05f62d168cea8a5f5aa82067e3d7ae787db903095fb290acd228bd03be2e"
+      },
+      "meta": {
+        "catalog_id": "e433f7c0-9941-5607-bfd3-6bf5833ab3e5",
+        "tags": [
+          "Base Node",
+          "qc",
+          "Compositor"
+        ],
+        "author": "Base Node",
+        "description": "Diagonal stripes, black and white, width pixels wide, where the luminance is above level; the image elsewhere",
+        "license": "Apache-2.0 OR MIT",
+        "properties": [
+          {
+            "name": "type",
+            "type": "IDP_INT",
+            "value": 1
+          }
+        ]
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "base-node-stdlib.blend",
+      "size_in_bytes": 7865428,
+      "hash": "SHA256:5ce53f14ca5c2e370608f5c4315c2fd0964fa0bd2298fda86d0903e7e2dda414",
+      "blender_version": "5.2.45"
+    }
+  ]
+}

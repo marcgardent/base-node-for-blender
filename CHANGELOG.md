@@ -59,6 +59,20 @@ Versions below 1.0.0 are pre-releases: the text format can change between them.
   `contour outer boundary` returns the outline of the shapes as closed curves, without their holes,
   moved `offset` outwards in the plane; it returned their faces, raised by `offset`.
 
+### Asset Browser
+
+- Added: the standard library as a remote asset library, one by version of Blender,
+  `https://blender.basenode.ludopant.com/assets/5.2/` and `…/assets/5.3/`. Each group is an asset
+  in the catalog *Base Node/<module>/<section>*, with a thumbnail: what it makes when it makes a
+  picture (a geometry, a shaping curve, a signed distance field, an image of the compositor, the
+  toon material), else a card of its sockets. The same `.blend` opens on every group laid out in
+  its editor, Geometry Nodes, Shader and Compositor, in a frame by module and section.
+- Added: Blender 5.3 finds that library in the repository of the add-on: the extension
+  *Base Node Standard Library* (`base_node_stdlib`, `type = "asset-library"`) is in
+  `extensions/index.json`. Blender 5.2, which has no extension of that type, leaves it out and adds
+  the library by hand in *Preferences > File Paths > Asset Libraries*.
+- Added: `make assets`, which writes them with each Blender of `BLENDERS`.
+
 ### Site
 
 - Fixed: `examples/tutorials/page.py` writes and checks the pages `site/tutorials/` has, no longer

@@ -1,0 +1,4 @@
+# Git LFS: the binaries make assets writes again at each build (the .blend of the stdlib and its
+# thumbnails, by version of Blender), kept out of the history of the repository.
+site/assets/**/*.blend filter=lfs diff=lfs merge=lfs -text
+site/assets/**/*.webp filter=lfs diff=lfs merge=lfs -text

@@ -1,0 +1,13 @@
+{
+  "api_versions": {
+    "v1": {
+      "url": "_v1/asset-index.json",
+      "hash": "SHA256:ec188cc4fc43cc9d0ce9b45ea5fe7e75ff2ab49a529d684a97e78ea198296646"
+    }
+  },
+  "name": "Base Node stdlib (Blender 5.2)",
+  "contact": {
+    "name": "Base Node",
+    "url": "https://blender.basenode.ludopant.com/"
+  }
+}

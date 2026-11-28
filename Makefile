@@ -68,6 +68,18 @@ srt-check: addon-lang ## Build examples/tutorials/srt_subtitles/srt_subtitles.bn
 extension: addon-lang ## Build the add-on .zip into DIST (default dist/)
 	BLENDER=$(BLENDER) addon/build.sh $(DIST)
 
+assets: addon-lang ## Write site/assets/<x.y>/ with each Blender of BLENDERS: the stdlib as a remote asset library, its groups open in their editors, a thumbnail each (PIL)
+	@for b in $(BLENDERS); do \
+	  v=$$($$b --version | sed -nE '1s/^Blender ([0-9]+\.[0-9]+).*/\1/p'); echo "== $$b ($$v)"; \
+	  $$b --background --factory-startup --python-exit-code 1 --python tools/stdlib_blend.py || exit 1; \
+	  $$b --background --factory-startup site/assets/$$v/base-node-stdlib.blend --python-exit-code 1 \
+	    --python tools/stdlib_previews.py -- render dist/previews/$$v || exit 1; \
+	  python3 tools/stdlib_cards.py dist/previews/$$v || exit 1; \
+	  $$b --background --factory-startup site/assets/$$v/base-node-stdlib.blend --python-exit-code 1 \
+	    --python tools/stdlib_previews.py -- apply dist/previews/$$v || exit 1; \
+	  $$b --factory-startup --command asset_listing generate site/assets/$$v || exit 1; \
+	done
+
 backend: addon-lang ## Write targets/backends/blender-<x.y>.json and blender-<x.y>/<module>.json from the Blender it runs (BLENDER=…), then its catalog targets/blender/<x.y>.json
 	$(BLENDER_RUN) addon/tests/export_backend.py
 	python3 -m base_node_blender.targets

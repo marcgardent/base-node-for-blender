@@ -1,0 +1,22 @@
+# The asset library of Base Node's standard library, as an extension: Blender 5.3 and later add
+# it to the Asset Browser from the same repository as the add-on (site/extensions/index.json).
+# The assets are the remote library site/assets/5.3/ (tools/stdlib_blend.py writes it). Blender
+# 5.2 has no extension of this type: it adds https://blender.basenode.ludopant.com/assets/5.2/
+# by hand, in Preferences > File Paths > Asset Libraries.
+schema_version = "1.0.0"
+
+id = "base_node_stdlib"
+version = "1.0.0"
+name = "Base Node Standard Library"
+tagline = "The node groups of Base Node's standard library, as assets"
+maintainer = "Marc Gardent"
+type = "asset-library"
+website = "https://blender.basenode.ludopant.com/"
+
+blender_version_min = "5.3.0"
+
+license = ["SPDX:MIT", "SPDX:Apache-2.0"]
+copyright = ["2026 Marc Gardent"]
+
+[asset_library]
+remote_url = "https://blender.basenode.ludopant.com/assets/5.3/"

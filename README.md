@@ -181,7 +181,9 @@ read the file of the Blender that runs (`targets/backends/blender-<x.y>.json`). 
 | [`corpus/`](corpus/) | The node groups of third-party libraries as `.bn` text, read by Blender 5.3: version 1 of the language, which a later version must read |
 | [`examples/`](examples/) | Showcases, tutorials and the scripts that render them |
 | [`conformance/`](conformance/) | `gltf-cases.json`: materials and what Blender's glTF exporter makes of them |
-| [`site/`](site/) | The site, https://blender.basenode.ludopant.com/ |
+| [`assetlib/`](assetlib/) | The manifest of the extension *Base Node Standard Library* (`type = "asset-library"`, Blender 5.3+), which points to `site/assets/5.3/` |
+| [`site/`](site/) | The site, https://blender.basenode.ludopant.com/; `site/extensions/` the repository of extensions, `site/assets/<x.y>/` the stdlib as a remote asset library by version of Blender |
+| [`tools/stdlib_blend.py`](tools/stdlib_blend.py) | Writes `site/assets/<x.y>/base-node-stdlib.blend`: every group of the stdlib an asset, and open in its editor, in frames by module and section; [`stdlib_previews.py`](tools/stdlib_previews.py) and [`stdlib_cards.py`](tools/stdlib_cards.py) give each its thumbnail (`make assets`) |
 | [`spec/`](spec/) | [Blender](spec/blender.md) (the language as Blender reads it, its versions), [targets](spec/targets.md) (what a destination accepts, translators, `@target`), [idioms](spec/idioms.md) (ways of writing a graph, each with an example); the language is the core's [reference](https://github.com/marcgardent/base-node-language/blob/main/spec/reference.md) |
 | [`tools/bump.py`](tools/bump.py) | Writes the version of this repository everywhere it is written, and the version of the core it needs (`make bump`, `make bump-check`) |
 | [`Cargo.toml`](Cargo.toml) | The workspace of `rust/` and `web/`, and the one path to the core's crate |
@@ -440,6 +442,20 @@ Run headless Blender tests (`make test-blender`, or after `make addon-lang`):
 blender --background --factory-startup --python-exit-code 1 \
   --python addon/tests/test_extension.py
 ```
+
+## The standard library in the Asset Browser
+
+`make assets BLENDERS="<blender 5.2> <blender 5.3>"` writes, with each Blender, `site/assets/<x.y>/`: a `.blend` where every group of the standard library is an asset, in the catalog *Base Node/<module>/<section>*, and also a node of the tree of its editor (the Geometry Nodes modifier of the object *Base Node stdlib*, its material in the Shader Editor, the scene's compositor), in a frame by module holding a frame by section; then a thumbnail for each asset, and its catalogs and the index of a remote asset library (`blender -c asset_listing generate`).
+
+A thumbnail is what the group makes, rendered by [`tools/stdlib_previews.py`](tools/stdlib_previews.py): a geometry (its geometry inputs given a star curve), the curve of a function of one Float, the field of a function of the position (a signed distance with its isolines), the image of a compositor group applied to two pictures of `site/images`, the `toon` material on a sphere. A group whose picture shows nothing, or its inputs as they are, gets instead a card of its name and sockets, drawn by [`tools/stdlib_cards.py`](tools/stdlib_cards.py) (PIL). The pictures wait in `dist/previews/<x.y>/`. The file is written by each version, as Blender reads a .blend of an older version but not of a newer one.
+
+| Blender | What to add | Where |
+|---|---|---|
+| 5.2 | `https://blender.basenode.ludopant.com/extensions/index.json`, the add-on | *Preferences > Get Extensions > Repositories* |
+| 5.2 | `https://blender.basenode.ludopant.com/assets/5.2/`, the assets | *Preferences > File Paths > Asset Libraries*, a remote library |
+| 5.3 | `https://blender.basenode.ludopant.com/extensions/index.json`: the add-on, and the extension *Base Node Standard Library*, which adds the remote library `assets/5.3/` | *Preferences > Get Extensions > Repositories* |
+
+Blender 5.2 has no extension of type `asset-library`: it leaves the entry out of the index, and its assets are added by hand. The zip of `assetlib/` is built by Blender 5.3 (`make bump VERSION=x.y.z ARCHIVE=1 BLENDER=<blender 5.3>`). Building them takes about two minutes by version of Blender. The `.blend` files and the thumbnails of `site/assets/` are kept in [Git LFS](https://git-lfs.com/) (`.gitattributes`): `git lfs install` once, before a clone, to have them as files rather than pointers.
 
 ## License
 
