@@ -9,7 +9,7 @@
 //
 // Attributes: src (a .bn file) or the text inside (a <script type="text/bn">
 // keeps `<` safe); view = code | both | nodes, the view shown first (default:
-// both when wide, else nodes; split is both);
+// nodes; both is the nodes above the code; split is both);
 // graph = the tab shown first, a graph's name or its number from 1 (default:
 // the last); height (px, default 440);
 // theme = dark | light (default: the page's color scheme).
@@ -132,10 +132,9 @@ a.icon:hover { border-color: var(--bn-accent); }
 .root[data-view="code"] .graph { display: none; }
 .root[data-view="code"] .code { flex: 1; border-right: 0; }
 .root[data-view="nodes"] .code { display: none; }
-@container (max-width: 680px) {
-  .root[data-view="split"] .panes { flex-direction: column; }
-  .root[data-view="split"] .code { flex: 0 0 45%; border-right: 0; border-bottom: 1px solid var(--bn-border); }
-}
+/* Both: the nodes above, the code under them. */
+.root[data-view="split"] .panes { flex-direction: column-reverse; }
+.root[data-view="split"] .code { flex: 0 0 40%; border-right: 0; border-top: 1px solid var(--bn-border); }
 /* The node editor, drawn by base-node (web/src/svg.rs). */
 .frame rect { fill: var(--ne-frame); }
 /* The comments of the text, as the Base Node add-on shows them in Blender. */
@@ -286,7 +285,7 @@ class BnView extends HTMLElement {
     root.querySelectorAll(".strip").forEach((el) => this.sideways(el));
     this.panZoom();
     this.scrolls();
-    this.setView(this.getAttribute("view") || (this.clientWidth && this.clientWidth < 680 ? "nodes" : "split"));
+    this.setView(this.getAttribute("view") || "nodes");
   }
 
   async load() {
@@ -458,7 +457,7 @@ class BnView extends HTMLElement {
 
   setView(v) {
     if (v === "both") v = "split";
-    if (!["code", "nodes", "split"].includes(v)) v = "split";
+    if (!["code", "nodes", "split"].includes(v)) v = "nodes";
     this.$.root.dataset.view = v;
     this.shadowRoot.querySelectorAll(".seg button").forEach((b) =>
       b.setAttribute("aria-pressed", String(b.dataset.v === v)));
