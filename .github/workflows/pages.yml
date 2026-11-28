@@ -1,5 +1,6 @@
 # The site of Base Node for Blender, https://blender.basenode.ludopant.com/ (site/CNAME): site/, with
 # bn-view built and the reference pages written, the language's from the core's spec (core/).
+# Its Git LFS files (site/assets/) are fetched, from a cache while they do not change.
 name: Pages
 
 on:
@@ -27,6 +28,16 @@ jobs:
         with:
           persist-credentials: false
           submodules: true
+      # site/assets/ holds Git LFS files (.gitattributes): the checkout leaves pointers, the files
+      # come from the cache, else from LFS, whose bandwidth is counted: once by change of them.
+      - name: List the LFS files
+        run: git lfs ls-files --long | cut -d ' ' -f1 | sort > .lfs-ids
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfs-ids') }}
+      - name: Fetch the LFS files
+        run: git lfs pull
       - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
         with:
           toolchain: stable

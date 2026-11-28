@@ -35,6 +35,27 @@
       "archive_url": "./base_node-1.0.0.zip",
       "archive_size": 286881,
       "archive_hash": "sha256:67e2a9dd2162f2b7d42f842f962b5d0d6773786566ef1dd12484ca7dc360e57b"
+    },
+    {
+      "schema_version": "1.0.0",
+      "id": "base_node_stdlib",
+      "name": "Base Node Standard Library",
+      "tagline": "The node groups of Base Node's standard library, as assets",
+      "version": "1.0.0",
+      "type": "asset-library",
+      "maintainer": "Marc Gardent",
+      "license": [
+        "SPDX:MIT",
+        "SPDX:Apache-2.0"
+      ],
+      "blender_version_min": "5.3.0",
+      "website": "https://blender.basenode.ludopant.com/",
+      "copyright": [
+        "2026 Marc Gardent"
+      ],
+      "archive_url": "./base_node_stdlib-1.0.0.zip",
+      "archive_size": 604,
+      "archive_hash": "sha256:7957811b12adedf2effe4df9b525c9756e54237fed52fc37a945afe05bb3bee1"
     }
   ]
 }

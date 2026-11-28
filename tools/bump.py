@@ -57,8 +57,10 @@ PLACES = [
     ("*/Cargo.toml", r'^version = "{V}"', "semver", EACH),
     # Blender
     ("addon/blender_manifest.toml", r'^version = "{V}"', "semver", EACH),
+    ("assetlib/blender_manifest.toml", r'^version = "{V}"', "semver", EACH),
     ("site/extensions/index.json", r'"version": "{V}"', "semver", EACH),
     ("site/extensions/index.json", r'"archive_url": "\./base_node-{V}\.zip"', "semver", EACH),
+    ("site/extensions/index.json", r'"archive_url": "\./base_node_stdlib-{V}\.zip"', "semver", EACH),
     # Site and documents
     ("site/index.html", r"<span>\(\.bn\) v{V}</span>", "semver", EACH),
     ("site/*.html", r"<span>\(\.bn\) v{V}</span>", "semver", ANY),
@@ -81,6 +83,8 @@ CORE_PLACES = [
 # Never read: versions of others
 SKIP = ("addon/tests/libraries/",)
 EXTENSIONS = "site/extensions"
+# The packages of site/extensions/: the add-on, and from Blender 5.3 the asset library of the stdlib
+PACKAGES = ("base_node", "base_node_stdlib")
 
 
 def forms(version: str) -> dict[str, str]:
@@ -174,44 +178,57 @@ def scan(root: Path, version: str, write: bool, core: str | None = None) -> tupl
 
 
 def archive_problems(root: Path, version: str) -> list[str]:
-    """What is wrong between site/extensions/index.json and the add-on zip it names."""
+    """What is wrong between site/extensions/index.json and the zips it names."""
     semver = forms(version)["semver"]
-    entry = json.loads((root / EXTENSIONS / "index.json").read_text(encoding="utf-8"))["data"][0]
-    path = root / EXTENSIONS / entry["archive_url"]
-    name = f"{EXTENSIONS}/{path.name}"
-    if not path.is_file():
-        return [f"{name}: named by {EXTENSIONS}/index.json, and missing"]
+    entries = {e["id"]: e for e in json.loads((root / EXTENSIONS / "index.json").read_text(encoding="utf-8"))["data"]}
     problems = []
-    data = path.read_bytes()
-    if entry["archive_size"] != len(data) or entry["archive_hash"] != "sha256:" + hashlib.sha256(data).hexdigest():
-        problems.append(f"{name}: not the size and hash {EXTENSIONS}/index.json says")
-    with zipfile.ZipFile(path) as z:
-        inside = re.search(r'(?m)^version = "([^"]+)"', z.read("blender_manifest.toml").decode("utf-8"))
-    if not inside or inside.group(1) != semver:
-        problems.append(f"{name}: holds the add-on of {inside.group(1) if inside else '?'}, expected {semver}: "
-                        f"build it again (python3 tools/bump.py {semver} --archive)")
+    for package in PACKAGES:
+        if package not in entries:
+            problems.append(f"{EXTENSIONS}/index.json: no {package}")
+            continue
+        entry = entries[package]
+        path = root / EXTENSIONS / entry["archive_url"]
+        name = f"{EXTENSIONS}/{path.name}"
+        if not path.is_file():
+            problems.append(f"{name}: named by {EXTENSIONS}/index.json, and missing")
+            continue
+        data = path.read_bytes()
+        if entry["archive_size"] != len(data) or entry["archive_hash"] != "sha256:" + hashlib.sha256(data).hexdigest():
+            problems.append(f"{name}: not the size and hash {EXTENSIONS}/index.json says")
+        with zipfile.ZipFile(path) as z:
+            inside = re.search(r'(?m)^version = "([^"]+)"', z.read("blender_manifest.toml").decode("utf-8"))
+        if not inside or inside.group(1) != semver:
+            problems.append(f"{name}: holds the {package} of {inside.group(1) if inside else '?'}, expected {semver}: "
+                            f"build it again (python3 tools/bump.py {semver} --archive)")
     return problems
 
 
 def rename_archive(root: Path, version: str) -> list[str]:
-    """Give the add-on zip the name index.json now says, when it is the only zip there."""
-    target = root / EXTENSIONS / f"base_node-{forms(version)['semver']}.zip"
-    zips = sorted((root / EXTENSIONS).glob("base_node-*.zip"))
-    if target.exists() or len(zips) != 1:
-        return []
-    zips[0].rename(target)
-    return [f"{EXTENSIONS}/{zips[0].name} -> {target.name}"]
+    """Give each zip the name index.json now says, when it is the only zip of its package there."""
+    renamed = []
+    for package in PACKAGES:
+        target = root / EXTENSIONS / f"{package}-{forms(version)['semver']}.zip"
+        zips = sorted((root / EXTENSIONS).glob(f"{package}-*.zip"))
+        if target.exists() or len(zips) != 1:
+            continue
+        zips[0].rename(target)
+        renamed.append(f"{EXTENSIONS}/{zips[0].name} -> {target.name}")
+    return renamed
 
 
 def build_archive(root: Path) -> None:
-    """Build the add-on zip and its index into site/extensions/ with Blender (BLENDER, default `blender`):
-    `make extension`, which embeds the core of the Makefile's CORE."""
+    """Build the zips and their index into site/extensions/ with Blender (BLENDER, default `blender`, 5.3 or
+    later: an older one does not build an asset library): `make extension`, which embeds the core of the
+    Makefile's CORE, and the asset library of assetlib/."""
     blender = os.environ.get("BLENDER", "blender")
     out = root / EXTENSIONS
-    for old in out.glob("base_node-*.zip"):
-        old.unlink()
+    for package in PACKAGES:
+        for old in out.glob(f"{package}-*.zip"):
+            old.unlink()
     subprocess.run(["make", "--no-print-directory", "-C", str(root), "extension", f"DIST={out}", f"BLENDER={blender}"],
                    check=True)
+    subprocess.run([blender, "--command", "extension", "build", f"--source-dir={root / 'assetlib'}",
+                    f"--output-dir={out}"], check=True)
     subprocess.run([blender, "--command", "extension", "server-generate", f"--repo-dir={out}"], check=True)
 
 
