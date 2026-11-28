@@ -26,7 +26,7 @@ it holds, and draws it as SVG. The page only pans and zooms it, once the graph i
 | Attribute | |
 |---|---|
 | `src` | A `.bn` file; else the text inside (a `<script type="text/bn">` keeps `<` safe), dedented |
-| `view` | The view shown first: `code`, `both` (code and nodes; `split` too) or `nodes`; `both` by default when wide enough, else `nodes` |
+| `view` | The view shown first: `code`, `both` (the nodes above the code; `split` too) or `nodes`; `nodes` by default |
 | `graph` | The tab shown first, when the text has several graphs: a graph's name (`chrono hud` or `chrono_hud`) or its number from 1 (default: the last) |
 | `height` | In px (default 440) |
 | `theme` | `dark` or `light` (default: the page's color scheme) |
